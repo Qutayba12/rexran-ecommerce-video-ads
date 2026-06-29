@@ -18,15 +18,18 @@ const item = {
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden px-6 py-10 sm:px-8 lg:px-12">
-      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-7xl flex-col justify-center gap-16 lg:flex-row lg:items-center lg:gap-24">
+    <section className="relative overflow-hidden px-6 py-14 sm:px-8 lg:px-12 lg:py-20">
+      <div className="mx-auto grid min-h-[calc(100vh-3.5rem)] max-w-7xl items-center gap-14 lg:grid-cols-2 lg:gap-16">
         <motion.div
-          className="flex w-full flex-col gap-8 lg:w-1/2"
+          className="flex w-full flex-col gap-8"
           initial="hidden"
           animate="show"
           variants={container}
         >
-          <motion.div variants={item} className="inline-flex items-center gap-3 rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-[#00E5FF] shadow-[0_0_40px_rgba(0,229,255,0.18)] backdrop-blur-sm">
+          <motion.div
+            variants={item}
+            className="inline-flex items-center gap-3 rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-[#00E5FF] shadow-[0_0_40px_rgba(0,229,255,0.18)] backdrop-blur-sm"
+          >
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-lg font-black text-[#00E5FF] shadow-[0_0_12px_rgba(0,229,255,0.35)]">
               R
             </span>
@@ -45,20 +48,17 @@ const Hero = () => {
             </p>
           </motion.div>
 
-          <motion.div variants={item} className="w-full max-w-2xl">
-            <form className="grid gap-4 sm:grid-cols-[1fr_auto]">
-              <label htmlFor="product-link" className="sr-only">
-                Product link
-              </label>
+          <motion.div variants={item} className="w-full max-w-3xl">
+            <form className="flex flex-col gap-4 rounded-full bg-white/5 p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] sm:flex-row">
               <input
                 id="product-link"
                 type="url"
                 placeholder="Paste your product link here..."
-                className="w-full rounded-full border border-white/10 bg-white/5 px-5 py-4 text-sm text-white placeholder:text-slate-500 outline-none ring-1 ring-transparent transition focus:border-[#00E5FF] focus:ring-2 focus:ring-[#00E5FF]/20"
+                className="min-w-0 flex-1 rounded-full border border-transparent bg-transparent px-5 py-4 text-sm text-white placeholder:text-slate-500 outline-none focus:border-transparent focus:ring-0"
               />
               <button
                 type="submit"
-                className="inline-flex items-center justify-center rounded-full bg-[#00E5FF] px-6 py-4 text-sm font-semibold text-slate-950 shadow-neon transition hover:bg-[#00ccff]"
+                className="inline-flex h-full items-center justify-center rounded-full bg-[#00E5FF] px-6 py-4 text-sm font-semibold text-slate-950 transition hover:bg-[#00ccff] sm:min-w-[180px]"
               >
                 Engineer My Ad
               </button>
@@ -67,7 +67,7 @@ const Hero = () => {
         </motion.div>
 
         <motion.div
-          className="relative flex w-full justify-center lg:w-1/2"
+          className="relative flex w-full justify-center lg:justify-end"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -77,33 +77,28 @@ const Hero = () => {
           </div>
 
           <motion.div
-            className="relative z-10 w-full max-w-[380px]"
-            animate={{ y: [0, -18, 0] }}
+            className="relative z-10 w-full max-w-[360px]"
+            animate={{ y: [0, -20, 0] }}
             transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <div className="relative overflow-hidden rounded-[44px] border border-white/10 bg-[#08101c] shadow-[0_30px_120px_-30px_rgba(0,229,255,0.35)]">
-              <div className="flex items-center gap-2 border-b border-white/10 bg-[#07101a] px-4 py-3">
-                <span className="h-3 w-3 rounded-full bg-[#00E5FF] shadow-[0_0_16px_rgba(0,229,255,0.45)]" />
-                <span className="h-3 w-3 rounded-full bg-slate-500/70" />
-                <span className="h-3 w-3 rounded-full bg-slate-500/70" />
+            <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#07101a] shadow-[0_30px_120px_-30px_rgba(0,229,255,0.25)]">
+              <div className="border-b border-white/10 bg-[#08101d] px-4 py-3">
+                <div className="mx-auto h-1.5 w-20 rounded-full bg-white/10" />
               </div>
-              <div className="bg-[#05101a] p-5">
-                <div className="relative mx-auto h-[650px] max-h-[650px] w-[280px] overflow-hidden rounded-[34px] border border-white/10 bg-[#03101a] shadow-inner">
-                  <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#00E5FF]/20 via-transparent to-transparent" />
-                  <div className="flex h-full flex-col justify-between p-5">
-                    <div className="space-y-4">
-                      <div className="h-2.5 w-28 rounded-full bg-white/10" />
-                      <div className="h-2.5 w-20 rounded-full bg-white/10" />
-                      <div className="mt-12 h-64 rounded-[28px] bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 shadow-inner" />
+              <div className="p-5">
+                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 shadow-inner">
+                  <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/10 via-transparent to-transparent" />
+                  <div className="h-[520px] rounded-[28px] bg-[#090d14] p-5 text-white">
+                    <div className="mb-6 flex items-center justify-between rounded-3xl bg-white/5 px-4 py-3 text-sm text-slate-300">
+                      <span className="font-semibold text-white">Rexran Studio</span>
+                      <span className="rounded-full bg-white/10 px-3 py-1">Live</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-3xl bg-white/5 p-4 text-sm text-slate-300">
-                      <div>
-                        <p className="font-semibold text-white">Product Teaser</p>
-                        <p className="text-slate-500">Preview of your next ad</p>
-                      </div>
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#00E5FF]/10 text-[#00E5FF] shadow-[0_0_24px_rgba(0,229,255,0.16)]">
-                        ▶
-                      </div>
+                    <div className="space-y-4">
+                      <div className="h-3 w-24 rounded-full bg-white/10" />
+                      <div className="h-3 w-16 rounded-full bg-white/10" />
+                    </div>
+                    <div className="mt-8 h-[320px] rounded-[28px] bg-gradient-to-b from-[#07101a] via-[#09101c] to-[#061017] p-5 shadow-inner">
+                      <div className="h-full rounded-[24px] bg-[#0f1726] shadow-[inset_0_0_50px_rgba(0,229,255,0.08)]" />
                     </div>
                   </div>
                 </div>
