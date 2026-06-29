@@ -16,7 +16,11 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 }
 
-const Hero = () => {
+type HeroProps = {
+  onOrder: () => void
+}
+
+const Hero = ({ onOrder }: HeroProps) => {
   return (
     <section className="relative overflow-hidden px-6 py-14 sm:px-8 lg:px-12 lg:py-20">
       <div className="mx-auto grid min-h-[calc(100vh-3.5rem)] max-w-7xl items-center gap-14 lg:grid-cols-2 lg:gap-16">
@@ -49,7 +53,13 @@ const Hero = () => {
           </motion.div>
 
           <motion.div variants={item} className="w-full max-w-3xl">
-            <form className="flex flex-col gap-4 rounded-full bg-white/5 p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] sm:flex-row">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                onOrder()
+              }}
+              className="flex flex-col gap-4 rounded-full bg-white/5 p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] sm:flex-row"
+            >
               <input
                 id="product-link"
                 type="url"
