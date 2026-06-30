@@ -42,47 +42,67 @@ const TILES = [
 ]
 
 const STEPS = [
-  { n: '01', t: 'You send the product', p: 'Pick a package, drop your product link and photos, tell me the size and where it will run. That is the whole brief.' },
+  { n: '01', t: 'You send the product', p: 'Pick a package, drop your product link and photos, choose your services and sizes. That is the whole brief.' },
   { n: '02', t: 'I direct the creative', p: 'I produce every asset by hand — scripting, casting the AI actor, shooting, grading — so it fits your brand, not a template.' },
   { n: '03', t: 'You run it in 48 hours', p: 'Final files land in your Instagram DMs as clean downloads, ready to upload straight to your ad account.' },
 ]
 
-// Real Soda-supported ratios
-const VIDEO_RATIOS = ['9:16 Portrait', '16:9 Landscape', '1:1 Square', '21:9 Ultrawide', '4:3', '3:4']
+const VIDEO_RATIOS = ['9:16', '16:9', '1:1', '21:9', '4:3', '3:4']
 const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
 
-// Custom builder unit prices
-const UNITS = [
-  { key: 'ugc15', label: 'UGC video — up to 15s', price: 29 },
-  { key: 'ugc30', label: 'UGC video — up to 30s', price: 49 },
-  { key: 'cine', label: 'Short cinematic film', price: 79 },
-  { key: 'static', label: 'Static ad creative', price: 12 },
-  { key: 'ratio', label: 'Extra aspect ratio (per asset)', price: 6 },
+// Every service has its own ratio set + unit price
+type Service = { key: string; label: string; price: number; ratios: string[] }
+const SERVICES: Service[] = [
+  { key: 'ugc', label: 'UGC Video Ad', price: 49, ratios: VIDEO_RATIOS },
+  { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS },
+  { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
+  { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
 ]
 const MIN_ORDER = 25
+
+type Line = { qty: number; ratios: string[] }
+const emptyLines = (): Record<string, Line> =>
+  Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [] }]))
 
 export default function App() {
   useReveal()
   const scrolled = useScrolled()
   const [plan, setPlan] = useState('Growth')
-  const [assetType, setAssetType] = useState<'Video' | 'Image' | 'Both'>('Both')
-  const [videoRatio, setVideoRatio] = useState<string[]>(['9:16 Portrait'])
-  const [imageRatio, setImageRatio] = useState<string[]>(['1:1'])
   const [sent, setSent] = useState(false)
   const [builderOpen, setBuilderOpen] = useState(false)
-  const [qty, setQty] = useState<Record<string, number>>({ ugc15: 0, ugc30: 1, cine: 0, static: 2, ratio: 0 })
-  const formRef = useRef<HTMLDivElement>(null)
 
+  // form services (toggle + per-service ratios)
+  const [picked, setPicked] = useState<Record<string, Line>>(() => ({
+    ...emptyLines(), ugc: { qty: 1, ratios: ['9:16'] },
+  }))
+  // builder services (qty + per-service ratios + live price)
+  const [build, setBuild] = useState<Record<string, Line>>(() => ({
+    ...emptyLines(), ugc: { qty: 1, ratios: ['9:16'] }, static: { qty: 2, ratios: ['1:1'] },
+  }))
+
+  const formRef = useRef<HTMLDivElement>(null)
   const choose = (name: string) => { setPlan(name); formRef.current?.scrollIntoView({ behavior: 'smooth' }) }
-  const toggle = (arr: string[], set: (v: string[]) => void, v: string) =>
-    set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
   const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
     e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
-  const bump = (key: string, d: number) => setQty((q) => ({ ...q, [key]: Math.max(0, (q[key] || 0) + d) }))
-  const total = UNITS.reduce((s, u) => s + (qty[u.key] || 0) * u.price, 0)
+
+  const toggleService = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string) => {
+    const cur = state[key]
+    set({ ...state, [key]: cur.qty > 0 ? { qty: 0, ratios: [] } : { qty: 1, ratios: [] } })
+  }
+  const setQty = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, d: number) => {
+    const q = Math.max(0, state[key].qty + d)
+    set({ ...state, [key]: { qty: q, ratios: q === 0 ? [] : state[key].ratios } })
+  }
+  const toggleRatio = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, r: string) => {
+    const line = state[key]
+    const ratios = line.ratios.includes(r) ? line.ratios.filter((x) => x !== r) : [...line.ratios, r]
+    set({ ...state, [key]: { ...line, ratios } })
+  }
+
+  const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * sv.price, 0)
 
   return (
     <>
@@ -213,43 +233,47 @@ export default function App() {
                     <select><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
                   </div>
                 </div>
-                <div style={{ height: 26 }} />
+                <div style={{ height: 30 }} />
                 <div className="field">
-                  <label>What do you need?</label>
-                  <div className="chips">
-                    {(['Video', 'Image', 'Both'] as const).map((t) => (
-                      <button type="button" key={t} className={`chip${assetType === t ? ' on' : ''}`}
-                        onClick={() => setAssetType(t)}>{t}</button>
-                    ))}
+                  <label>Choose your services & sizes</label>
+                  <div className="svc-list">
+                    {SERVICES.map((sv) => {
+                      const line = picked[sv.key]
+                      const on = line.qty > 0
+                      return (
+                        <div className={`svc${on ? ' on' : ''}`} key={sv.key}>
+                          <div className="svc-head" onClick={() => toggleService(picked, setPicked, sv.key)}>
+                            <span className={`svc-check${on ? ' on' : ''}`}>{on ? '✓' : ''}</span>
+                            <span className="svc-name">{sv.label}</span>
+                            <span className="svc-price">${sv.price} each</span>
+                          </div>
+                          {on && (
+                            <div className="svc-body">
+                              <div className="svc-qty">
+                                <span className="svc-qty-lab">Quantity</span>
+                                <div className="stepper sm">
+                                  <button onClick={() => setQty(picked, setPicked, sv.key, -1)} disabled={line.qty <= 1} aria-label="Decrease">−</button>
+                                  <span className="qty">{line.qty}</span>
+                                  <button onClick={() => setQty(picked, setPicked, sv.key, 1)} aria-label="Increase">+</button>
+                                </div>
+                              </div>
+                              <div className="svc-ratios">
+                                <span className="svc-qty-lab">Sizes for this service</span>
+                                <div className="chips">
+                                  {sv.ratios.map((r) => (
+                                    <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
+                                      onClick={() => toggleRatio(picked, setPicked, sv.key, r)}>{r}</button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-                {(assetType === 'Video' || assetType === 'Both') && (
-                  <>
-                    <div style={{ height: 26 }} />
-                    <div className="field">
-                      <label>Video aspect ratio</label>
-                      <div className="chips">
-                        {VIDEO_RATIOS.map((r) => (
-                          <button type="button" key={r} className={`chip${videoRatio.includes(r) ? ' on' : ''}`} onClick={() => toggle(videoRatio, setVideoRatio, r)}>{r}</button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-                {(assetType === 'Image' || assetType === 'Both') && (
-                  <>
-                    <div style={{ height: 26 }} />
-                    <div className="field">
-                      <label>Image aspect ratio</label>
-                      <div className="chips">
-                        {IMAGE_RATIOS.map((r) => (
-                          <button type="button" key={r} className={`chip${imageRatio.includes(r) ? ' on' : ''}`} onClick={() => toggle(imageRatio, setImageRatio, r)}>{r}</button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-                <div style={{ height: 26 }} />
+                <div style={{ height: 30 }} />
                 <div className="field"><label>Product details & what to highlight</label><textarea placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
                 <div className="ffoot">
                   <p className="fnote">Preview only — no payment is taken yet. Stripe checkout connects here next.</p>
@@ -275,24 +299,41 @@ export default function App() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-x" onClick={() => setBuilderOpen(false)} aria-label="Close">✕</button>
             <h3>Build <em>your own.</em></h3>
-            <p className="modal-lede">Choose exactly what you need — the price updates as you go.</p>
-            {UNITS.map((u) => (
-              <div className="bitem" key={u.key}>
-                <div className="bitem-info"><h4>{u.label}</h4><p>${u.price} each</p></div>
-                <div className="stepper">
-                  <button onClick={() => bump(u.key, -1)} disabled={(qty[u.key] || 0) === 0} aria-label="Decrease">−</button>
-                  <span className="qty">{qty[u.key] || 0}</span>
-                  <button onClick={() => bump(u.key, 1)} aria-label="Increase">+</button>
+            <p className="modal-lede">Pick each service, set the quantity, and choose the sizes you want for it. The price updates as you go.</p>
+            {SERVICES.map((sv) => {
+              const line = build[sv.key]
+              const on = line.qty > 0
+              return (
+                <div className={`bsvc${on ? ' on' : ''}`} key={sv.key}>
+                  <div className="bitem">
+                    <div className="bitem-info"><h4>{sv.label}</h4><p>${sv.price} each</p></div>
+                    <div className="stepper">
+                      <button onClick={() => setQty(build, setBuild, sv.key, -1)} disabled={line.qty === 0} aria-label="Decrease">−</button>
+                      <span className="qty">{line.qty}</span>
+                      <button onClick={() => setQty(build, setBuild, sv.key, 1)} aria-label="Increase">+</button>
+                    </div>
+                  </div>
+                  {on && (
+                    <div className="bratios">
+                      <span className="svc-qty-lab">Sizes for this service</span>
+                      <div className="chips">
+                        {sv.ratios.map((r) => (
+                          <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
+                            onClick={() => toggleRatio(build, setBuild, sv.key, r)}>{r}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
             <div className="btotal">
-              <div className="sum"><span className="lab">Your total</span>${total}</div>
+              <div className="sum"><span className="lab">Your total</span>${buildTotal}</div>
               <button className="cta" onClick={() => { setBuilderOpen(false); setPlan('Custom'); formRef.current?.scrollIntoView({ behavior: 'smooth' }) }}>
                 Continue with this
               </button>
             </div>
-            {total > 0 && total < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
+            {buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
           </div>
         </div>
       )}
