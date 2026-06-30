@@ -50,7 +50,6 @@ const STEPS = [
 // Real Soda-supported ratios
 const VIDEO_RATIOS = ['9:16 Portrait', '16:9 Landscape', '1:1 Square', '21:9 Ultrawide', '4:3', '3:4']
 const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
-const PLACES = ['Instagram', 'TikTok', 'Facebook', 'YouTube', 'My store / website', 'Snapchat']
 
 // Custom builder unit prices
 const UNITS = [
@@ -67,8 +66,8 @@ export default function App() {
   const scrolled = useScrolled()
   const [plan, setPlan] = useState('Growth')
   const [assetType, setAssetType] = useState<'Video' | 'Image' | 'Both'>('Both')
-  const [ratio, setRatio] = useState<string[]>(['9:16 Portrait'])
-  const [places, setPlaces] = useState<string[]>(['Instagram'])
+  const [videoRatio, setVideoRatio] = useState<string[]>(['9:16 Portrait'])
+  const [imageRatio, setImageRatio] = useState<string[]>(['1:1'])
   const [sent, setSent] = useState(false)
   const [builderOpen, setBuilderOpen] = useState(false)
   const [qty, setQty] = useState<Record<string, number>>({ ugc15: 0, ugc30: 1, cine: 0, static: 2, ratio: 0 })
@@ -84,9 +83,6 @@ export default function App() {
   }
   const bump = (key: string, d: number) => setQty((q) => ({ ...q, [key]: Math.max(0, (q[key] || 0) + d) }))
   const total = UNITS.reduce((s, u) => s + (qty[u.key] || 0) * u.price, 0)
-
-  // ratios shown in the intake form depend on asset type
-  const ratioOptions = assetType === 'Image' ? IMAGE_RATIOS : VIDEO_RATIOS
 
   return (
     <>
@@ -223,28 +219,36 @@ export default function App() {
                   <div className="chips">
                     {(['Video', 'Image', 'Both'] as const).map((t) => (
                       <button type="button" key={t} className={`chip${assetType === t ? ' on' : ''}`}
-                        onClick={() => { setAssetType(t); setRatio([]) }}>{t}</button>
+                        onClick={() => setAssetType(t)}>{t}</button>
                     ))}
                   </div>
                 </div>
-                <div style={{ height: 26 }} />
-                <div className="field">
-                  <label>Aspect ratio / size {assetType === 'Both' ? '(video sizes)' : ''}</label>
-                  <div className="chips">
-                    {ratioOptions.map((r) => (
-                      <button type="button" key={r} className={`chip${ratio.includes(r) ? ' on' : ''}`} onClick={() => toggle(ratio, setRatio, r)}>{r}</button>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ height: 26 }} />
-                <div className="field">
-                  <label>Where will you run it?</label>
-                  <div className="chips">
-                    {PLACES.map((pl) => (
-                      <button type="button" key={pl} className={`chip${places.includes(pl) ? ' on' : ''}`} onClick={() => toggle(places, setPlaces, pl)}>{pl}</button>
-                    ))}
-                  </div>
-                </div>
+                {(assetType === 'Video' || assetType === 'Both') && (
+                  <>
+                    <div style={{ height: 26 }} />
+                    <div className="field">
+                      <label>Video aspect ratio</label>
+                      <div className="chips">
+                        {VIDEO_RATIOS.map((r) => (
+                          <button type="button" key={r} className={`chip${videoRatio.includes(r) ? ' on' : ''}`} onClick={() => toggle(videoRatio, setVideoRatio, r)}>{r}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+                {(assetType === 'Image' || assetType === 'Both') && (
+                  <>
+                    <div style={{ height: 26 }} />
+                    <div className="field">
+                      <label>Image aspect ratio</label>
+                      <div className="chips">
+                        {IMAGE_RATIOS.map((r) => (
+                          <button type="button" key={r} className={`chip${imageRatio.includes(r) ? ' on' : ''}`} onClick={() => toggle(imageRatio, setImageRatio, r)}>{r}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div style={{ height: 26 }} />
                 <div className="field"><label>Product details & what to highlight</label><textarea placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
                 <div className="ffoot">
