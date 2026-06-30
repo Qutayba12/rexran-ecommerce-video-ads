@@ -113,12 +113,52 @@ export default function App() {
     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
 
+  // client details
+  const [info, setInfo] = useState({ brand: '', productUrl: '', instagram: '', email: '', language: 'English', notes: '' })
+  const setField = (k: string, v: string) => setInfo((s) => ({ ...s, [k]: v }))
+  const [submitting, setSubmitting] = useState(false)
+  const [submitErr, setSubmitErr] = useState('')
+
   const open = (plan: string) => { setCheckout(plan); setStep(0) }
-  const close = () => { setCheckout(null); setStep(0) }
+  const close = () => { setCheckout(null); setStep(0); setSubmitErr('') }
 
   const isCustom = checkout === 'Custom'
   const planObj = PLANS.find((p) => p.name === checkout)
   const planTotal = isCustom ? buildTotal : (planObj ? parseInt(planObj.price.replace('$', '')) : 0)
+
+  // assemble services & sizes for the order
+  const orderItems = () => {
+    if (isCustom) {
+      return SERVICES.filter((sv) => build[sv.key].qty > 0).map((sv) => ({
+        label: sv.label, qty: build[sv.key].qty, ratios: build[sv.key].ratios,
+      }))
+    }
+    return (PLAN_CONTENTS[checkout!] || []).map((c) => ({
+      label: c.label, qty: 0, ratios: planRatios[c.key] || [],
+    }))
+  }
+
+  const submitOrder = async () => {
+    setSubmitting(true); setSubmitErr('')
+    try {
+      const payload = {
+        package: isCustom ? 'Custom' : checkout,
+        total: planTotal,
+        brand: info.brand, productUrl: info.productUrl, instagram: info.instagram,
+        email: info.email, language: info.language, notes: info.notes,
+        items: orderItems(),
+      }
+      const r = await fetch('/api/order', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+      })
+      if (!r.ok) throw new Error('send failed')
+      setStep(3)
+    } catch {
+      setSubmitErr('Could not send your order. Please try again or DM us on Instagram.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <>
@@ -344,20 +384,20 @@ export default function App() {
               <>
                 <p className="modal-lede">Tell me about the product so I can produce the right creative.</p>
                 <div className="fgrid two">
-                  <div className="field"><label>Brand / store name</label><input placeholder="Acme Supply Co." /></div>
-                  <div className="field"><label>Product link</label><input type="url" placeholder="https://…/your-product" /></div>
+                  <div className="field"><label>Brand / store name</label><input value={info.brand} onChange={(e) => setField('brand', e.target.value)} placeholder="Acme Supply Co." /></div>
+                  <div className="field"><label>Product link</label><input type="url" value={info.productUrl} onChange={(e) => setField('productUrl', e.target.value)} placeholder="https://…/your-product" /></div>
                 </div>
                 <div style={{ height: 22 }} />
                 <div className="fgrid two">
-                  <div className="field"><label>Instagram handle</label><input placeholder="@yourstore" /></div>
-                  <div className="field"><label>Email</label><input type="email" placeholder="you@store.com" /></div>
+                  <div className="field"><label>Instagram handle</label><input value={info.instagram} onChange={(e) => setField('instagram', e.target.value)} placeholder="@yourstore" /></div>
+                  <div className="field"><label>Email</label><input type="email" value={info.email} onChange={(e) => setField('email', e.target.value)} placeholder="you@store.com" /></div>
                 </div>
                 <div style={{ height: 22 }} />
                 <div className="field"><label>Primary language</label>
-                  <select><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
+                  <select value={info.language} onChange={(e) => setField('language', e.target.value)}><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
                 </div>
                 <div style={{ height: 22 }} />
-                <div className="field"><label>Product details & what to highlight</label><textarea placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
+                <div className="field"><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
                 <div className="modal-nav">
                   <button className="cta ghost" onClick={() => setStep(0)}>Back</button>
                   <button className="cta" onClick={() => setStep(2)}>Continue to payment</button>
@@ -380,9 +420,10 @@ export default function App() {
                   <div className="field"><label>CVC</label><input placeholder="123" disabled /></div>
                 </div>
                 <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>Preview only — secure Stripe checkout connects here. No payment is taken yet.</p>
+                {submitErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b' }}>{submitErr}</p>}
                 <div className="modal-nav">
-                  <button className="cta ghost" onClick={() => setStep(1)}>Back</button>
-                  <button className="cta" onClick={() => setStep(3)}>Pay ${planTotal}</button>
+                  <button className="cta ghost" onClick={() => setStep(1)} disabled={submitting}>Back</button>
+                  <button className="cta" onClick={submitOrder} disabled={submitting}>{submitting ? 'Sending…' : `Pay $${planTotal}`}</button>
                 </div>
               </>
             )}
