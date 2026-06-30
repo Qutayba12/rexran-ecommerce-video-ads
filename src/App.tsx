@@ -47,16 +47,31 @@ const STEPS = [
   { n: '03', t: 'You run it in 48 hours', p: 'Final files land in your Instagram DMs as clean downloads, ready to upload straight to your ad account.' },
 ]
 
-const RATIOS = ['1:1 — Square', '9:16 — Story / Reels', '4:5 — Feed', '16:9 — Landscape']
+// Real Soda-supported ratios
+const VIDEO_RATIOS = ['9:16 Portrait', '16:9 Landscape', '1:1 Square', '21:9 Ultrawide', '4:3', '3:4']
+const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
 const PLACES = ['Instagram', 'TikTok', 'Facebook', 'YouTube', 'My store / website', 'Snapchat']
+
+// Custom builder unit prices
+const UNITS = [
+  { key: 'ugc15', label: 'UGC video — up to 15s', price: 29 },
+  { key: 'ugc30', label: 'UGC video — up to 30s', price: 49 },
+  { key: 'cine', label: 'Short cinematic film', price: 79 },
+  { key: 'static', label: 'Static ad creative', price: 12 },
+  { key: 'ratio', label: 'Extra aspect ratio (per asset)', price: 6 },
+]
+const MIN_ORDER = 25
 
 export default function App() {
   useReveal()
   const scrolled = useScrolled()
   const [plan, setPlan] = useState('Growth')
-  const [ratio, setRatio] = useState<string[]>(['9:16 — Story / Reels'])
+  const [assetType, setAssetType] = useState<'Video' | 'Image' | 'Both'>('Both')
+  const [ratio, setRatio] = useState<string[]>(['9:16 Portrait'])
   const [places, setPlaces] = useState<string[]>(['Instagram'])
   const [sent, setSent] = useState(false)
+  const [builderOpen, setBuilderOpen] = useState(false)
+  const [qty, setQty] = useState<Record<string, number>>({ ugc15: 0, ugc30: 1, cine: 0, static: 2, ratio: 0 })
   const formRef = useRef<HTMLDivElement>(null)
 
   const choose = (name: string) => { setPlan(name); formRef.current?.scrollIntoView({ behavior: 'smooth' }) }
@@ -67,6 +82,11 @@ export default function App() {
     e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
+  const bump = (key: string, d: number) => setQty((q) => ({ ...q, [key]: Math.max(0, (q[key] || 0) + d) }))
+  const total = UNITS.reduce((s, u) => s + (qty[u.key] || 0) * u.price, 0)
+
+  // ratios shown in the intake form depend on asset type
+  const ratioOptions = assetType === 'Image' ? IMAGE_RATIOS : VIDEO_RATIOS
 
   return (
     <>
@@ -156,6 +176,11 @@ export default function App() {
               </div>
             ))}
           </div>
+          <div className="builder-row reveal">
+            <button className="builder-trigger" onClick={() => setBuilderOpen(true)}>
+              <span className="plus">+</span> Build your own package
+            </button>
+          </div>
         </div>
       </section>
 
@@ -183,7 +208,10 @@ export default function App() {
                 <div style={{ height: 26 }} />
                 <div className="fgrid two">
                   <div className="field"><label>Package</label>
-                    <select value={plan} onChange={(e) => setPlan(e.target.value)}>{PLANS.map((p) => <option key={p.name}>{p.name}</option>)}</select>
+                    <select value={plan} onChange={(e) => setPlan(e.target.value)}>
+                      {PLANS.map((p) => <option key={p.name}>{p.name}</option>)}
+                      <option>Custom</option>
+                    </select>
                   </div>
                   <div className="field"><label>Primary language</label>
                     <select><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
@@ -191,9 +219,19 @@ export default function App() {
                 </div>
                 <div style={{ height: 26 }} />
                 <div className="field">
-                  <label>Aspect ratio / size</label>
+                  <label>What do you need?</label>
                   <div className="chips">
-                    {RATIOS.map((r) => (
+                    {(['Video', 'Image', 'Both'] as const).map((t) => (
+                      <button type="button" key={t} className={`chip${assetType === t ? ' on' : ''}`}
+                        onClick={() => { setAssetType(t); setRatio([]) }}>{t}</button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ height: 26 }} />
+                <div className="field">
+                  <label>Aspect ratio / size {assetType === 'Both' ? '(video sizes)' : ''}</label>
+                  <div className="chips">
+                    {ratioOptions.map((r) => (
                       <button type="button" key={r} className={`chip${ratio.includes(r) ? ' on' : ''}`} onClick={() => toggle(ratio, setRatio, r)}>{r}</button>
                     ))}
                   </div>
@@ -226,6 +264,34 @@ export default function App() {
           <div className="foot-fine">© 2026 Rexran — AI-Directed Ad Studio</div>
         </div>
       </footer>
+
+      {/* CUSTOM BUILDER MODAL */}
+      {builderOpen && (
+        <div className="modal-back" onClick={() => setBuilderOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-x" onClick={() => setBuilderOpen(false)} aria-label="Close">✕</button>
+            <h3>Build <em>your own.</em></h3>
+            <p className="modal-lede">Choose exactly what you need — the price updates as you go.</p>
+            {UNITS.map((u) => (
+              <div className="bitem" key={u.key}>
+                <div className="bitem-info"><h4>{u.label}</h4><p>${u.price} each</p></div>
+                <div className="stepper">
+                  <button onClick={() => bump(u.key, -1)} disabled={(qty[u.key] || 0) === 0} aria-label="Decrease">−</button>
+                  <span className="qty">{qty[u.key] || 0}</span>
+                  <button onClick={() => bump(u.key, 1)} aria-label="Increase">+</button>
+                </div>
+              </div>
+            ))}
+            <div className="btotal">
+              <div className="sum"><span className="lab">Your total</span>${total}</div>
+              <button className="cta" onClick={() => { setBuilderOpen(false); setPlan('Custom'); formRef.current?.scrollIntoView({ behavior: 'smooth' }) }}>
+                Continue with this
+              </button>
+            </div>
+            {total > 0 && total < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
+          </div>
+        </div>
+      )}
     </>
   )
 }

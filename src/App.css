@@ -159,3 +159,32 @@
 .foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px; }
 .foot-links { display: flex; gap: 26px; font-size: 13px; color: var(--ink-mut); }
 .foot-fine { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+
+/* ===== CUSTOM BUILDER ===== */
+.builder-row { margin-top: 40px; display: flex; justify-content: center; }
+.builder-trigger { display: inline-flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; padding: 18px 32px; border: 1px dashed var(--gold-deep); border-radius: 100px; color: var(--gold-hi); background: rgba(212,175,55,.04); transition: all .25s; }
+.builder-trigger:hover { border-color: var(--gold); border-style: solid; background: rgba(212,175,55,.08); transform: translateY(-2px); }
+.builder-trigger .plus { font-size: 18px; }
+
+.modal-back { position: fixed; inset: 0; z-index: 100; background: rgba(4,3,7,.78); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; animation: fadeIn .3s ease forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+.modal { width: min(680px, 100%); max-height: 90svh; overflow-y: auto; border: 1px solid var(--gold-deep); border-radius: var(--r-lg); background: linear-gradient(180deg, var(--bg2), #07060a); padding: clamp(26px,4vw,42px); position: relative; transform: translateY(20px); animation: modalUp .4s cubic-bezier(.16,1,.3,1) forwards; }
+@keyframes modalUp { to { transform: none; } }
+.modal-x { position: absolute; top: 20px; right: 20px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink-mut); font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+.modal-x:hover { border-color: var(--gold); color: var(--gold-hi); }
+.modal h3 { font-size: clamp(26px,4vw,36px); margin-bottom: 8px; }
+.modal h3 em { font-style: italic; color: var(--gold-hi); }
+.modal-lede { color: var(--ink-mut); font-size: 15px; margin-bottom: 30px; }
+.bitem { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; border-top: 1px solid var(--line); }
+.bitem:last-of-type { border-bottom: 1px solid var(--line); }
+.bitem-info h4 { font-family: var(--body); font-weight: 600; font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+.bitem-info p { font-family: var(--mono); font-size: 12px; color: var(--gold); }
+.stepper { display: flex; align-items: center; gap: 14px; flex: none; }
+.stepper button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+.stepper button:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-hi); }
+.stepper button:disabled { opacity: .3; cursor: not-allowed; }
+.stepper .qty { font-family: var(--mono); font-size: 17px; min-width: 26px; text-align: center; color: var(--ink); }
+.btotal { margin-top: 30px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.btotal .sum { font-family: var(--display); font-size: 40px; color: var(--ink); }
+.btotal .sum .lab { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .1em; display: block; margin-bottom: 4px; }
+.bmin { font-size: 12px; color: var(--ink-faint); margin-top: 14px; text-align: center; }
