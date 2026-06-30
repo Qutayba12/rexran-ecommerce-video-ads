@@ -50,6 +50,28 @@ const STEPS = [
 const VIDEO_RATIOS = ['9:16', '16:9', '1:1', '21:9', '4:3', '3:4']
 const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
 
+// What each ready-made package contains (for size selection)
+const PLAN_CONTENTS: Record<string, { key: string; label: string; ratios: string[] }[]> = {
+  Spark: [
+    { key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS },
+    { key: 'static', label: 'Static ad image', ratios: IMAGE_RATIOS },
+  ],
+  Growth: [
+    { key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS },
+    { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS },
+  ],
+  Scale: [
+    { key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS },
+    { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS },
+    { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS },
+  ],
+  'Brand Partner': [
+    { key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS },
+    { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS },
+    { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS },
+  ],
+}
+
 // Every service has its own ratio set + unit price
 type Service = { key: string; label: string; price: number; ratios: string[] }
 const SERVICES: Service[] = [
@@ -79,6 +101,14 @@ export default function App() {
   const [build, setBuild] = useState<Record<string, Line>>(() => ({
     ...emptyLines(), ugc: { qty: 1, ratios: ['9:16'] }, static: { qty: 2, ratios: ['1:1'] },
   }))
+
+  // ratios chosen for a ready-made package (one set of choices per content type)
+  const [planRatios, setPlanRatios] = useState<Record<string, string[]>>({ ugc: ['9:16'], cine: ['16:9'], static: ['1:1'] })
+  const togglePlanRatio = (typeKey: string, r: string) =>
+    setPlanRatios((p) => {
+      const cur = p[typeKey] || []
+      return { ...p, [typeKey]: cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r] }
+    })
 
   const formRef = useRef<HTMLDivElement>(null)
   const choose = (name: string) => { setPlan(name); formRef.current?.scrollIntoView({ behavior: 'smooth' }) }
@@ -234,45 +264,71 @@ export default function App() {
                   </div>
                 </div>
                 <div style={{ height: 30 }} />
-                <div className="field">
-                  <label>Choose your services & sizes</label>
-                  <div className="svc-list">
-                    {SERVICES.map((sv) => {
-                      const line = picked[sv.key]
-                      const on = line.qty > 0
-                      return (
-                        <div className={`svc${on ? ' on' : ''}`} key={sv.key}>
-                          <div className="svc-head" onClick={() => toggleService(picked, setPicked, sv.key)}>
-                            <span className={`svc-check${on ? ' on' : ''}`}>{on ? '✓' : ''}</span>
-                            <span className="svc-name">{sv.label}</span>
-                            <span className="svc-price">${sv.price} each</span>
-                          </div>
-                          {on && (
-                            <div className="svc-body">
-                              <div className="svc-qty">
-                                <span className="svc-qty-lab">Quantity</span>
-                                <div className="stepper sm">
-                                  <button onClick={() => setQty(picked, setPicked, sv.key, -1)} disabled={line.qty <= 1} aria-label="Decrease">−</button>
-                                  <span className="qty">{line.qty}</span>
-                                  <button onClick={() => setQty(picked, setPicked, sv.key, 1)} aria-label="Increase">+</button>
+                {plan === 'Custom' ? (
+                  <div className="field">
+                    <label>Choose your services & sizes</label>
+                    <div className="svc-list">
+                      {SERVICES.map((sv) => {
+                        const line = picked[sv.key]
+                        const on = line.qty > 0
+                        return (
+                          <div className={`svc${on ? ' on' : ''}`} key={sv.key}>
+                            <div className="svc-head" onClick={() => toggleService(picked, setPicked, sv.key)}>
+                              <span className={`svc-check${on ? ' on' : ''}`}>{on ? '✓' : ''}</span>
+                              <span className="svc-name">{sv.label}</span>
+                              <span className="svc-price">${sv.price} each</span>
+                            </div>
+                            {on && (
+                              <div className="svc-body">
+                                <div className="svc-qty">
+                                  <span className="svc-qty-lab">Quantity</span>
+                                  <div className="stepper sm">
+                                    <button onClick={() => setQty(picked, setPicked, sv.key, -1)} disabled={line.qty <= 1} aria-label="Decrease">−</button>
+                                    <span className="qty">{line.qty}</span>
+                                    <button onClick={() => setQty(picked, setPicked, sv.key, 1)} aria-label="Increase">+</button>
+                                  </div>
+                                </div>
+                                <div className="svc-ratios">
+                                  <span className="svc-qty-lab">Sizes for this service</span>
+                                  <div className="chips">
+                                    {sv.ratios.map((r) => (
+                                      <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
+                                        onClick={() => toggleRatio(picked, setPicked, sv.key, r)}>{r}</button>
+                                    ))}
+                                  </div>
                                 </div>
                               </div>
-                              <div className="svc-ratios">
-                                <span className="svc-qty-lab">Sizes for this service</span>
-                                <div className="chips">
-                                  {sv.ratios.map((r) => (
-                                    <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
-                                      onClick={() => toggleRatio(picked, setPicked, sv.key, r)}>{r}</button>
-                                  ))}
-                                </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="field">
+                    <label>Choose your sizes for the {plan} package</label>
+                    <div className="svc-list">
+                      {(PLAN_CONTENTS[plan] || []).map((c) => (
+                        <div className="svc on" key={c.key}>
+                          <div className="svc-head" style={{ cursor: 'default' }}>
+                            <span className="svc-name">{c.label}</span>
+                          </div>
+                          <div className="svc-body">
+                            <div className="svc-ratios">
+                              <span className="svc-qty-lab">Pick the size(s) you want</span>
+                              <div className="chips">
+                                {c.ratios.map((r) => (
+                                  <button type="button" key={r} className={`chip sm${(planRatios[c.key] || []).includes(r) ? ' on' : ''}`}
+                                    onClick={() => togglePlanRatio(c.key, r)}>{r}</button>
+                                ))}
                               </div>
                             </div>
-                          )}
+                          </div>
                         </div>
-                      )
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div style={{ height: 30 }} />
                 <div className="field"><label>Product details & what to highlight</label><textarea placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
                 <div className="ffoot">
