@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import RexMark from './RexMark'
 
@@ -22,6 +22,18 @@ function useScrolled() {
   return s
 }
 
+const VIDEO_RATIOS = ['9:16', '16:9', '1:1', '21:9', '4:3', '3:4']
+const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
+
+type Service = { key: string; label: string; price: number; ratios: string[] }
+const SERVICES: Service[] = [
+  { key: 'ugc', label: 'UGC Video Ad', price: 49, ratios: VIDEO_RATIOS },
+  { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS },
+  { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
+  { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
+]
+const MIN_ORDER = 25
+
 const PLANS = [
   { name: 'Spark', price: '$39', per: '/ project', desc: 'A quick test spot to see how AI creative performs for your product.',
     items: ['1 UGC video (up to 15s)', '1 static ad creative', 'One aspect ratio', '48-hour delivery'], feat: false },
@@ -32,6 +44,13 @@ const PLANS = [
   { name: 'Brand Partner', price: '$549', per: '/ month', desc: 'Fresh creative on tap for stores that feed paid social every week.',
     items: ['4 UGC videos / month', '1 cinematic film / month', '10 statics / month', 'Rolling revisions', 'Direct line on Instagram'], feat: false },
 ]
+
+const PLAN_CONTENTS: Record<string, { key: string; label: string; ratios: string[] }[]> = {
+  Spark: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad image', ratios: IMAGE_RATIOS }],
+  Growth: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS }],
+  Scale: [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS }],
+  'Brand Partner': [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS }],
+}
 
 const TILES = [
   { c: 't1', n: 'FORMAT 01', t: 'UGC Video Ads', p: 'Hyper-real AI creators holding and talking through your product — natural voice, perfect lip-sync. The format that prints on paid social.', ph: 'VIDEO' },
@@ -47,92 +66,59 @@ const STEPS = [
   { n: '03', t: 'You run it in 48 hours', p: 'Final files land in your Instagram DMs as clean downloads, ready to upload straight to your ad account.' },
 ]
 
-const VIDEO_RATIOS = ['9:16', '16:9', '1:1', '21:9', '4:3', '3:4']
-const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
-
-// What each ready-made package contains (for size selection)
-const PLAN_CONTENTS: Record<string, { key: string; label: string; ratios: string[] }[]> = {
-  Spark: [
-    { key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS },
-    { key: 'static', label: 'Static ad image', ratios: IMAGE_RATIOS },
-  ],
-  Growth: [
-    { key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS },
-    { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS },
-  ],
-  Scale: [
-    { key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS },
-    { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS },
-    { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS },
-  ],
-  'Brand Partner': [
-    { key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS },
-    { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS },
-    { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS },
-  ],
-}
-
-// Every service has its own ratio set + unit price
-type Service = { key: string; label: string; price: number; ratios: string[] }
-const SERVICES: Service[] = [
-  { key: 'ugc', label: 'UGC Video Ad', price: 49, ratios: VIDEO_RATIOS },
-  { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS },
-  { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
-  { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
+const WHY = [
+  { t: 'No studio, no crew', p: 'You skip the photographer, the actors, the editor, and the week of back-and-forth. One link in, finished ads out.' },
+  { t: 'Built to convert', p: 'Every asset leads with a hook and is sized natively for the feed — made to stop the scroll, not just look pretty.' },
+  { t: '48-hour turnaround', p: 'Most agencies take two weeks. You get launch-ready creative in two days, straight to your DMs.' },
+  { t: 'Done entirely for you', p: 'No tool to learn, no prompts to write. You approve the brief, I handle the rest end to end.' },
 ]
-const MIN_ORDER = 25
+
+const REVIEWS = [
+  { q: 'First UGC video we ran beat our agency creative on day one. CPA dropped about 30% in the first week.', n: 'Marcus T.', r: 'DTC skincare founder' },
+  { q: 'I sent one product link and got back three scroll-stopping ads in two days. No calls, no briefs, no chaos.', n: 'Lena R.', r: 'Shopify apparel store' },
+  { q: 'The cinematic film made our $40 product look like a $400 one. It completely changed how people see the brand.', n: 'Devin K.', r: 'Home & lifestyle brand' },
+  { q: 'Cheaper than one freelancer, faster than any agency, and the quality is honestly better than both.', n: 'Priya S.', r: 'Supplements DTC' },
+]
 
 type Line = { qty: number; ratios: string[] }
-const emptyLines = (): Record<string, Line> =>
-  Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [] }]))
+const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [] }]))
 
 export default function App() {
   useReveal()
   const scrolled = useScrolled()
-  const [plan, setPlan] = useState('Growth')
-  const [sent, setSent] = useState(false)
-  const [builderOpen, setBuilderOpen] = useState(false)
 
-  // form services (toggle + per-service ratios)
-  const [picked, setPicked] = useState<Record<string, Line>>(() => ({
-    ...emptyLines(), ugc: { qty: 1, ratios: ['9:16'] },
-  }))
-  // builder services (qty + per-service ratios + live price)
-  const [build, setBuild] = useState<Record<string, Line>>(() => ({
-    ...emptyLines(), ugc: { qty: 1, ratios: ['9:16'] }, static: { qty: 2, ratios: ['1:1'] },
-  }))
+  // checkout modal: which plan ('Spark'..) or 'Custom'
+  const [checkout, setCheckout] = useState<string | null>(null)
+  const [step, setStep] = useState(0) // 0 sizes, 1 info, 2 pay, 3 done
 
-  // ratios chosen for a ready-made package (one set of choices per content type)
+  // ready-plan size choices
   const [planRatios, setPlanRatios] = useState<Record<string, string[]>>({ ugc: ['9:16'], cine: ['16:9'], static: ['1:1'] })
-  const togglePlanRatio = (typeKey: string, r: string) =>
-    setPlanRatios((p) => {
-      const cur = p[typeKey] || []
-      return { ...p, [typeKey]: cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r] }
-    })
+  const togglePlanRatio = (k: string, r: string) =>
+    setPlanRatios((p) => { const c = p[k] || []; return { ...p, [k]: c.includes(r) ? c.filter((x) => x !== r) : [...c, r] } })
 
-  const formRef = useRef<HTMLDivElement>(null)
-  const choose = (name: string) => { setPlan(name); formRef.current?.scrollIntoView({ behavior: 'smooth' }) }
+  // custom builder lines
+  const [build, setBuild] = useState<Record<string, Line>>(() => ({ ...emptyLines(), ugc: { qty: 1, ratios: ['9:16'] }, static: { qty: 2, ratios: ['1:1'] } }))
+  const setQty = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, d: number) => {
+    const q = Math.max(0, state[key].qty + d); set({ ...state, [key]: { qty: q, ratios: q === 0 ? [] : state[key].ratios } })
+  }
+  const toggleRatio = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, r: string) => {
+    const line = state[key]; const ratios = line.ratios.includes(r) ? line.ratios.filter((x) => x !== r) : [...line.ratios, r]
+    set({ ...state, [key]: { ...line, ratios } })
+  }
+  const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * sv.price, 0)
+
   const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
     e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
 
-  const toggleService = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string) => {
-    const cur = state[key]
-    set({ ...state, [key]: cur.qty > 0 ? { qty: 0, ratios: [] } : { qty: 1, ratios: [] } })
-  }
-  const setQty = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, d: number) => {
-    const q = Math.max(0, state[key].qty + d)
-    set({ ...state, [key]: { qty: q, ratios: q === 0 ? [] : state[key].ratios } })
-  }
-  const toggleRatio = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, r: string) => {
-    const line = state[key]
-    const ratios = line.ratios.includes(r) ? line.ratios.filter((x) => x !== r) : [...line.ratios, r]
-    set({ ...state, [key]: { ...line, ratios } })
-  }
+  const open = (plan: string) => { setCheckout(plan); setStep(0) }
+  const close = () => { setCheckout(null); setStep(0) }
 
-  const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * sv.price, 0)
+  const isCustom = checkout === 'Custom'
+  const planObj = PLANS.find((p) => p.name === checkout)
+  const planTotal = isCustom ? buildTotal : (planObj ? parseInt(planObj.price.replace('$', '')) : 0)
 
   return (
     <>
@@ -143,7 +129,7 @@ export default function App() {
 
       <nav className={`nav${scrolled ? ' scrolled' : ''}`}>
         <a className="brand" href="#top"><RexMark className="brand-logo" />Rexran</a>
-        <a className="nav-cta" href="#start">Start a project</a>
+        <a className="nav-cta" href="#pricing">Start a project</a>
       </nav>
 
       <header className="hero" id="top">
@@ -158,7 +144,7 @@ export default function App() {
           films — produced by hand, delivered to your DMs in 48 hours. No actors. No crew. No software to learn.
         </p>
         <div className="hero-actions">
-          <a className="cta" href="#start">Start a project</a>
+          <a className="cta" href="#pricing">Start a project</a>
           <a className="cta ghost" href="#work">See the work</a>
         </div>
         <div className="scroll-hint">Scroll<div className="bar" /></div>
@@ -218,125 +204,51 @@ export default function App() {
                 <div className="pprice">{p.price}<span className="per">{p.per}</span></div>
                 <p className="pdesc">{p.desc}</p>
                 <ul className="pitems">{p.items.map((i) => <li key={i}>{i}</li>)}</ul>
-                <button className={`cta${p.feat ? '' : ' ghost'}`} onClick={() => choose(p.name)}>Choose {p.name}</button>
+                <button className={`cta${p.feat ? '' : ' ghost'}`} onClick={() => open(p.name)}>Choose {p.name}</button>
               </div>
             ))}
           </div>
           <div className="builder-row reveal">
-            <button className="builder-trigger" onClick={() => setBuilderOpen(true)}>
+            <button className="builder-trigger" onClick={() => open('Custom')}>
               <span className="plus">+</span> Build your own package
             </button>
           </div>
         </div>
       </section>
 
-      <section className="sec" id="start">
-        <div className="wrap" ref={formRef}>
+      {/* WHY */}
+      <section className="sec" id="why">
+        <div className="wrap">
           <div className="reveal">
-            <div className="sec-tag">Start a Project</div>
-            <h2 className="sec-h">Tell me about <em>the product.</em></h2>
-            <p className="sec-lede">The more you give me here, the sharper the result. I'll confirm on Instagram with a timeline.</p>
+            <div className="sec-tag">Why Rexran</div>
+            <h2 className="sec-h">Agency-grade creative, <em>without the agency.</em></h2>
           </div>
-          <div className="intake reveal">
-            {sent ? (
-              <div className="done"><span className="dot" /><p>Brief received. This is a preview form — once payments go live you'll check out here and I'll confirm in your DMs.</p></div>
-            ) : (
-              <>
-                <div className="fgrid two">
-                  <div className="field"><label>Brand / store name</label><input placeholder="Acme Supply Co." /></div>
-                  <div className="field"><label>Product link</label><input type="url" placeholder="https://…/your-product" /></div>
-                </div>
-                <div style={{ height: 26 }} />
-                <div className="fgrid two">
-                  <div className="field"><label>Instagram handle</label><input placeholder="@yourstore" /></div>
-                  <div className="field"><label>Email</label><input type="email" placeholder="you@store.com" /></div>
-                </div>
-                <div style={{ height: 26 }} />
-                <div className="fgrid two">
-                  <div className="field"><label>Package</label>
-                    <select value={plan} onChange={(e) => setPlan(e.target.value)}>
-                      {PLANS.map((p) => <option key={p.name}>{p.name}</option>)}
-                      <option>Custom</option>
-                    </select>
-                  </div>
-                  <div className="field"><label>Primary language</label>
-                    <select><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
-                  </div>
-                </div>
-                <div style={{ height: 30 }} />
-                {plan === 'Custom' ? (
-                  <div className="field">
-                    <label>Choose your services & sizes</label>
-                    <div className="svc-list">
-                      {SERVICES.map((sv) => {
-                        const line = picked[sv.key]
-                        const on = line.qty > 0
-                        return (
-                          <div className={`svc${on ? ' on' : ''}`} key={sv.key}>
-                            <div className="svc-head" onClick={() => toggleService(picked, setPicked, sv.key)}>
-                              <span className={`svc-check${on ? ' on' : ''}`}>{on ? '✓' : ''}</span>
-                              <span className="svc-name">{sv.label}</span>
-                              <span className="svc-price">${sv.price} each</span>
-                            </div>
-                            {on && (
-                              <div className="svc-body">
-                                <div className="svc-qty">
-                                  <span className="svc-qty-lab">Quantity</span>
-                                  <div className="stepper sm">
-                                    <button onClick={() => setQty(picked, setPicked, sv.key, -1)} disabled={line.qty <= 1} aria-label="Decrease">−</button>
-                                    <span className="qty">{line.qty}</span>
-                                    <button onClick={() => setQty(picked, setPicked, sv.key, 1)} aria-label="Increase">+</button>
-                                  </div>
-                                </div>
-                                <div className="svc-ratios">
-                                  <span className="svc-qty-lab">Sizes for this service</span>
-                                  <div className="chips">
-                                    {sv.ratios.map((r) => (
-                                      <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
-                                        onClick={() => toggleRatio(picked, setPicked, sv.key, r)}>{r}</button>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="field">
-                    <label>Choose your sizes for the {plan} package</label>
-                    <div className="svc-list">
-                      {(PLAN_CONTENTS[plan] || []).map((c) => (
-                        <div className="svc on" key={c.key}>
-                          <div className="svc-head" style={{ cursor: 'default' }}>
-                            <span className="svc-name">{c.label}</span>
-                          </div>
-                          <div className="svc-body">
-                            <div className="svc-ratios">
-                              <span className="svc-qty-lab">Pick the size(s) you want</span>
-                              <div className="chips">
-                                {c.ratios.map((r) => (
-                                  <button type="button" key={r} className={`chip sm${(planRatios[c.key] || []).includes(r) ? ' on' : ''}`}
-                                    onClick={() => togglePlanRatio(c.key, r)}>{r}</button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div style={{ height: 30 }} />
-                <div className="field"><label>Product details & what to highlight</label><textarea placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
-                <div className="ffoot">
-                  <p className="fnote">Preview only — no payment is taken yet. Stripe checkout connects here next.</p>
-                  <button className="cta" onClick={() => setSent(true)}>Submit brief</button>
-                </div>
-              </>
-            )}
+          <div className="why-grid reveal">
+            {WHY.map((w, i) => (
+              <div className="why-card" key={w.t}>
+                <div className="why-n">0{i + 1}</div>
+                <h3>{w.t}</h3><p>{w.p}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* REVIEWS */}
+      <section className="sec" id="reviews">
+        <div className="wrap">
+          <div className="reveal">
+            <div className="sec-tag">Client Results</div>
+            <h2 className="sec-h">Brands that stopped <em>the scroll.</em></h2>
+          </div>
+          <div className="rev-grid reveal">
+            {REVIEWS.map((rv) => (
+              <figure className="rev-card" key={rv.n}>
+                <div className="rev-stars">★★★★★</div>
+                <blockquote>"{rv.q}"</blockquote>
+                <figcaption><span className="rev-name">{rv.n}</span><span className="rev-role">{rv.r}</span></figcaption>
+              </figure>
+            ))}
           </div>
         </div>
       </section>
@@ -349,47 +261,139 @@ export default function App() {
         </div>
       </footer>
 
-      {/* CUSTOM BUILDER MODAL */}
-      {builderOpen && (
-        <div className="modal-back" onClick={() => setBuilderOpen(false)}>
+      {/* CHECKOUT MODAL (multi-step) */}
+      {checkout && (
+        <div className="modal-back" onClick={close}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-x" onClick={() => setBuilderOpen(false)} aria-label="Close">✕</button>
-            <h3>Build <em>your own.</em></h3>
-            <p className="modal-lede">Pick each service, set the quantity, and choose the sizes you want for it. The price updates as you go.</p>
-            {SERVICES.map((sv) => {
-              const line = build[sv.key]
-              const on = line.qty > 0
-              return (
-                <div className={`bsvc${on ? ' on' : ''}`} key={sv.key}>
-                  <div className="bitem">
-                    <div className="bitem-info"><h4>{sv.label}</h4><p>${sv.price} each</p></div>
-                    <div className="stepper">
-                      <button onClick={() => setQty(build, setBuild, sv.key, -1)} disabled={line.qty === 0} aria-label="Decrease">−</button>
-                      <span className="qty">{line.qty}</span>
-                      <button onClick={() => setQty(build, setBuild, sv.key, 1)} aria-label="Increase">+</button>
-                    </div>
-                  </div>
-                  {on && (
-                    <div className="bratios">
-                      <span className="svc-qty-lab">Sizes for this service</span>
-                      <div className="chips">
-                        {sv.ratios.map((r) => (
-                          <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
-                            onClick={() => toggleRatio(build, setBuild, sv.key, r)}>{r}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+            <button className="modal-x" onClick={close} aria-label="Close">✕</button>
+
+            {/* progress */}
+            <div className="steps-bar">
+              {['Sizes', 'Details', 'Payment'].map((lab, i) => (
+                <div className={`stepdot${step === i ? ' on' : ''}${step > i ? ' done' : ''}`} key={lab}>
+                  <span className="d">{step > i ? '✓' : i + 1}</span>{lab}
                 </div>
-              )
-            })}
-            <div className="btotal">
-              <div className="sum"><span className="lab">Your total</span>${buildTotal}</div>
-              <button className="cta" onClick={() => { setBuilderOpen(false); setPlan('Custom'); formRef.current?.scrollIntoView({ behavior: 'smooth' }) }}>
-                Continue with this
-              </button>
+              ))}
             </div>
-            {buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
+
+            {/* header */}
+            <h3>{isCustom ? <>Build <em>your own.</em></> : <>{checkout} <em>package.</em></>}</h3>
+
+            {/* STEP 0 — SIZES */}
+            {step === 0 && (
+              <>
+                {isCustom ? (
+                  <>
+                    <p className="modal-lede">Pick each service, set the quantity, and choose its sizes. Price updates live.</p>
+                    {SERVICES.map((sv) => {
+                      const line = build[sv.key]; const on = line.qty > 0
+                      return (
+                        <div className={`bsvc${on ? ' on' : ''}`} key={sv.key}>
+                          <div className="bitem">
+                            <div className="bitem-info"><h4>{sv.label}</h4><p>${sv.price} each</p></div>
+                            <div className="stepper">
+                              <button onClick={() => setQty(build, setBuild, sv.key, -1)} disabled={line.qty === 0} aria-label="Decrease">−</button>
+                              <span className="qty">{line.qty}</span>
+                              <button onClick={() => setQty(build, setBuild, sv.key, 1)} aria-label="Increase">+</button>
+                            </div>
+                          </div>
+                          {on && (
+                            <div className="bratios">
+                              <span className="svc-qty-lab">Sizes for this service</span>
+                              <div className="chips">
+                                {sv.ratios.map((r) => (
+                                  <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
+                                    onClick={() => toggleRatio(build, setBuild, sv.key, r)}>{r}</button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </>
+                ) : (
+                  <>
+                    <p className="modal-lede">Choose the size(s) you want for each part of your {checkout} package.</p>
+                    {(PLAN_CONTENTS[checkout!] || []).map((c) => (
+                      <div className="bsvc on" key={c.key}>
+                        <div className="bitem"><div className="bitem-info"><h4>{c.label}</h4></div></div>
+                        <div className="bratios">
+                          <span className="svc-qty-lab">Pick the size(s) you want</span>
+                          <div className="chips">
+                            {c.ratios.map((r) => (
+                              <button type="button" key={r} className={`chip sm${(planRatios[c.key] || []).includes(r) ? ' on' : ''}`}
+                                onClick={() => togglePlanRatio(c.key, r)}>{r}</button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+                <div className="btotal">
+                  <div className="sum"><span className="lab">{isCustom ? 'Your total' : 'Package price'}</span>${planTotal}</div>
+                  <button className="cta" disabled={isCustom && buildTotal < MIN_ORDER} onClick={() => setStep(1)}>Continue</button>
+                </div>
+                {isCustom && buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
+              </>
+            )}
+
+            {/* STEP 1 — DETAILS */}
+            {step === 1 && (
+              <>
+                <p className="modal-lede">Tell me about the product so I can produce the right creative.</p>
+                <div className="fgrid two">
+                  <div className="field"><label>Brand / store name</label><input placeholder="Acme Supply Co." /></div>
+                  <div className="field"><label>Product link</label><input type="url" placeholder="https://…/your-product" /></div>
+                </div>
+                <div style={{ height: 22 }} />
+                <div className="fgrid two">
+                  <div className="field"><label>Instagram handle</label><input placeholder="@yourstore" /></div>
+                  <div className="field"><label>Email</label><input type="email" placeholder="you@store.com" /></div>
+                </div>
+                <div style={{ height: 22 }} />
+                <div className="field"><label>Primary language</label>
+                  <select><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
+                </div>
+                <div style={{ height: 22 }} />
+                <div className="field"><label>Product details & what to highlight</label><textarea placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
+                <div className="modal-nav">
+                  <button className="cta ghost" onClick={() => setStep(0)}>Back</button>
+                  <button className="cta" onClick={() => setStep(2)}>Continue to payment</button>
+                </div>
+              </>
+            )}
+
+            {/* STEP 2 — PAYMENT */}
+            {step === 2 && (
+              <>
+                <p className="modal-lede">Review and pay securely. Your files arrive in your DMs within 48 hours.</p>
+                <div className="pay-sum">
+                  <div className="pay-row"><span>{isCustom ? 'Custom package' : `${checkout} package`}</span><strong>${planTotal}</strong></div>
+                  <div className="pay-row muted"><span>Delivery</span><span>48 hours · Instagram DMs</span></div>
+                </div>
+                <div className="fgrid"><div className="field"><label>Card number</label><input placeholder="1234 5678 9012 3456" disabled /></div></div>
+                <div style={{ height: 22 }} />
+                <div className="fgrid two">
+                  <div className="field"><label>Expiry</label><input placeholder="MM / YY" disabled /></div>
+                  <div className="field"><label>CVC</label><input placeholder="123" disabled /></div>
+                </div>
+                <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>Preview only — secure Stripe checkout connects here. No payment is taken yet.</p>
+                <div className="modal-nav">
+                  <button className="cta ghost" onClick={() => setStep(1)}>Back</button>
+                  <button className="cta" onClick={() => setStep(3)}>Pay ${planTotal}</button>
+                </div>
+              </>
+            )}
+
+            {/* STEP 3 — DONE */}
+            {step === 3 && (
+              <div className="done" style={{ marginTop: 10 }}>
+                <span className="dot" />
+                <p>That's the flow! Once Stripe is connected this completes the order and I confirm in your DMs with a timeline.</p>
+              </div>
+            )}
           </div>
         </div>
       )}

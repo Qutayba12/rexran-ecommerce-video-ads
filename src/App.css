@@ -211,3 +211,42 @@
 .bsvc:last-of-type { border-bottom: 1px solid var(--line); }
 .bsvc.on { background: rgba(212,175,55,.03); }
 .bratios { padding: 0 0 20px; }
+
+/* ===== MODAL STEP BAR ===== */
+.steps-bar { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+.stepdot { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); }
+.stepdot .d { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; transition: all .25s; }
+.stepdot.on { color: var(--ink); }
+.stepdot.on .d { border-color: var(--gold); color: var(--gold-hi); }
+.stepdot.done .d { background: var(--gold); border-color: var(--gold); color: #000; }
+
+.modal-nav { margin-top: 30px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.modal-nav .cta { flex: none; }
+
+/* payment summary */
+.pay-sum { border: 1px solid var(--line); border-radius: var(--r); padding: 20px 22px; margin-bottom: 26px; }
+.pay-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 15px; color: var(--ink); }
+.pay-row strong { font-family: var(--mono); color: var(--gold-hi); font-size: 18px; }
+.pay-row.muted { color: var(--ink-mut); font-size: 13px; }
+.field input:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ===== WHY ===== */
+.why-grid { margin-top: 56px; display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .why-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 980px) { .why-grid { grid-template-columns: repeat(4,1fr); } }
+.why-card { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 32px 28px; background: rgba(14,12,18,.4); backdrop-filter: blur(6px); transition: transform .4s, border-color .4s; }
+.why-card:hover { transform: translateY(-6px); border-color: rgba(212,175,55,.35); }
+.why-n { font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: .15em; margin-bottom: 22px; }
+.why-card h3 { font-size: 21px; margin-bottom: 12px; line-height: 1.2; }
+.why-card p { color: var(--ink-mut); font-size: 14.5px; line-height: 1.65; }
+
+/* ===== REVIEWS ===== */
+.rev-grid { margin-top: 56px; display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .rev-grid { grid-template-columns: 1fr 1fr; } }
+.rev-card { margin: 0; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 34px 32px; background: rgba(14,12,18,.4); backdrop-filter: blur(6px); transition: transform .4s, border-color .4s; }
+.rev-card:hover { transform: translateY(-5px); border-color: rgba(212,175,55,.35); }
+.rev-stars { color: var(--gold); letter-spacing: 3px; font-size: 15px; margin-bottom: 18px; }
+.rev-card blockquote { margin: 0 0 22px; font-family: var(--display); font-size: clamp(18px,2.2vw,23px); line-height: 1.45; color: var(--ink); font-style: italic; }
+.rev-card figcaption { display: flex; flex-direction: column; gap: 3px; }
+.rev-name { font-weight: 600; font-size: 14px; color: var(--ink); }
+.rev-role { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
