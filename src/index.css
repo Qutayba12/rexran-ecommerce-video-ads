@@ -1,18 +1,19 @@
 :root {
-  --bg: #060504;
-  --bg2: #0d0b08;
+  --bg: #07060a;
+  --bg2: #0e0c12;
   --gold: #d4af37;
   --gold-hi: #f4d97b;
   --gold-deep: #8a6d1f;
   --ink: #f7f3e9;
-  --ink-mut: #a39a85;
-  --ink-faint: #5f5848;
-  --line: rgba(212, 175, 55, 0.14);
-
+  --ink-mut: #a8a092;
+  --ink-faint: #635c52;
+  --line: rgba(212, 175, 55, 0.16);
+  --r: 18px;
+  --r-lg: 28px;
+  --r-sm: 12px;
   --display: 'Fraunces', Georgia, serif;
   --body: 'Manrope', system-ui, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
-
   color-scheme: dark;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
