@@ -119,6 +119,12 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false)
   const [submitErr, setSubmitErr] = useState('')
 
+  // portfolio videos from admin
+  const [videos, setVideos] = useState<{ id: string; title: string; url: string; type: string; poster?: string }[]>([])
+  useEffect(() => {
+    fetch('/api/videos').then((r) => r.json()).then((d) => setVideos(d.videos || [])).catch(() => {})
+  }, [])
+
   const open = (plan: string) => { setCheckout(plan); setStep(0) }
   const close = () => { setCheckout(null); setStep(0); setSubmitErr('') }
 
@@ -204,6 +210,16 @@ export default function App() {
             <h2 className="sec-h">Every format your <em>ad account</em> is hungry for.</h2>
             <p className="sec-lede">Pick one, mix them, or let me recommend the set most likely to convert for your product.</p>
           </div>
+          {videos.length > 0 && (
+            <div className="vid-grid reveal">
+              {videos.map((v) => (
+                <figure className="vid-card" key={v.id}>
+                  <video src={v.url} poster={v.poster || undefined} controls playsInline preload="metadata" />
+                  <figcaption><span className="vid-type">{v.type}</span><span className="vid-title">{v.title}</span></figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
           <div className="reel reveal">
             {TILES.map((t) => (
               <div className={`tile ${t.c}`} key={t.n} onMouseMove={tilt}>

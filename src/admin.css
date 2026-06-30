@@ -1,0 +1,38 @@
+/* ===== ADMIN ===== */
+.adm-gate { min-height: 100svh; display: flex; align-items: center; justify-content: center; padding: 22px; }
+.adm-card { width: min(420px, 100%); border: 1px solid var(--line); border-radius: var(--r-lg); background: rgba(14,12,18,.55); backdrop-filter: blur(8px); padding: 44px 36px; text-align: center; }
+.adm-logo { font-size: 64px; color: var(--gold); margin-bottom: 22px; }
+.adm-card h1 { font-size: 30px; margin-bottom: 10px; }
+.adm-card p { color: var(--ink-mut); font-size: 14.5px; margin-bottom: 26px; }
+.adm-card input { width: 100%; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font: 15px var(--body); padding: 13px 15px; margin-bottom: 18px; transition: border-color .25s; }
+.adm-card input:focus { border-color: var(--gold); outline: none; }
+.adm-card .cta { width: 100%; justify-content: center; }
+
+.adm-err { color: #e6896b; font-size: 13.5px; margin-bottom: 16px; }
+
+.adm-wrap { max-width: 880px; margin: 0 auto; padding: 28px 22px 80px; }
+.adm-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 30px; border-bottom: 1px solid var(--line); margin-bottom: 40px; }
+.adm-head .brand { font-family: var(--display); font-size: 22px; display: flex; align-items: center; gap: 11px; }
+.adm-head .brand-logo { font-size: 28px; }
+
+.adm-section { margin-bottom: 50px; }
+.adm-section h2 { font-size: 24px; margin-bottom: 22px; }
+.adm-form { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; margin-bottom: 22px; }
+@media (max-width: 600px) { .adm-form { grid-template-columns: 1fr; } }
+.adm-form .field label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
+.adm-form .field input, .adm-form .field select { width: 100%; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font: 15px var(--body); padding: 12px 14px; transition: border-color .25s; }
+.adm-form .field select option { background: var(--bg2); }
+.adm-form .field input:focus, .adm-form .field select:focus { border-color: var(--gold); outline: none; }
+
+.adm-empty { color: var(--ink-faint); font-size: 14.5px; }
+.adm-list { display: grid; gap: 14px; }
+.adm-item { display: flex; align-items: center; gap: 18px; border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; background: rgba(14,12,18,.4); }
+.adm-thumb { width: 72px; height: 72px; flex: none; border-radius: var(--r-sm); overflow: hidden; background: linear-gradient(150deg, var(--bg2), #000); display: flex; align-items: center; justify-content: center; }
+.adm-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.adm-thumb span { font-family: var(--mono); font-size: 10px; color: var(--gold); letter-spacing: .1em; }
+.adm-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.adm-meta strong { font-size: 15px; color: var(--ink); }
+.adm-tag { font-family: var(--mono); font-size: 11px; color: var(--gold); }
+.adm-url { font-size: 12px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-del { flex: none; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; padding: 9px 16px; border: 1px solid var(--line); border-radius: 100px; background: transparent; color: var(--ink-mut); transition: all .2s; }
+.adm-del:hover { border-color: #e6896b; color: #e6896b; }
