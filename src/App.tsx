@@ -468,10 +468,10 @@ export default function App() {
             {/* STEP 2 — PAYMENT */}
             {step === 2 && (
               <>
-                <p className="modal-lede">Review and pay securely. Your files arrive in your DMs within 48 hours.</p>
+                <p className="modal-lede">Secure checkout. Your files arrive in your Instagram DMs, ready to run.</p>
                 <div className="pay-sum">
                   <div className="pay-row"><span>{isCustom ? 'Custom package' : `${checkout} package`}</span><strong>${planTotal}</strong></div>
-                  <div className="pay-row muted"><span>Delivery</span><span>48 hours · Instagram DMs</span></div>
+                  <div className="pay-row muted"><span>Delivery</span><span>Fast turnaround · Instagram DMs</span></div>
                 </div>
                 <div className="fgrid"><div className="field"><label>Card number</label><input placeholder="1234 5678 9012 3456" disabled /></div></div>
                 <div style={{ height: 22 }} />
@@ -479,7 +479,7 @@ export default function App() {
                   <div className="field"><label>Expiry</label><input placeholder="MM / YY" disabled /></div>
                   <div className="field"><label>CVC</label><input placeholder="123" disabled /></div>
                 </div>
-                <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>Preview only — secure Stripe checkout connects here. No payment is taken yet.</p>
+                <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>🔒 Payments are processed securely. You'll get a confirmation right after checkout.</p>
                 {submitErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b' }}>{submitErr}</p>}
                 <div className="modal-nav">
                   <button className="cta ghost" onClick={() => setStep(1)} disabled={submitting}>Back</button>
@@ -492,7 +492,7 @@ export default function App() {
             {step === 3 && (
               <div className="done" style={{ marginTop: 10 }}>
                 <span className="dot" />
-                <p>That's the flow! Once Stripe is connected this completes the order and I confirm in your DMs with a timeline.</p>
+                <p>Order received — thank you. I'll confirm on Instagram shortly with your timeline, and your finished ads will land in your DMs ready to run.</p>
               </div>
             )}
           </div>
