@@ -8,10 +8,21 @@ export default async function handler(req, res) {
   const body = req.body
   const adminPw = process.env.ADMIN_PASSWORD
 
+  // Find the Blob token regardless of what Vercel named it
+  const blobToken =
+    process.env.BLOB_READ_WRITE_TOKEN ||
+    Object.keys(process.env).filter((k) => k.includes('BLOB') && k.includes('READ_WRITE'))
+      .map((k) => process.env[k])[0]
+
+  if (!blobToken) {
+    return res.status(500).json({ error: 'Blob store not connected. Connect rexran-blob to this project and redeploy.' })
+  }
+
   try {
     const jsonResponse = await handleUpload({
       body,
       request: req,
+      token: blobToken,
       onBeforeGenerateToken: async (_pathname, clientPayload) => {
         // clientPayload carries the admin password from the browser
         let pw = ''
