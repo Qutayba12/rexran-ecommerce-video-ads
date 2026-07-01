@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { upload } from '@vercel/blob/client'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './App.css'
@@ -19,6 +20,26 @@ function Admin() {
   const [url, setUrl] = useState('')
   const [type, setType] = useState('UGC')
   const [poster, setPoster] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadPct, setUploadPct] = useState(0)
+
+  const uploadFile = async (file: File) => {
+    setErr(''); setUploading(true); setUploadPct(0)
+    try {
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+        clientPayload: JSON.stringify({ password: pw }),
+        onUploadProgress: (p) => setUploadPct(Math.round(p.percentage)),
+      })
+      setUrl(blob.url)
+      if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
+    } catch (e) {
+      setErr('Upload failed: ' + String(e instanceof Error ? e.message : e))
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const loadVideos = async () => {
     try {
@@ -100,6 +121,19 @@ function Admin() {
 
       <section className="adm-section">
         <h2>Add a video</h2>
+        <div className="adm-upload">
+          <label className="adm-drop">
+            <input type="file" accept="video/mp4,video/quicktime,video/webm" style={{ display: 'none' }}
+              onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0])} disabled={uploading} />
+            {uploading ? (
+              <div className="adm-prog"><div className="adm-prog-bar" style={{ width: `${uploadPct}%` }} /><span>Uploading… {uploadPct}%</span></div>
+            ) : (
+              <div className="adm-drop-in"><span className="adm-drop-plus">↑</span><strong>Upload a video from your device</strong><span className="adm-drop-hint">MP4, MOV or WebM · up to 500MB</span></div>
+            )}
+          </label>
+          {url && !uploading && <div className="adm-uploaded">✓ Video ready — fill in the details below and click Add video.</div>}
+        </div>
+        <div className="adm-or">or paste a link</div>
         <div className="adm-form">
           <div className="field"><label>Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Skincare UGC — Summer drop" /></div>
           <div className="field"><label>Video URL (mp4 / hosted link)</label><input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…/video.mp4" /></div>

@@ -36,3 +36,17 @@
 .adm-url { font-size: 12px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adm-del { flex: none; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; padding: 9px 16px; border: 1px solid var(--line); border-radius: 100px; background: transparent; color: var(--ink-mut); transition: all .2s; }
 .adm-del:hover { border-color: #e6896b; color: #e6896b; }
+
+/* ===== ADMIN UPLOAD ===== */
+.adm-upload { margin-bottom: 20px; }
+.adm-drop { display: block; border: 1px dashed var(--gold-deep); border-radius: var(--r); padding: 34px 24px; text-align: center; cursor: pointer; background: rgba(212,175,55,.03); transition: all .25s; }
+.adm-drop:hover { border-color: var(--gold); background: rgba(212,175,55,.07); }
+.adm-drop-in { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.adm-drop-plus { font-size: 28px; color: var(--gold); margin-bottom: 4px; }
+.adm-drop-in strong { font-size: 15px; color: var(--ink); }
+.adm-drop-hint { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); letter-spacing: .04em; }
+.adm-prog { width: 100%; }
+.adm-prog-bar { height: 6px; background: var(--gold); border-radius: 100px; margin-bottom: 12px; transition: width .3s ease; min-width: 6px; }
+.adm-prog span { font-family: var(--mono); font-size: 13px; color: var(--gold-hi); }
+.adm-uploaded { margin-top: 12px; font-size: 13.5px; color: var(--gold-hi); }
+.adm-or { text-align: center; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); margin: 6px 0 20px; }
