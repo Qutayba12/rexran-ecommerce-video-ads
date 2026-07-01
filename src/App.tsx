@@ -86,39 +86,45 @@ const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((
 type VideoItem = { id: string; title: string; url: string; type: string; poster?: string }
 function VideoCard({ v }: { v: VideoItem }) {
   const ref = useRef<HTMLVideoElement>(null)
-  const [playing, setPlaying] = useState(false)
-  const [ready, setReady] = useState(false)
+  const [muted, setMuted] = useState(true)
 
-  // Nudge the video to render its first frame as a visible preview (avoids a black box)
-  const onLoaded = () => {
-    const el = ref.current
-    if (el && el.currentTime === 0) { try { el.currentTime = 0.05 } catch { /* ignore */ } }
-    setReady(true)
-  }
-
-  const toggle = () => {
+  // Autoplay muted + looped so a real, moving frame is always visible (no black box).
+  // Clicking unmutes and restarts audio; clicking again mutes.
+  const onClick = () => {
     const el = ref.current
     if (!el) return
-    if (el.paused) { el.play(); setPlaying(true) } else { el.pause(); setPlaying(false) }
+    if (muted) {
+      el.muted = false
+      el.currentTime = 0
+      el.play().catch(() => {})
+      setMuted(false)
+    } else {
+      el.muted = true
+      setMuted(true)
+    }
   }
 
   return (
     <figure className="vid-card">
-      <div className="vid-frame" onClick={toggle}>
+      <div className="vid-frame" onClick={onClick}>
         <video
           ref={ref}
-          src={v.url + '#t=0.05'}
+          src={v.url}
           poster={v.poster || undefined}
+          autoPlay
+          muted
+          loop
           playsInline
-          preload="metadata"
-          muted={false}
-          onLoadedData={onLoaded}
-          onEnded={() => setPlaying(false)}
-          onPause={() => setPlaying(false)}
-          onPlay={() => setPlaying(true)}
+          preload="auto"
         />
-        {!playing && <button className="vid-play" aria-label="Play"><span /></button>}
-        {!ready && <div className="vid-skeleton" />}
+        {muted && (
+          <button className="vid-sound" aria-label="Unmute">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5 6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+            <span>Tap for sound</span>
+          </button>
+        )}
       </div>
       <figcaption><span className="vid-type">{v.type}</span><span className="vid-title">{v.title}</span></figcaption>
     </figure>
@@ -253,7 +259,7 @@ export default function App() {
             <p className="sec-lede">Pick one, mix them, or let me recommend the set most likely to convert for your product.</p>
           </div>
           {videos.length > 0 && (
-            <div className="vid-grid reveal">
+            <div className="vid-grid">
               {videos.map((v) => (
                 <VideoCard key={v.id} v={v} />
               ))}
