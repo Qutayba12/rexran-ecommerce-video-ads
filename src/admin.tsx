@@ -30,16 +30,14 @@ function Admin() {
         access: 'public',
         handleUploadUrl: '/api/upload',
         clientPayload: JSON.stringify({ password: pw }),
+        multipart: true,
         onUploadProgress: (p) => setUploadPct(Math.round(p.percentage)),
       })
+      setUploadPct(100)
       setUrl(blob.url)
       if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
-      setUploadPct(100)
     } catch (e) {
-      const msg = String(e instanceof Error ? e.message : e)
-      // The file itself uploads fine; only the completion callback can fail on Vercel.
-      // Guide the user rather than losing their upload.
-      setErr('Upload finished but confirmation was slow: ' + msg + ' — if the URL field is empty, please try once more.')
+      setErr('Upload failed: ' + String(e instanceof Error ? e.message : e))
     } finally {
       setUploading(false)
     }
