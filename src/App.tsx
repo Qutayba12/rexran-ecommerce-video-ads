@@ -84,12 +84,14 @@ type Line = { qty: number; ratios: string[] }
 const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [] }]))
 
 type VideoItem = { id: string; title: string; url: string; type: string; poster?: string }
-function VideoCard({ v }: { v: VideoItem }) {
+function isImageUrl(u: string) {
+  return /\.(jpe?g|png|webp|gif|avif)(\?|#|$)/i.test(u)
+}
+function MediaCard({ v }: { v: VideoItem }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [muted, setMuted] = useState(true)
+  const image = isImageUrl(v.url)
 
-  // Autoplay muted + looped so a real, moving frame is always visible (no black box).
-  // Clicking unmutes and restarts audio; clicking again mutes.
   const onClick = () => {
     const el = ref.current
     if (!el) return
@@ -106,27 +108,24 @@ function VideoCard({ v }: { v: VideoItem }) {
 
   return (
     <figure className="vid-card">
-      <div className="vid-frame" onClick={onClick}>
-        <video
-          ref={ref}
-          src={v.url}
-          poster={v.poster || undefined}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        />
-        {muted && (
-          <button className="vid-sound" aria-label="Unmute">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 5 6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
-            </svg>
-            <span>Tap for sound</span>
-          </button>
-        )}
-      </div>
-      <figcaption><span className="vid-type">{v.type}</span><span className="vid-title">{v.title}</span></figcaption>
+      {image ? (
+        <div className="vid-frame">
+          <img src={v.url} alt="" loading="lazy" />
+        </div>
+      ) : (
+        <div className="vid-frame" onClick={onClick}>
+          <video ref={ref} src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline preload="auto" />
+          {muted && (
+            <button className="vid-sound" aria-label="Unmute">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5 6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+              <span>Tap for sound</span>
+            </button>
+          )}
+        </div>
+      )}
+      <figcaption><span className="vid-type">{v.type}</span></figcaption>
     </figure>
   )
 }
@@ -261,7 +260,7 @@ export default function App() {
           {videos.length > 0 && (
             <div className="vid-grid">
               {videos.map((v) => (
-                <VideoCard key={v.id} v={v} />
+                <MediaCard key={v.id} v={v} />
               ))}
             </div>
           )}

@@ -16,7 +16,6 @@ function Admin() {
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
 
-  const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [type, setType] = useState('UGC')
   const [poster, setPoster] = useState('')
@@ -34,7 +33,6 @@ function Admin() {
       })
       setUploadPct(100)
       setUrl(blob.url)
-      if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
     } catch (e) {
       setErr('Upload failed: ' + String(e instanceof Error ? e.message : e))
     } finally {
@@ -74,12 +72,12 @@ function Admin() {
     try {
       const r = await fetch('/api/admin-videos', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pw, action: 'add', video: { title, url, type, poster } }),
+        body: JSON.stringify({ password: pw, action: 'add', video: { url, type, poster } }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'failed')
       setVideos(d.videos)
-      setTitle(''); setUrl(''); setPoster(''); setType('UGC')
+      setUrl(''); setPoster(''); setType('UGC')
     } catch (e) {
       setErr('Could not add. ' + String(e))
     } finally { setLoading(false) }
@@ -136,8 +134,7 @@ function Admin() {
         </div>
         <div className="adm-or">or paste a link</div>
         <div className="adm-form">
-          <div className="field"><label>Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Skincare UGC — Summer drop" /></div>
-          <div className="field"><label>Video URL (mp4 / hosted link)</label><input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…/video.mp4" /></div>
+          <div className="field"><label>Media URL (video mp4 or image)</label><input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…/video.mp4" /></div>
           <div className="field"><label>Type</label>
             <select value={type} onChange={(e) => setType(e.target.value)}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
           </div>
@@ -157,8 +154,7 @@ function Admin() {
                 {v.poster ? <img src={v.poster} alt="" /> : <span>{v.type}</span>}
               </div>
               <div className="adm-meta">
-                <strong>{v.title || 'Untitled'}</strong>
-                <span className="adm-tag">{v.type}</span>
+                <strong>{v.type}</strong>
                 <a href={v.url} target="_blank" rel="noreferrer" className="adm-url">{v.url}</a>
               </div>
               <button className="adm-del" onClick={() => removeVideo(v.id)} disabled={loading}>Delete</button>

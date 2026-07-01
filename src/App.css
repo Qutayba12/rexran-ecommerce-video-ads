@@ -265,6 +265,7 @@
 /* ===== VIDEO CARD (auto-playing muted preview) ===== */
 .vid-frame { position: relative; width: 100%; aspect-ratio: 9 / 16; background: #0e0c12; cursor: pointer; overflow: hidden; }
 .vid-frame video { width: 100%; height: 100%; object-fit: cover; display: block; background: #0e0c12; }
+.vid-frame img { width: 100%; height: 100%; object-fit: cover; display: block; background: #0e0c12; }
 .vid-sound { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 13px; border-radius: 100px; border: 1px solid rgba(212,175,55,.5);
   background: rgba(7,6,10,.6); backdrop-filter: blur(6px); color: var(--gold-hi);
