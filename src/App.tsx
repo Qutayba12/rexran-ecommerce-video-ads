@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import RexMark from './RexMark'
 
@@ -82,6 +82,48 @@ const REVIEWS = [
 
 type Line = { qty: number; ratios: string[] }
 const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [] }]))
+
+type VideoItem = { id: string; title: string; url: string; type: string; poster?: string }
+function VideoCard({ v }: { v: VideoItem }) {
+  const ref = useRef<HTMLVideoElement>(null)
+  const [playing, setPlaying] = useState(false)
+  const [ready, setReady] = useState(false)
+
+  // Nudge the video to render its first frame as a visible preview (avoids a black box)
+  const onLoaded = () => {
+    const el = ref.current
+    if (el && el.currentTime === 0) { try { el.currentTime = 0.05 } catch { /* ignore */ } }
+    setReady(true)
+  }
+
+  const toggle = () => {
+    const el = ref.current
+    if (!el) return
+    if (el.paused) { el.play(); setPlaying(true) } else { el.pause(); setPlaying(false) }
+  }
+
+  return (
+    <figure className="vid-card">
+      <div className="vid-frame" onClick={toggle}>
+        <video
+          ref={ref}
+          src={v.url + '#t=0.05'}
+          poster={v.poster || undefined}
+          playsInline
+          preload="metadata"
+          muted={false}
+          onLoadedData={onLoaded}
+          onEnded={() => setPlaying(false)}
+          onPause={() => setPlaying(false)}
+          onPlay={() => setPlaying(true)}
+        />
+        {!playing && <button className="vid-play" aria-label="Play"><span /></button>}
+        {!ready && <div className="vid-skeleton" />}
+      </div>
+      <figcaption><span className="vid-type">{v.type}</span><span className="vid-title">{v.title}</span></figcaption>
+    </figure>
+  )
+}
 
 export default function App() {
   useReveal()
@@ -213,10 +255,7 @@ export default function App() {
           {videos.length > 0 && (
             <div className="vid-grid reveal">
               {videos.map((v) => (
-                <figure className="vid-card" key={v.id}>
-                  <video src={v.url} poster={v.poster || undefined} controls playsInline preload="metadata" />
-                  <figcaption><span className="vid-type">{v.type}</span><span className="vid-title">{v.title}</span></figcaption>
-                </figure>
+                <VideoCard key={v.id} v={v} />
               ))}
             </div>
           )}

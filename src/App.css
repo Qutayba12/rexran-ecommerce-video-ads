@@ -261,3 +261,16 @@
 .vid-card figcaption { padding: 16px 18px; display: flex; flex-direction: column; gap: 5px; }
 .vid-type { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 .vid-title { font-size: 14.5px; color: var(--ink); }
+
+/* ===== VIDEO CARD (visible preview + play button) ===== */
+.vid-frame { position: relative; width: 100%; aspect-ratio: 9 / 16; background: #000; cursor: pointer; overflow: hidden; }
+.vid-frame video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
+.vid-play { position: absolute; inset: 0; margin: auto; width: 66px; height: 66px; border-radius: 50%;
+  border: 1px solid rgba(212,175,55,.5); background: rgba(7,6,10,.55); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; transition: all .25s; pointer-events: none; }
+.vid-frame:hover .vid-play { background: rgba(212,175,55,.9); border-color: var(--gold); transform: scale(1.06); }
+.vid-play span { display: block; width: 0; height: 0; margin-left: 4px;
+  border-top: 11px solid transparent; border-bottom: 11px solid transparent; border-left: 18px solid var(--gold-hi); transition: border-left-color .25s; }
+.vid-frame:hover .vid-play span { border-left-color: #000; }
+.vid-skeleton { position: absolute; inset: 0; background: linear-gradient(110deg, #0e0c12 30%, #17141c 50%, #0e0c12 70%); background-size: 200% 100%; animation: vidshimmer 1.4s infinite; }
+@keyframes vidshimmer { to { background-position: -200% 0; } }
