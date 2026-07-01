@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { upload } from '@vercel/blob/client'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './App.css'
@@ -26,15 +25,27 @@ function Admin() {
   const uploadFile = async (file: File) => {
     setErr(''); setUploading(true); setUploadPct(0)
     try {
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/upload',
-        clientPayload: JSON.stringify({ password: pw }),
-        multipart: true,
-        onUploadProgress: (p) => setUploadPct(Math.round(p.percentage)),
+      const blobUrl = await new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', '/api/upload', true)
+        xhr.setRequestHeader('content-type', file.type || 'application/octet-stream')
+        xhr.setRequestHeader('x-filename', file.name)
+        xhr.setRequestHeader('x-admin-password', pw)
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100))
+        }
+        xhr.onload = () => {
+          let data: { url?: string; error?: string } = {}
+          try { data = JSON.parse(xhr.responseText) } catch { /* ignore */ }
+          if (xhr.status >= 200 && xhr.status < 300 && data.url) resolve(data.url)
+          else reject(new Error(data.error || `Upload failed (${xhr.status})`))
+        }
+        xhr.onerror = () => reject(new Error('Network error during upload'))
+        xhr.send(file)
       })
+
       setUploadPct(100)
-      setUrl(blob.url)
+      setUrl(blobUrl)
       if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
     } catch (e) {
       setErr('Upload failed: ' + String(e instanceof Error ? e.message : e))
@@ -125,12 +136,12 @@ function Admin() {
         <h2>Add a video</h2>
         <div className="adm-upload">
           <label className="adm-drop">
-            <input type="file" accept="video/mp4,video/quicktime,video/webm" style={{ display: 'none' }}
+            <input type="file" accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/webp" style={{ display: 'none' }}
               onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0])} disabled={uploading} />
             {uploading ? (
               <div className="adm-prog"><div className="adm-prog-bar" style={{ width: `${uploadPct}%` }} /><span>Uploading… {uploadPct}%</span></div>
             ) : (
-              <div className="adm-drop-in"><span className="adm-drop-plus">↑</span><strong>Upload a video from your device</strong><span className="adm-drop-hint">MP4, MOV or WebM · up to 500MB</span></div>
+              <div className="adm-drop-in"><span className="adm-drop-plus">↑</span><strong>Upload a video or image from your device</strong><span className="adm-drop-hint">MP4, MOV, WebM or images · best under ~30MB</span></div>
             )}
           </label>
           {url && !uploading && <div className="adm-uploaded">✓ Video ready — fill in the details below and click Add video.</div>}
