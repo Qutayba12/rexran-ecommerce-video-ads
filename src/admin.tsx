@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { upload } from '@vercel/blob/client'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './App.css'
@@ -25,27 +26,14 @@ function Admin() {
   const uploadFile = async (file: File) => {
     setErr(''); setUploading(true); setUploadPct(0)
     try {
-      const blobUrl = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.open('POST', '/api/upload', true)
-        xhr.setRequestHeader('content-type', file.type || 'application/octet-stream')
-        xhr.setRequestHeader('x-filename', file.name)
-        xhr.setRequestHeader('x-admin-password', pw)
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100))
-        }
-        xhr.onload = () => {
-          let data: { url?: string; error?: string } = {}
-          try { data = JSON.parse(xhr.responseText) } catch { /* ignore */ }
-          if (xhr.status >= 200 && xhr.status < 300 && data.url) resolve(data.url)
-          else reject(new Error(data.error || `Upload failed (${xhr.status})`))
-        }
-        xhr.onerror = () => reject(new Error('Network error during upload'))
-        xhr.send(file)
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+        clientPayload: JSON.stringify({ password: pw }),
+        onUploadProgress: (p) => setUploadPct(Math.round(p.percentage)),
       })
-
       setUploadPct(100)
-      setUrl(blobUrl)
+      setUrl(blob.url)
       if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
     } catch (e) {
       setErr('Upload failed: ' + String(e instanceof Error ? e.message : e))
@@ -141,7 +129,7 @@ function Admin() {
             {uploading ? (
               <div className="adm-prog"><div className="adm-prog-bar" style={{ width: `${uploadPct}%` }} /><span>Uploading… {uploadPct}%</span></div>
             ) : (
-              <div className="adm-drop-in"><span className="adm-drop-plus">↑</span><strong>Upload a video or image from your device</strong><span className="adm-drop-hint">MP4, MOV, WebM or images · best under ~30MB</span></div>
+              <div className="adm-drop-in"><span className="adm-drop-plus">↑</span><strong>Upload a video or image from your device</strong><span className="adm-drop-hint">MP4, MOV, WebM or images · up to 500MB</span></div>
             )}
           </label>
           {url && !uploading && <div className="adm-uploaded">✓ Video ready — fill in the details below and click Add video.</div>}

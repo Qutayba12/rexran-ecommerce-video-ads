@@ -1,10 +1,7 @@
-// POST /api/upload — server upload: the browser sends the raw file bytes,
-// we stream them straight into Vercel Blob and return the public URL.
-// No client tokens, no multipart handshake, no completion callback — nothing that can hang.
-import { put } from '@vercel/blob'
-
-// Let us read the raw request stream ourselves (no body parsing/limit games).
-export const config = { api: { bodyParser: false } }
+// POST /api/upload — issues a secure client-upload token so the browser uploads
+// the file DIRECTLY to Vercel Blob (bypasses the 4.5MB serverless body limit).
+// No onUploadCompleted callback (that's what stalled the browser previously).
+import { handleUpload } from '@vercel/blob/client'
 
 const blobToken =
   process.env.BLOB_READ_WRITE_TOKEN ||
@@ -12,35 +9,29 @@ const blobToken =
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  if (!blobToken) return res.status(500).json({ error: 'Blob store not connected. Connect rexran-blob and redeploy.' })
-
-  // auth via header (body is the raw file, so we can't put the password in it)
-  const pw = req.headers['x-admin-password']
-  if (!process.env.ADMIN_PASSWORD || pw !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
-  const rawName = (req.headers['x-filename'] || 'upload').toString()
-  const safeName = rawName.replace(/[^a-zA-Z0-9._-]/g, '_')
-  const contentType = (req.headers['content-type'] || 'application/octet-stream').toString()
+  if (!blobToken) return res.status(500).json({ error: 'Blob store not connected. Connect the store and redeploy.' })
 
   try {
-    // Read the whole request body into a buffer, then store it.
-    const chunks = []
-    for await (const chunk of req) chunks.push(chunk)
-    const buffer = Buffer.concat(chunks)
-
-    if (!buffer.length) return res.status(400).json({ error: 'Empty upload' })
-
-    const blob = await put(`media/${Date.now()}-${safeName}`, buffer, {
-      access: 'public',
-      contentType,
+    const jsonResponse = await handleUpload({
+      body: req.body,
+      request: req,
       token: blobToken,
-      addRandomSuffix: true,
+      onBeforeGenerateToken: async (_pathname, clientPayload) => {
+        let pw = ''
+        try { pw = clientPayload ? JSON.parse(clientPayload).password : '' } catch { pw = '' }
+        if (!process.env.ADMIN_PASSWORD || pw !== process.env.ADMIN_PASSWORD) {
+          throw new Error('Unauthorized')
+        }
+        return {
+          allowedContentTypes: ['video/mp4', 'video/quicktime', 'video/webm', 'image/jpeg', 'image/png', 'image/webp'],
+          maximumSizeInBytes: 500 * 1024 * 1024,
+          addRandomSuffix: true,
+        }
+      },
+      // NO onUploadCompleted — the admin UI saves the returned URL itself.
     })
-
-    return res.status(200).json({ url: blob.url })
+    return res.status(200).json(jsonResponse)
   } catch (e) {
-    return res.status(500).json({ error: String(e instanceof Error ? e.message : e) })
+    return res.status(400).json({ error: String(e instanceof Error ? e.message : e) })
   }
 }
