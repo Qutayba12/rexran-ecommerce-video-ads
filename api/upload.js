@@ -36,9 +36,6 @@ export default async function handler(req, res) {
           addRandomSuffix: true,
         }
       },
-      onUploadCompleted: async () => {
-        // nothing needed here — the admin UI saves the URL via /api/admin-videos
-      },
     })
     return res.status(200).json(jsonResponse)
   } catch (e) {
