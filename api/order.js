@@ -54,6 +54,39 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'Telegram send failed', detail: err })
     }
 
+    // Also email the order to the studio inbox (best-effort — never blocks the order)
+    const resendKey = process.env.RESEND_API_KEY
+    const orderEmail = process.env.ORDER_EMAIL || 'hello@rexran.com'
+    const fromEmail = process.env.ORDER_FROM || 'Rexran Orders <onboarding@resend.dev>'
+    if (resendKey) {
+      try {
+        const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6">
+          <h2 style="margin:0 0 4px">🎬 New Rexran Order</h2>
+          <p style="margin:0 0 16px;color:#666">${o.package || '—'}${o.total ? ` · $${o.total}` : ''}</p>
+          <table style="border-collapse:collapse;width:100%;max-width:520px">
+            <tr><td style="padding:4px 0;color:#666;width:120px">Brand</td><td style="padding:4px 0">${o.brand || '—'}</td></tr>
+            <tr><td style="padding:4px 0;color:#666">Product</td><td style="padding:4px 0">${o.productUrl || '—'}</td></tr>
+            <tr><td style="padding:4px 0;color:#666">Instagram</td><td style="padding:4px 0">${o.instagram || '—'}</td></tr>
+            <tr><td style="padding:4px 0;color:#666">Email</td><td style="padding:4px 0">${o.email || '—'}</td></tr>
+            <tr><td style="padding:4px 0;color:#666">Language</td><td style="padding:4px 0">${o.language || '—'}</td></tr>
+          </table>
+          ${(o.items && o.items.length) ? `<h3 style="margin:18px 0 6px">Services &amp; sizes</h3><ul style="margin:0;padding-left:18px">${o.items.map((it) => { const sizes = (it.ratios && it.ratios.length) ? it.ratios.join(', ') : 'any'; const qty = it.qty ? `×${it.qty} ` : ''; return `<li>${qty}${it.label} — ${sizes}</li>` }).join('')}</ul>` : ''}
+          ${o.notes ? `<h3 style="margin:18px 0 6px">Notes</h3><p style="margin:0;white-space:pre-wrap">${o.notes}</p>` : ''}
+        </div>`
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey}` },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [orderEmail],
+            reply_to: o.email || undefined,
+            subject: `New order — ${o.package || 'Rexran'}${o.total ? ` ($${o.total})` : ''}`,
+            html: htmlBody,
+          }),
+        })
+      } catch { /* email is best-effort; Telegram already succeeded */ }
+    }
+
     return res.status(200).json({ ok: true })
   } catch (e) {
     return res.status(500).json({ error: 'Server error', detail: String(e) })
