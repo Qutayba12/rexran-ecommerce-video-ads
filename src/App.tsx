@@ -283,7 +283,10 @@ export default function App() {
           </div>
           <div className="steps reveal">
             {STEPS.map((s) => (
-              <div className="step" key={s.n}><div className="step-n">{s.n}</div><h3>{s.t}</h3><p>{s.p}</p></div>
+              <div className="step" key={s.n} onMouseMove={tilt}>
+                <div className="glow" />
+                <div className="step-n">{s.n}</div><h3>{s.t}</h3><p>{s.p}</p>
+              </div>
             ))}
           </div>
         </div>
