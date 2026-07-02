@@ -91,9 +91,10 @@
 .reel { margin-top: 48px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
 @media (max-width: 960px) {
   .reel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px;
-    margin-left: -22px; margin-right: -22px; padding: 4px 22px 14px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    padding: 4px 0 14px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .reel::-webkit-scrollbar { display: none; }
-  .tile { flex: 0 0 78%; scroll-snap-align: start; }
+  .tile { flex: 0 0 82%; scroll-snap-align: start; }
+  .tile:last-child { margin-right: 0; }
 }
 .tile { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-lg);
   background: linear-gradient(160deg, var(--bg2), #050409); padding: 22px 20px;
@@ -354,3 +355,75 @@
 .manifesto-sign { margin-top: 40px; display: inline-flex; align-items: center; gap: 12px; padding-top: 26px; border-top: 1px solid var(--line); }
 .manifesto-mark { font-size: 30px; color: var(--gold); }
 .manifesto-sign span { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+
+/* ===== MOBILE REFINEMENTS (<=640px) ===== */
+@media (max-width: 640px) {
+  /* Layout width: a touch more breathing room */
+  .wrap { width: min(1240px, 100% - 36px); }
+
+  /* Nav: slimmer, tighter CTA that stays tappable */
+  .nav { padding: 14px 18px; }
+  .nav.scrolled { padding: 10px 18px; }
+  .nav-cta { padding: 10px 15px; font-size: 11px; }
+  .brand { font-size: 19px; }
+
+  /* Hero: tighten vertical rhythm so the sub + buttons sit above the fold */
+  .hero { min-height: 100svh; padding-top: 96px; padding-bottom: 40px; }
+  .hero-logo { font-size: 64px; }
+  .hero-h { font-size: clamp(44px, 15vw, 66px); }
+  .hero-sub { margin-top: 26px; font-size: 16px; line-height: 1.65; max-width: 90%; }
+  .hero-actions { margin-top: 32px; width: 100%; gap: 12px; }
+  .hero-actions .cta { flex: 1 1 100%; justify-content: center; }
+  .hero-promise { margin-top: 24px; font-size: 11px; line-height: 1.8; }
+  .scroll-hint { display: none; }
+
+  /* Marquee: smaller so it doesn't dominate */
+  .strip { padding: 15px 0; }
+  .strip-track span { font-size: 20px; padding: 0 22px; }
+
+  /* Sections: comfortable, not cavernous */
+  .sec { padding: 64px 0; }
+  .sec-h { font-size: clamp(28px, 8vw, 38px); }
+  .sec-lede { font-size: 15.5px; margin-top: 16px; }
+
+  /* Cards: a bit more inner padding balance already handled; ensure grids breathe */
+  .why-grid, .proof-grid, .steps, .prices { margin-top: 34px; gap: 14px; }
+
+  /* Pricing: full-width tap CTA, clearer price */
+  .pprice { font-size: 44px; }
+
+  /* Footer: bigger tap targets + centered stack */
+  .foot { padding: 40px 0; }
+  .foot-in { flex-direction: column; align-items: flex-start; gap: 24px; }
+  .foot-links { gap: 22px 24px; flex-wrap: wrap; }
+  .foot-links a, .foot-linkbtn { padding: 11px 0; font-size: 14.5px; }
+
+  /* Modal: behave like a bottom sheet — easier to reach with a thumb */
+  .modal-back { padding: 0; align-items: flex-end; }
+  .modal { width: 100%; max-height: 92svh; border-radius: 22px 22px 0 0; border-bottom: none;
+    padding: 30px 22px calc(30px + env(safe-area-inset-bottom)); }
+  .modal h3 { font-size: 26px; }
+  .modal-x { top: 16px; right: 16px; }
+  .steps-bar { gap: 7px; }
+  .stepdot { font-size: 11px; }
+
+  /* Modal forms: single column, full-width controls, bigger touch fields */
+  .fgrid.two { grid-template-columns: 1fr; gap: 20px; }
+  .field input, .field select, .field textarea { padding: 14px; font-size: 16px; } /* 16px avoids iOS zoom */
+  .modal-nav { flex-direction: column-reverse; gap: 12px; }
+  .modal-nav .cta { width: 100%; justify-content: center; }
+
+  /* Builder steppers + chips: easier to hit */
+  .stepper button { width: 40px; height: 40px; }
+  .chip.sm { padding: 9px 14px; }
+
+  /* Contact modal spacing */
+  .contact-modal .modal-nav { margin-top: 20px; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .hero-h { font-size: 40px; }
+  .sec-h { font-size: 26px; }
+  .strip-track span { font-size: 18px; }
+}
