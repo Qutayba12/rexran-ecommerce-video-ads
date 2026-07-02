@@ -283,3 +283,14 @@
 .proof-k { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
 .proof-card h3 { font-family: var(--display); font-size: 21px; margin-bottom: 12px; color: var(--ink); }
 .proof-card p { color: var(--ink-mut); font-size: 14.5px; line-height: 1.65; }
+
+/* ===== ABOUT / MANIFESTO ===== */
+.manifesto { max-width: 860px; margin: 0 auto; text-align: center; }
+.manifesto .sec-tag { justify-content: center; }
+.manifesto-lead { font-family: var(--display); font-size: clamp(26px,4vw,44px); line-height: 1.25; letter-spacing: -.01em; margin: 22px auto 34px; color: var(--ink); max-width: 18ch; }
+.manifesto-lead em { color: var(--gold-hi); font-style: italic; }
+.manifesto-body { max-width: 62ch; margin: 0 auto; display: grid; gap: 20px; }
+.manifesto-body p { font-size: clamp(15px,1.7vw,17px); line-height: 1.75; color: var(--ink-mut); }
+.manifesto-sign { margin-top: 40px; display: inline-flex; align-items: center; gap: 12px; padding-top: 26px; border-top: 1px solid var(--line); }
+.manifesto-mark { font-size: 30px; color: var(--gold); }
+.manifesto-sign span { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }

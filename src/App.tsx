@@ -289,6 +289,26 @@ export default function App() {
         </div>
       </section>
 
+      {/* ABOUT / MANIFESTO */}
+      <section className="sec" id="about">
+        <div className="wrap">
+          <div className="manifesto reveal">
+            <div className="sec-tag">The Studio</div>
+            <p className="manifesto-lead">
+              Great ads used to mean a <em>studio, a crew, and a two-week wait.</em> Rexran was built to break that trade-off.
+            </p>
+            <div className="manifesto-body">
+              <p>Most small brands are stuck choosing between an agency they can't afford and DIY creative that looks like everyone else's. Rexran exists to end that compromise — pairing an art director's eye with AI production, so a store scaling on a tight budget can run creative that looks like it came from a studio.</p>
+              <p>Every project is directed by hand, one brand at a time. No templates, no prompt-and-pray, no assembly line. Just ads built to earn attention and move product — delivered in days, not weeks.</p>
+            </div>
+            <div className="manifesto-sign">
+              <RexMark className="manifesto-mark" />
+              <span>Rexran — AI-Directed Ad Studio</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="sec" id="pricing">
         <div className="wrap">
           <div className="reveal">
@@ -364,7 +384,7 @@ export default function App() {
       <footer className="foot">
         <div className="wrap foot-in">
           <a className="brand" href="#top" style={{ fontSize: 20 }}><RexMark className="brand-logo" />Rexran</a>
-          <div className="foot-links"><a href="#work">Work</a><a href="#pricing">Pricing</a><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a></div>
+          <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a></div>
           <div className="foot-fine">© 2026 Rexran — AI-Directed Ad Studio</div>
         </div>
       </footer>
