@@ -206,7 +206,7 @@ export default function App() {
       if (!r.ok) throw new Error('send failed')
       setStep(3)
     } catch {
-      setSubmitErr('Could not send your order. Please try again or DM us on Instagram.')
+      setSubmitErr('Could not send your order. Please try again, or DM us @rexran.media on Instagram.')
     } finally {
       setSubmitting(false)
     }
@@ -384,7 +384,7 @@ export default function App() {
       <footer className="foot">
         <div className="wrap foot-in">
           <a className="brand" href="#top" style={{ fontSize: 20 }}><RexMark className="brand-logo" />Rexran</a>
-          <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a></div>
+          <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer">Instagram</a></div>
           <div className="foot-fine">© 2026 Rexran — AI-Directed Ad Studio</div>
         </div>
       </footer>
