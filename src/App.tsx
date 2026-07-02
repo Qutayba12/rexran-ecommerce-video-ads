@@ -62,7 +62,7 @@ const TILES = [
 
 const STEPS = [
   { n: '01', t: 'You send the product', p: 'Pick a package, drop your product link and photos, choose your services and sizes. That is the whole brief.' },
-  { n: '02', t: 'I direct the creative', p: 'I produce every asset by hand — scripting, casting the AI actor, shooting, grading — so it fits your brand, not a template.' },
+  { n: '02', t: 'Rexran directs the creative', p: 'Every asset is produced by hand — scripting, casting the AI actor, shooting, grading — so it fits your brand, not a template.' },
   { n: '03', t: 'You run it in 48 hours', p: 'Final files land in your Instagram DMs as clean downloads, ready to upload straight to your ad account.' },
 ]
 
@@ -70,7 +70,7 @@ const WHY = [
   { t: 'No studio, no crew', p: 'You skip the photographer, the actors, the editor, and the week of back-and-forth. One link in, finished ads out.' },
   { t: 'Built to convert', p: 'Every asset leads with a hook and is sized natively for the feed — made to stop the scroll, not just look pretty.' },
   { t: '48-hour turnaround', p: 'Most agencies take two weeks. You get launch-ready creative in two days, straight to your DMs.' },
-  { t: 'Done entirely for you', p: 'No tool to learn, no prompts to write. You approve the brief, I handle the rest end to end.' },
+  { t: 'Done entirely for you', p: 'No tool to learn, no prompts to write. You approve the brief, Rexran handles the rest end to end.' },
 ]
 
 const REVIEWS = [
@@ -233,13 +233,14 @@ export default function App() {
           <span className="ln"><span><em>stop scrolling.</em></span></span>
         </h1>
         <p className="hero-sub">
-          I turn one product link into cinematic UGC video, scroll-stopping statics, and 4K product
+          Rexran turns one product link into cinematic UGC video, scroll-stopping statics, and 4K product
           films — produced by hand, delivered to your DMs in 48 hours. No actors. No crew. No software to learn.
         </p>
         <div className="hero-actions">
           <a className="cta" href="#pricing">Start a project</a>
           <a className="cta ghost" href="#work">See the work</a>
         </div>
+        <p className="hero-promise">Agency-grade creative · Freelancer speed · Made for DTC</p>
         <div className="scroll-hint">Scroll<div className="bar" /></div>
       </header>
 
@@ -255,7 +256,7 @@ export default function App() {
           <div className="reveal">
             <div className="sec-tag">The Work</div>
             <h2 className="sec-h">Every format your <em>ad account</em> is hungry for.</h2>
-            <p className="sec-lede">Pick one, mix them, or let me recommend the set most likely to convert for your product.</p>
+            <p className="sec-lede">Pick one, mix them, or get a recommended set built to convert for your product.</p>
           </div>
           {videos.length > 0 && (
             <div className="vid-grid">
@@ -442,7 +443,7 @@ export default function App() {
             {/* STEP 1 — DETAILS */}
             {step === 1 && (
               <>
-                <p className="modal-lede">Tell me about the product so I can produce the right creative.</p>
+                <p className="modal-lede">Tell us about the product so Rexran can produce the right creative.</p>
                 <div className="fgrid two">
                   <div className="field"><label>Brand / store name</label><input value={info.brand} onChange={(e) => setField('brand', e.target.value)} placeholder="Acme Supply Co." /></div>
                   <div className="field"><label>Product link</label><input type="url" value={info.productUrl} onChange={(e) => setField('productUrl', e.target.value)} placeholder="https://…/your-product" /></div>
@@ -492,7 +493,7 @@ export default function App() {
             {step === 3 && (
               <div className="done" style={{ marginTop: 10 }}>
                 <span className="dot" />
-                <p>Order received — thank you. I'll confirm on Instagram shortly with your timeline, and your finished ads will land in your DMs ready to run.</p>
+                <p>Order received — thank you. Rexran will confirm on Instagram shortly with your timeline, and your finished ads will land in your DMs ready to run.</p>
               </div>
             )}
           </div>
