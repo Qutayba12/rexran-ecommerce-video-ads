@@ -22,7 +22,6 @@ export default async function handler(req, res) {
       if (!video || !video.url) return res.status(400).json({ error: 'Missing video url' })
       const item = {
         id: Date.now().toString(),
-        title: video.title || 'Untitled',
         url: video.url,
         type: video.type || 'UGC',
         poster: video.poster || '',
