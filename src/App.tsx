@@ -171,6 +171,33 @@ export default function App() {
     fetch('/api/videos').then((r) => r.json()).then((d) => setVideos(d.videos || [])).catch(() => {})
   }, [])
 
+  // contact modal
+  const [contactOpen, setContactOpen] = useState(false)
+  const [contact, setContact] = useState({ name: '', email: '', message: '' })
+  const setContactField = (k: string, v: string) => setContact((s) => ({ ...s, [k]: v }))
+  const [contactState, setContactState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+  const openContact = () => { setContactOpen(true); setContactState('idle') }
+  const closeContact = () => { setContactOpen(false); setContactState('idle') }
+
+  const sendContact = async () => {
+    if (!contact.email.trim() || !contact.message.trim()) { setContactState('error'); return }
+    setContactState('sending')
+    try {
+      const r = await fetch('/api/order', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          package: 'Contact message',
+          brand: contact.name, email: contact.email, notes: contact.message,
+        }),
+      })
+      if (!r.ok) throw new Error('failed')
+      setContactState('done')
+      setContact({ name: '', email: '', message: '' })
+    } catch {
+      setContactState('error')
+    }
+  }
+
   const open = (plan: string) => { setCheckout(plan); setStep(0) }
   const close = () => { setCheckout(null); setStep(0); setSubmitErr('') }
 
@@ -390,7 +417,7 @@ export default function App() {
       <footer className="foot">
         <div className="wrap foot-in">
           <a className="brand" href="#top" style={{ fontSize: 20 }}><RexMark className="brand-logo" />Rexran</a>
-          <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><a href="mailto:hello@rexran.com">Email</a><a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer">Instagram</a></div>
+          <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><button className="foot-linkbtn" onClick={openContact}>Contact</button><a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer">Instagram</a></div>
           <div className="foot-fine">© 2026 Rexran — AI-Directed Ad Studio</div>
         </div>
       </footer>
@@ -528,6 +555,36 @@ export default function App() {
                 <span className="dot" />
                 <p>Order received — thank you. Rexran will confirm on Instagram shortly with your timeline, and your finished ads will land in your DMs ready to run.</p>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CONTACT MODAL */}
+      {contactOpen && (
+        <div className="modal-back" onClick={closeContact}>
+          <div className="modal contact-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-x" onClick={closeContact} aria-label="Close">✕</button>
+            {contactState === 'done' ? (
+              <div className="done" style={{ marginTop: 10 }}>
+                <span className="dot" />
+                <p>Message sent — thank you. Rexran will get back to you shortly at the email you provided.</p>
+              </div>
+            ) : (
+              <>
+                <h3>Let's <em>talk.</em></h3>
+                <p className="modal-lede">Questions, a custom brief, or just saying hello — send a note and Rexran will reply by email.</p>
+                <div className="fgrid two">
+                  <div className="field"><label>Your name</label><input value={contact.name} onChange={(e) => setContactField('name', e.target.value)} placeholder="Your name" /></div>
+                  <div className="field"><label>Email</label><input type="email" value={contact.email} onChange={(e) => setContactField('email', e.target.value)} placeholder="you@brand.com" /></div>
+                </div>
+                <div style={{ height: 22 }} />
+                <div className="field"><label>Message</label><textarea value={contact.message} onChange={(e) => setContactField('message', e.target.value)} placeholder="Tell us what you're looking for…" /></div>
+                {contactState === 'error' && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b', marginTop: 14 }}>Please add your email and a message, then try again — or reach us @rexran.media on Instagram.</p>}
+                <div className="modal-nav" style={{ justifyContent: 'flex-end' }}>
+                  <button className="cta" onClick={sendContact} disabled={contactState === 'sending'}>{contactState === 'sending' ? 'Sending…' : 'Send message'}</button>
+                </div>
+              </>
             )}
           </div>
         </div>

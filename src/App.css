@@ -195,7 +195,9 @@
 /* ===== FOOTER ===== */
 .foot { border-top: 1px solid var(--line); padding: 54px 0; }
 .foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px; }
-.foot-links { display: flex; gap: 26px; font-size: 13px; color: var(--ink-mut); }
+.foot-links { display: flex; gap: 26px; font-size: 13px; color: var(--ink-mut); align-items: center; }
+.foot-linkbtn { background: none; border: none; padding: 0; margin: 0; font: inherit; font-size: 13px; color: var(--ink-mut); cursor: pointer; transition: color .2s; }
+.foot-linkbtn:hover { color: var(--gold-hi); }
 .foot-fine { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
 
 /* ===== CUSTOM BUILDER ===== */
