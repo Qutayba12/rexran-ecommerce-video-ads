@@ -12,33 +12,45 @@ export default async function handler(req, res) {
 
   try {
     const o = req.body || {}
+    const isContact = o.package === 'Contact message'
 
     // Build a clean, readable message
     const lines = []
-    lines.push('🎬 *New Rexran Order*')
-    lines.push('')
-    lines.push(`*Package:* ${o.package || '—'}`)
-    if (o.total) lines.push(`*Total:* $${o.total}`)
-    lines.push('')
-    lines.push('*Client*')
-    lines.push(`• Brand: ${o.brand || '—'}`)
-    lines.push(`• Product: ${o.productUrl || '—'}`)
-    lines.push(`• Instagram: ${o.instagram || '—'}`)
-    lines.push(`• Email: ${o.email || '—'}`)
-    lines.push(`• Language: ${o.language || '—'}`)
-    if (o.items && o.items.length) {
+    if (isContact) {
+      lines.push('✉️ *New Contact Message*')
       lines.push('')
-      lines.push('*Services & sizes*')
-      o.items.forEach((it) => {
-        const sizes = (it.ratios && it.ratios.length) ? it.ratios.join(', ') : 'any'
-        const qty = it.qty ? `×${it.qty} ` : ''
-        lines.push(`• ${qty}${it.label} — ${sizes}`)
-      })
-    }
-    if (o.notes) {
+      lines.push('*From*')
+      lines.push(`• Name: ${o.brand || '—'}`)
+      lines.push(`• Email: ${o.email || '—'}`)
       lines.push('')
-      lines.push('*Notes*')
-      lines.push(o.notes)
+      lines.push('*Message*')
+      lines.push(o.notes || '—')
+    } else {
+      lines.push('🎬 *New Rexran Order*')
+      lines.push('')
+      lines.push(`*Package:* ${o.package || '—'}`)
+      if (o.total) lines.push(`*Total:* $${o.total}`)
+      lines.push('')
+      lines.push('*Client*')
+      lines.push(`• Brand: ${o.brand || '—'}`)
+      lines.push(`• Product: ${o.productUrl || '—'}`)
+      lines.push(`• Instagram: ${o.instagram || '—'}`)
+      lines.push(`• Email: ${o.email || '—'}`)
+      lines.push(`• Language: ${o.language || '—'}`)
+      if (o.items && o.items.length) {
+        lines.push('')
+        lines.push('*Services & sizes*')
+        o.items.forEach((it) => {
+          const sizes = (it.ratios && it.ratios.length) ? it.ratios.join(', ') : 'any'
+          const qty = it.qty ? `×${it.qty} ` : ''
+          lines.push(`• ${qty}${it.label} — ${sizes}`)
+        })
+      }
+      if (o.notes) {
+        lines.push('')
+        lines.push('*Notes*')
+        lines.push(o.notes)
+      }
     }
 
     const text = lines.join('\n')
@@ -60,7 +72,15 @@ export default async function handler(req, res) {
     const fromEmail = process.env.ORDER_FROM || 'Rexran Orders <onboarding@resend.dev>'
     if (resendKey) {
       try {
-        const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6">
+        const htmlBody = isContact ? `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6">
+          <h2 style="margin:0 0 12px">✉️ New Contact Message</h2>
+          <table style="border-collapse:collapse;width:100%;max-width:520px">
+            <tr><td style="padding:4px 0;color:#666;width:120px">Name</td><td style="padding:4px 0">${o.brand || '—'}</td></tr>
+            <tr><td style="padding:4px 0;color:#666">Email</td><td style="padding:4px 0">${o.email || '—'}</td></tr>
+          </table>
+          <h3 style="margin:18px 0 6px">Message</h3>
+          <p style="margin:0;white-space:pre-wrap">${o.notes || '—'}</p>
+        </div>` : `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6">
           <h2 style="margin:0 0 4px">🎬 New Rexran Order</h2>
           <p style="margin:0 0 16px;color:#666">${o.package || '—'}${o.total ? ` · $${o.total}` : ''}</p>
           <table style="border-collapse:collapse;width:100%;max-width:520px">
@@ -80,7 +100,7 @@ export default async function handler(req, res) {
             from: fromEmail,
             to: [orderEmail],
             reply_to: o.email || undefined,
-            subject: `New order — ${o.package || 'Rexran'}${o.total ? ` ($${o.total})` : ''}`,
+            subject: isContact ? `New contact message — ${o.brand || 'Rexran'}` : `New order — ${o.package || 'Rexran'}${o.total ? ` ($${o.total})` : ''}`,
             html: htmlBody,
           }),
         })
