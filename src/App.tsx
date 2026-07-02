@@ -173,6 +173,7 @@ export default function App() {
 
   // contact modal
   const [contactOpen, setContactOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [contact, setContact] = useState({ name: '', email: '', message: '' })
   const setContactField = (k: string, v: string) => setContact((s) => ({ ...s, [k]: v }))
   const [contactState, setContactState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
@@ -247,9 +248,22 @@ export default function App() {
       <div className="grain" />
 
       <nav className={`nav${scrolled ? ' scrolled' : ''}`}>
-        <a className="brand" href="#top"><RexMark className="brand-logo" />Rexran</a>
+        <a className="brand" href="#top" onClick={() => setMenuOpen(false)}><RexMark className="brand-logo" />Rexran</a>
         <a className="nav-cta" href="#pricing">Start a project</a>
+        <button className={`nav-burger${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen((v) => !v)} aria-label="Menu" aria-expanded={menuOpen}>
+          <span /><span /><span />
+        </button>
       </nav>
+      <div className={`mobile-menu${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(false)}>
+        <div className="mobile-menu-inner" onClick={(e) => e.stopPropagation()}>
+          <a href="#work" onClick={() => setMenuOpen(false)}>Work</a>
+          <a href="#about" onClick={() => setMenuOpen(false)}>Studio</a>
+          <a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
+          <button onClick={() => { setMenuOpen(false); openContact() }}>Contact</button>
+          <a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)}>Instagram</a>
+          <a className="cta" href="#pricing" onClick={() => setMenuOpen(false)}>Start a project</a>
+        </div>
+      </div>
 
       <header className="hero" id="top">
         <RexMark className="hero-logo" />

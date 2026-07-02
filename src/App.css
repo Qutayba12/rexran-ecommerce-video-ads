@@ -427,3 +427,35 @@
   .sec-h { font-size: 26px; }
   .strip-track span { font-size: 18px; }
 }
+
+/* ===== MOBILE NAV MENU ===== */
+.nav-burger { display: none; }
+.mobile-menu { display: none; }
+
+@media (max-width: 640px) {
+  /* hide the inline CTA; the burger takes over */
+  .nav-cta { display: none; }
+
+  .nav-burger { display: flex; flex-direction: column; justify-content: center; gap: 5px;
+    width: 44px; height: 44px; padding: 0 10px; background: none; border: none; cursor: pointer; z-index: 60; }
+  .nav-burger span { display: block; height: 2px; width: 24px; background: var(--ink); border-radius: 2px;
+    transition: transform .35s cubic-bezier(.16,1,.3,1), opacity .25s; }
+  .nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2) { opacity: 0; }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .mobile-menu { display: block; position: fixed; inset: 0; z-index: 55;
+    background: rgba(7,6,10,.6); backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .mobile-menu.open { opacity: 1; pointer-events: auto; }
+  .mobile-menu-inner { position: absolute; top: 0; left: 0; right: 0;
+    background: linear-gradient(180deg, var(--bg2), var(--bg)); border-bottom: 1px solid var(--line);
+    padding: 92px 24px 32px; display: flex; flex-direction: column; gap: 4px;
+    transform: translateY(-16px); opacity: 0; transition: transform .4s cubic-bezier(.16,1,.3,1), opacity .35s; }
+  .mobile-menu.open .mobile-menu-inner { transform: translateY(0); opacity: 1; }
+  .mobile-menu-inner a, .mobile-menu-inner button {
+    font-family: var(--display); font-size: 26px; color: var(--ink); text-align: left;
+    background: none; border: none; padding: 14px 0; cursor: pointer; border-bottom: 1px solid var(--line); transition: color .2s; }
+  .mobile-menu-inner a:hover, .mobile-menu-inner button:hover { color: var(--gold-hi); }
+  .mobile-menu-inner .cta { font-family: var(--mono); font-size: 13px; justify-content: center; margin-top: 20px; border-bottom: none; }
+}
