@@ -241,16 +241,7 @@
 .why-card h3 { font-size: 21px; margin-bottom: 12px; line-height: 1.2; }
 .why-card p { color: var(--ink-mut); font-size: 14.5px; line-height: 1.65; }
 
-/* ===== REVIEWS ===== */
-.rev-grid { margin-top: 56px; display: grid; gap: 16px; grid-template-columns: 1fr; }
-@media (min-width: 720px) { .rev-grid { grid-template-columns: 1fr 1fr; } }
-.rev-card { margin: 0; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 34px 32px; background: rgba(14,12,18,.4); backdrop-filter: blur(6px); transition: transform .4s, border-color .4s; }
-.rev-card:hover { transform: translateY(-5px); border-color: rgba(212,175,55,.35); }
-.rev-stars { color: var(--gold); letter-spacing: 3px; font-size: 15px; margin-bottom: 18px; }
-.rev-card blockquote { margin: 0 0 22px; font-family: var(--display); font-size: clamp(18px,2.2vw,23px); line-height: 1.45; color: var(--ink); font-style: italic; }
-.rev-card figcaption { display: flex; flex-direction: column; gap: 3px; }
-.rev-name { font-weight: 600; font-size: 14px; color: var(--ink); }
-.rev-role { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+
 
 /* ===== PORTFOLIO VIDEOS ===== */
 .vid-grid { margin: 0 0 24px; display: grid; gap: 18px; grid-template-columns: 1fr; }
@@ -272,3 +263,23 @@
   background: rgba(7,6,10,.6); backdrop-filter: blur(6px); color: var(--gold-hi);
   font-family: var(--mono); font-size: 11px; letter-spacing: .04em; transition: all .25s; pointer-events: none; }
 .vid-frame:hover .vid-sound { background: rgba(212,175,55,.92); color: #000; border-color: var(--gold); }
+
+/* ===== FOUNDING OFFER + PROOF ===== */
+.founding { margin-top: 56px; display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
+  border: 1px solid rgba(212,175,55,.35); border-radius: var(--r-lg); padding: 30px 34px;
+  background: linear-gradient(120deg, rgba(212,175,55,.10), rgba(14,12,18,.5) 60%); }
+.founding-badge { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: #0c0a10; background: var(--gold); padding: 7px 13px; border-radius: 100px; align-self: flex-start; }
+.founding-body { flex: 1; min-width: 240px; }
+.founding-body h3 { font-family: var(--display); font-size: clamp(20px,2.4vw,26px); margin-bottom: 8px; color: var(--ink); }
+.founding-body p { color: var(--ink-mut); font-size: 15px; line-height: 1.6; max-width: 60ch; }
+.founding .cta { flex: none; }
+@media (max-width: 640px) { .founding { padding: 24px; } .founding .cta { width: 100%; justify-content: center; } }
+
+.proof-grid { margin-top: 20px; display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .proof-grid { grid-template-columns: repeat(3,1fr); } }
+.proof-card { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 32px 30px; background: rgba(14,12,18,.4); backdrop-filter: blur(6px); transition: transform .4s, border-color .4s; }
+.proof-card:hover { transform: translateY(-5px); border-color: rgba(212,175,55,.35); }
+.proof-k { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+.proof-card h3 { font-family: var(--display); font-size: 21px; margin-bottom: 12px; color: var(--ink); }
+.proof-card p { color: var(--ink-mut); font-size: 14.5px; line-height: 1.65; }

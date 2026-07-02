@@ -73,11 +73,10 @@ const WHY = [
   { t: 'Done entirely for you', p: 'No tool to learn, no prompts to write. You approve the brief, Rexran handles the rest end to end.' },
 ]
 
-const REVIEWS = [
-  { q: 'First UGC video we ran beat our agency creative on day one. CPA dropped about 30% in the first week.', n: 'Marcus T.', r: 'DTC skincare founder' },
-  { q: 'I sent one product link and got back three scroll-stopping ads in two days. No calls, no briefs, no chaos.', n: 'Lena R.', r: 'Shopify apparel store' },
-  { q: 'The cinematic film made our $40 product look like a $400 one. It completely changed how people see the brand.', n: 'Devin K.', r: 'Home & lifestyle brand' },
-  { q: 'Cheaper than one freelancer, faster than any agency, and the quality is honestly better than both.', n: 'Priya S.', r: 'Supplements DTC' },
+const PROOF = [
+  { k: 'Native by format', t: 'Made to convert, not decorate', p: 'Every asset leads with a hook in the first second and is sized natively for the placement it runs in — built for the feed, not a portfolio.' },
+  { k: 'Human-directed', t: 'Directed, never auto-generated', p: 'AI is the camera and crew; the direction is human. Scripting, pacing, casting and grading are done by hand so it reads like a brand, not a prompt.' },
+  { k: 'Speed + economics', t: 'Two-day turnaround, no agency retainer', p: 'The output quality of a studio at the speed of a freelancer — launch-ready creative in days, priced for stores still scaling their spend.' },
 ]
 
 type Line = { qty: number; ratios: string[] }
@@ -335,20 +334,28 @@ export default function App() {
         </div>
       </section>
 
-      {/* REVIEWS */}
-      <section className="sec" id="reviews">
+      {/* PROOF + FOUNDING OFFER */}
+      <section className="sec" id="proof">
         <div className="wrap">
           <div className="reveal">
-            <div className="sec-tag">Client Results</div>
-            <h2 className="sec-h">Brands that stopped <em>the scroll.</em></h2>
+            <div className="sec-tag">Why It Works</div>
+            <h2 className="sec-h">Creative built to <em>earn the click.</em></h2>
           </div>
-          <div className="rev-grid reveal">
-            {REVIEWS.map((rv) => (
-              <figure className="rev-card" key={rv.n}>
-                <div className="rev-stars">★★★★★</div>
-                <blockquote>"{rv.q}"</blockquote>
-                <figcaption><span className="rev-name">{rv.n}</span><span className="rev-role">{rv.r}</span></figcaption>
-              </figure>
+          <div className="founding reveal">
+            <div className="founding-badge">Now onboarding</div>
+            <div className="founding-body">
+              <h3>Founding client spots are open</h3>
+              <p>Rexran is taking on its first founding brands. Come in early, lock in founding pricing, and get creative treated like the whole business depends on it — because right now, it does.</p>
+            </div>
+            <a className="cta" href="#pricing">Claim a spot</a>
+          </div>
+          <div className="proof-grid reveal">
+            {PROOF.map((p) => (
+              <div className="proof-card" key={p.t}>
+                <div className="proof-k">{p.k}</div>
+                <h3>{p.t}</h3>
+                <p>{p.p}</p>
+              </div>
             ))}
           </div>
         </div>
