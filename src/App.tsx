@@ -321,7 +321,8 @@ export default function App() {
           </div>
           <div className="prices reveal">
             {PLANS.map((p) => (
-              <div className={`pcard${p.feat ? ' feat' : ''}`} key={p.name}>
+              <div className={`pcard${p.feat ? ' feat' : ''}`} key={p.name} onMouseMove={tilt}>
+                <div className="glow" />
                 {p.feat && <span className="pflag">Most picked</span>}
                 <div className="pname">{p.name}</div>
                 <div className="pprice">{p.price}<span className="per">{p.per}</span></div>
@@ -348,7 +349,8 @@ export default function App() {
           </div>
           <div className="why-grid reveal">
             {WHY.map((w, i) => (
-              <div className="why-card" key={w.t}>
+              <div className="why-card" key={w.t} onMouseMove={tilt}>
+                <div className="glow" />
                 <div className="why-n">0{i + 1}</div>
                 <h3>{w.t}</h3><p>{w.p}</p>
               </div>
@@ -374,7 +376,8 @@ export default function App() {
           </div>
           <div className="proof-grid reveal">
             {PROOF.map((p) => (
-              <div className="proof-card" key={p.t}>
+              <div className="proof-card" key={p.t} onMouseMove={tilt}>
+                <div className="glow" />
                 <div className="proof-k">{p.k}</div>
                 <h3>{p.t}</h3>
                 <p>{p.p}</p>
