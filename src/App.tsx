@@ -432,7 +432,7 @@ export default function App() {
         <div className="wrap foot-in">
           <a className="brand" href="#top" style={{ fontSize: 20 }}><RexMark className="brand-logo" />Rexran</a>
           <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><button className="foot-linkbtn" onClick={openContact}>Contact</button><a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer">Instagram</a></div>
-          <div className="foot-fine">© 2026 Rexran — AI-Directed Ad Studio · <a href="/privacy" style={{ color: 'var(--ink-faint)' }}>Privacy</a></div>
+          <div className="foot-fine">© 2026 Rexran — AI-Directed Ad Studio · <a href="/privacy" style={{ color: 'var(--ink-faint)' }}>Privacy</a> · <a href="/terms" style={{ color: 'var(--ink-faint)' }}>Terms</a></div>
         </div>
       </footer>
 
