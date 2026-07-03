@@ -93,7 +93,7 @@ export default async function handler(req, res) {
           ${(o.items && o.items.length) ? `<h3 style="margin:18px 0 6px">Services &amp; sizes</h3><ul style="margin:0;padding-left:18px">${o.items.map((it) => { const sizes = (it.ratios && it.ratios.length) ? it.ratios.join(', ') : 'any'; const qty = it.qty ? `×${it.qty} ` : ''; return `<li>${qty}${it.label} — ${sizes}</li>` }).join('')}</ul>` : ''}
           ${o.notes ? `<h3 style="margin:18px 0 6px">Notes</h3><p style="margin:0;white-space:pre-wrap">${o.notes}</p>` : ''}
         </div>`
-        await fetch('https://api.resend.com/emails', {
+        const mailRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey}` },
           body: JSON.stringify({
@@ -104,10 +104,18 @@ export default async function handler(req, res) {
             html: htmlBody,
           }),
         })
-      } catch { /* email is best-effort; Telegram already succeeded */ }
+        const mailData = await mailRes.json().catch(() => ({}))
+        if (!mailRes.ok) {
+          // Surface the email error in the response (order still succeeds via Telegram)
+          return res.status(200).json({ ok: true, email: 'failed', emailError: mailData })
+        }
+        return res.status(200).json({ ok: true, email: 'sent', emailId: mailData.id })
+      } catch (e) {
+        return res.status(200).json({ ok: true, email: 'failed', emailError: String(e) })
+      }
     }
 
-    return res.status(200).json({ ok: true })
+    return res.status(200).json({ ok: true, email: 'skipped (no RESEND_API_KEY)' })
   } catch (e) {
     return res.status(500).json({ error: 'Server error', detail: String(e) })
   }
