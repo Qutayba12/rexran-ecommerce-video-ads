@@ -149,7 +149,7 @@ export default function App() {
   }, [])
 
   // ready-plan size choices
-  const [planRatios, setPlanRatios] = useState<Record<string, string[]>>({ ugc: ['9:16'], cine: ['16:9'], static: ['1:1'] })
+  const [planRatios, setPlanRatios] = useState<Record<string, string[]>>({})
   const togglePlanRatio = (k: string, r: string) =>
     setPlanRatios((p) => { const c = p[k] || []; return { ...p, [k]: c.includes(r) ? c.filter((x) => x !== r) : [...c, r] } })
 
