@@ -465,48 +465,109 @@
   .step-anim { animation: none; }
 }
 
-/* ===== THE WORK — continuous luxe 3D float (user can still hover to bring forward) ===== */
-.reel { perspective: 1400px; }
-.tile { transform-style: preserve-3d; }
-.reel.in .tile { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards, workFloat 9s ease-in-out infinite; }
-.reel.in .tile:nth-child(1) { animation-delay: .05s, 0s; }
-.reel.in .tile:nth-child(2) { animation-delay: .13s, .9s; }
-.reel.in .tile:nth-child(3) { animation-delay: .21s, 1.8s; }
-.reel.in .tile:nth-child(4) { animation-delay: .29s, 2.7s; }
-.reel.in .tile:nth-child(5) { animation-delay: .37s, 3.6s; }
-@keyframes workFloat {
-  0%   { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
-  25%  { transform: translateY(-9px) rotateX(3.5deg) rotateY(-4deg); }
-  50%  { transform: translateY(0) rotateX(0deg) rotateY(4deg); }
-  75%  { transform: translateY(-6px) rotateX(-3deg) rotateY(-2deg); }
-  100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+/* ===== THE WORK — layered luxe motion (3D float + ambient glow + drifting shimmer + pulsing edge) ===== */
+.reel { perspective: 1600px; }
+.tile { transform-style: preserve-3d; will-change: transform; }
+.reel.in .tile {
+  animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards,
+             workFloat 10s ease-in-out infinite,
+             edgePulse 5s ease-in-out infinite;
 }
-/* hover pauses the drift and lifts the card cleanly to the front */
+.reel.in .tile:nth-child(1) { animation-delay: .05s, 0s, 0s; }
+.reel.in .tile:nth-child(2) { animation-delay: .13s, 1s, .5s; }
+.reel.in .tile:nth-child(3) { animation-delay: .21s, 2s, 1s; }
+.reel.in .tile:nth-child(4) { animation-delay: .29s, 3s, 1.5s; }
+.reel.in .tile:nth-child(5) { animation-delay: .37s, 4s, 2s; }
+@keyframes workFloat {
+  0%   { transform: translateY(0) rotateX(0deg) rotateY(0deg); box-shadow: 0 14px 34px -22px rgba(0,0,0,.7); }
+  25%  { transform: translateY(-12px) rotateX(4deg) rotateY(-5deg); box-shadow: 0 34px 60px -26px rgba(0,0,0,.8); }
+  50%  { transform: translateY(-3px) rotateX(0deg) rotateY(5deg); box-shadow: 0 22px 46px -24px rgba(0,0,0,.75); }
+  75%  { transform: translateY(-9px) rotateX(-3.5deg) rotateY(-2deg); box-shadow: 0 30px 54px -26px rgba(0,0,0,.8); }
+  100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); box-shadow: 0 14px 34px -22px rgba(0,0,0,.7); }
+}
+@keyframes edgePulse {
+  0%, 100% { border-color: rgba(212,175,55,.14); }
+  50% { border-color: rgba(212,175,55,.4); }
+}
+/* ambient gold light that lives inside each card and slowly breathes + drifts */
+.tile .glow {
+  opacity: 1;
+  background: radial-gradient(260px circle at var(--mx,50%) var(--my,30%), rgba(212,175,55,.16), transparent 62%);
+  animation: ambientDrift 11s ease-in-out infinite;
+}
+.reel.in .tile:nth-child(2) .glow { animation-delay: 1.4s; }
+.reel.in .tile:nth-child(3) .glow { animation-delay: 2.8s; }
+.reel.in .tile:nth-child(4) .glow { animation-delay: 4.2s; }
+.reel.in .tile:nth-child(5) .glow { animation-delay: 5.6s; }
+@keyframes ambientDrift {
+  0%   { opacity: .35; transform: translate(-8%, 6%) scale(1); }
+  50%  { opacity: .8;  transform: translate(8%, -6%) scale(1.15); }
+  100% { opacity: .35; transform: translate(-8%, 6%) scale(1); }
+}
+/* a soft reflection that glides across on its own, continuously */
+.tile::after {
+  left: -70%; width: 55%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.10), transparent);
+  animation: sheenSweep 6.5s ease-in-out infinite;
+}
+.reel.in .tile:nth-child(1) .glow, .reel.in .tile::after { animation-delay: 0s; }
+.reel.in .tile:nth-child(2)::after { animation-delay: 1.3s; }
+.reel.in .tile:nth-child(3)::after { animation-delay: 2.6s; }
+.reel.in .tile:nth-child(4)::after { animation-delay: 3.9s; }
+.reel.in .tile:nth-child(5)::after { animation-delay: 5.2s; }
+@keyframes sheenSweep {
+  0%   { left: -70%; }
+  45%  { left: 130%; }
+  100% { left: 130%; }
+}
+/* hover: pause the drift, lift cleanly forward with a rich gold aura */
 .reel .tile:hover {
   animation-play-state: paused;
-  transform: translateY(-10px) rotateX(0deg) rotateY(0deg) scale(1.04) !important;
+  transform: translateY(-12px) rotateX(0deg) rotateY(0deg) scale(1.05) !important;
   z-index: 5;
-  border-color: rgba(212,175,55,.5);
-  box-shadow: 0 26px 60px -22px rgba(0,0,0,.75), 0 0 0 1px rgba(212,175,55,.14);
+  border-color: rgba(212,175,55,.6) !important;
+  box-shadow: 0 30px 70px -22px rgba(0,0,0,.8), 0 0 40px -8px rgba(212,175,55,.25), 0 0 0 1px rgba(212,175,55,.2) !important;
 }
+.reel .tile:hover .glow { animation-play-state: paused; opacity: 1; }
 
-/* ===== THE PROCESS — slow breathing zoom in/out ===== */
-.steps.in .step { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards, procBreathe 7s ease-in-out infinite; }
-.steps.in .step:nth-child(1) { animation-delay: .05s, 0s; }
-.steps.in .step:nth-child(2) { animation-delay: .15s, 1.2s; }
-.steps.in .step:nth-child(3) { animation-delay: .25s, 2.4s; }
-@keyframes procBreathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.045); }
+/* ===== THE PROCESS — breathing zoom + ambient glow + gliding sheen ===== */
+.steps.in .step {
+  animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards,
+             procBreathe 8s ease-in-out infinite,
+             edgePulse 6s ease-in-out infinite;
 }
+.steps.in .step:nth-child(1) { animation-delay: .05s, 0s, 0s; }
+.steps.in .step:nth-child(2) { animation-delay: .15s, 1.3s, .7s; }
+.steps.in .step:nth-child(3) { animation-delay: .25s, 2.6s, 1.4s; }
+@keyframes procBreathe {
+  0%, 100% { transform: scale(1) translateY(0); box-shadow: 0 14px 30px -22px rgba(0,0,0,.6); }
+  50% { transform: scale(1.05) translateY(-4px); box-shadow: 0 30px 54px -24px rgba(0,0,0,.75); }
+}
+.step .glow {
+  opacity: 1;
+  background: radial-gradient(320px circle at var(--mx,50%) var(--my,40%), rgba(212,175,55,.14), transparent 62%);
+  animation: ambientDrift 12s ease-in-out infinite;
+}
+.steps.in .step:nth-child(2) .glow { animation-delay: 1.8s; }
+.steps.in .step:nth-child(3) .glow { animation-delay: 3.6s; }
+.step::after {
+  left: -70%; width: 55%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.08), transparent);
+  animation: sheenSweep 7.5s ease-in-out infinite;
+}
+.steps.in .step:nth-child(2)::after { animation-delay: 2s; }
+.steps.in .step:nth-child(3)::after { animation-delay: 4s; }
 .steps .step:hover {
   animation-play-state: paused;
-  transform: translateY(-6px) scale(1.05) !important;
+  transform: translateY(-8px) scale(1.06) !important;
   z-index: 5;
-  border-color: rgba(212,175,55,.5);
-  box-shadow: 0 26px 60px -22px rgba(0,0,0,.75), 0 0 0 1px rgba(212,175,55,.14);
+  border-color: rgba(212,175,55,.6) !important;
+  box-shadow: 0 30px 70px -22px rgba(0,0,0,.8), 0 0 40px -8px rgba(212,175,55,.25), 0 0 0 1px rgba(212,175,55,.2) !important;
 }
+.steps .step:hover .glow { animation-play-state: paused; }
+.steps .step:hover .step-n { color: var(--gold); -webkit-text-stroke: 1px var(--gold); }
 
 @media (prefers-reduced-motion: reduce) {
   .reel.in .tile, .steps.in .step { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards; }
+  .tile .glow, .step .glow, .tile::after, .step::after { animation: none; }
 }
