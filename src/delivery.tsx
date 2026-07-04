@@ -33,19 +33,6 @@ function Delivery() {
       .catch(() => setState('error'))
   }, [])
 
-  const downloadAll = () => {
-    if (!data) return
-    data.files.forEach((f, i) => {
-      setTimeout(() => {
-        const a = document.createElement('a')
-        a.href = forceDownloadUrl(f.url)
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-      }, i * 500)
-    })
-  }
-
   return (
     <div className="dl">
       <header className="dl-head">
@@ -76,11 +63,7 @@ function Delivery() {
             <h1>{data.client ? `${data.client}, your ads have landed.` : 'Your ads have landed.'}</h1>
             {data.note && <p className="dl-note">{data.note}</p>}
 
-            <div className="dl-actions">
-              <button className="cta" onClick={downloadAll}>Download all ({data.files.length})</button>
-            </div>
-
-            <div className="dl-grid">
+            <div className="dl-grid" style={{ marginTop: 40 }}>
               {data.files.map((f, i) => (
                 <div className="dl-card" key={i}>
                   <div className="dl-preview">
