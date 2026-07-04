@@ -31,10 +31,8 @@ const SERVICES: Service[] = [
   { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS },
   { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
   { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
-  // TEST ITEM — remove after payment testing
-  { key: 'test', label: 'Test item ($1)', price: 1, ratios: [] },
 ]
-const MIN_ORDER = 1
+const MIN_ORDER = 25
 
 const PLANS = [
   { name: 'Spark', price: '$39', per: '/ project', desc: 'A quick test spot to see how AI creative performs for your product.',
@@ -177,6 +175,18 @@ export default function App() {
   const setField = (k: string, v: string) => setInfo((s) => ({ ...s, [k]: v }))
   const [submitting, setSubmitting] = useState(false)
   const [submitErr, setSubmitErr] = useState('')
+  const [infoErr, setInfoErr] = useState('')
+
+  // Validate required details before allowing payment
+  const goToPayment = () => {
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email.trim())
+    if (!info.brand.trim()) { setInfoErr('Please add your brand or store name.'); return }
+    if (!emailOk) { setInfoErr('Please enter a valid email so we can reach you.'); return }
+    if (!info.productUrl.trim()) { setInfoErr('Please add a link to your product.'); return }
+    if (!info.notes.trim()) { setInfoErr('Please add a few product details so we can produce the right creative.'); return }
+    setInfoErr('')
+    setStep(2)
+  }
 
   // portfolio videos from admin
   const [videos, setVideos] = useState<{ id: string; title: string; url: string; type: string; poster?: string }[]>([])
@@ -213,7 +223,7 @@ export default function App() {
   }
 
   const open = (plan: string) => { setCheckout(plan); setStep(0) }
-  const close = () => { setCheckout(null); setStep(0); setSubmitErr('') }
+  const close = () => { setCheckout(null); setStep(0); setSubmitErr(''); setInfoErr('') }
 
   const isCustom = checkout === 'Custom'
   const planObj = PLANS.find((p) => p.name === checkout)
@@ -548,9 +558,10 @@ export default function App() {
                 </div>
                 <div style={{ height: 22 }} />
                 <div className="field"><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
+                {infoErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b', marginTop: 14 }}>{infoErr}</p>}
                 <div className="modal-nav">
                   <button className="cta ghost" onClick={() => setStep(0)}>Back</button>
-                  <button className="cta" onClick={() => setStep(2)}>Continue to payment</button>
+                  <button className="cta" onClick={goToPayment}>Continue to payment</button>
                 </div>
               </>
             )}
