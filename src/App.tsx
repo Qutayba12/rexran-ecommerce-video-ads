@@ -239,12 +239,8 @@ export default function App() {
       items: orderItems(),
     }
     try {
-      // 1) Notify the studio right away (Telegram + email), so the order isn't lost if payment is abandoned
-      fetch('/api/order', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-      }).catch(() => {})
-
-      // 2) Create a Stripe Checkout session and redirect to the secure payment page
+      // Create a Stripe Checkout session and redirect to the secure payment page.
+      // Notification is sent by the Stripe webhook only AFTER payment succeeds.
       const r = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       })
