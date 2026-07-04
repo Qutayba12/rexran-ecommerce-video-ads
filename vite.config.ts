@@ -12,6 +12,7 @@ export default defineConfig({
         admin: resolve(__dirname, 'admin.html'),
         privacy: resolve(__dirname, 'privacy.html'),
         terms: resolve(__dirname, 'terms.html'),
+        delivery: resolve(__dirname, 'delivery.html'),
       },
     },
   },
