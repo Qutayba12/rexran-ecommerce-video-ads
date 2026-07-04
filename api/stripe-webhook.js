@@ -18,18 +18,23 @@ function readRawBody(req) {
 // Verify Stripe's signature manually (no SDK needed)
 function verifyStripeSignature(rawBody, sigHeader, secret) {
   if (!sigHeader || !secret) return false
-  const parts = Object.fromEntries(sigHeader.split(',').map((p) => p.split('=')))
-  const timestamp = parts.t
-  const signature = parts.v1
-  if (!timestamp || !signature) return false
+  // Header looks like: t=timestamp,v1=sig1,v1=sig2,...
+  const items = sigHeader.split(',').map((p) => p.split('='))
+  const timestamp = items.find((i) => i[0] === 't')?.[1]
+  const signatures = items.filter((i) => i[0] === 'v1').map((i) => i[1])
+  if (!timestamp || signatures.length === 0) return false
   const signedPayload = `${timestamp}.${rawBody.toString('utf8')}`
   const expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex')
-  // constant-time compare
-  try {
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
-  } catch {
-    return false
-  }
+  const expectedBuf = Buffer.from(expected)
+  // Match against any provided signature (constant-time)
+  return signatures.some((s) => {
+    try {
+      const sBuf = Buffer.from(s)
+      return sBuf.length === expectedBuf.length && crypto.timingSafeEqual(sBuf, expectedBuf)
+    } catch {
+      return false
+    }
+  })
 }
 
 async function notify(session) {
@@ -111,8 +116,17 @@ export default async function handler(req, res) {
   // Verify the event genuinely came from Stripe
   if (webhookSecret) {
     if (!verifyStripeSignature(raw, sig, webhookSecret)) {
-      return res.status(400).json({ error: 'Invalid signature' })
+      // Diagnostic detail (safe — reveals no secret) to explain the 400 in Stripe logs
+      const hasSecret = !!webhookSecret
+      const secretPrefix = webhookSecret ? webhookSecret.slice(0, 8) : 'none'
+      const hasSig = !!sig
+      return res.status(400).json({
+        error: 'Signature verification failed',
+        debug: { hasSecret, secretPrefix, hasSig, bodyLength: raw.length },
+      })
     }
+  } else {
+    return res.status(400).json({ error: 'STRIPE_WEBHOOK_SECRET is not set on the server' })
   }
 
   let event
