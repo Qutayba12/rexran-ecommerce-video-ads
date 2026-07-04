@@ -5,7 +5,7 @@ import './App.css'
 import './delivery.css'
 import RexMark from './RexMark'
 
-type FileItem = { url: string; name: string; type: string }
+type FileItem = { url: string; name: string; type: string; label?: string }
 type Delivery = { client: string; note: string; files: FileItem[]; createdAt: number | null }
 
 const isImage = (u: string) => /\.(jpe?g|png|webp|gif|avif)(\?|#|$)/i.test(u)
@@ -68,15 +68,15 @@ function Delivery() {
                 <div className="dl-card" key={i}>
                   <div className="dl-preview">
                     {isImage(f.url) ? (
-                      <img src={f.url} alt={f.name} loading="lazy" />
+                      <img src={f.url} alt={f.label || f.name} loading="lazy" />
                     ) : isVideo(f.url) ? (
-                      <video src={f.url} controls preload="metadata" playsInline />
+                      <video src={`${f.url}#t=0.1`} controls preload="metadata" playsInline />
                     ) : (
                       <div className="dl-file-icon">FILE</div>
                     )}
                   </div>
                   <div className="dl-card-foot">
-                    <span className="dl-name">{f.name}</span>
+                    <span className="dl-name">{f.label || f.name}</span>
                     <a className="dl-dl" href={forceDownloadUrl(f.url)}>Download</a>
                   </div>
                 </div>

@@ -43,6 +43,7 @@ export default async function handler(req, res) {
             url: String(f.url),
             name: (f.name || 'file').toString().slice(0, 200),
             type: (f.type || '').toString().slice(0, 40),
+            label: (f.label || '').toString().slice(0, 60),
           })),
         createdAt: Date.now(),
       }

@@ -97,12 +97,14 @@ function Admin() {
   }
 
   // ---- DELIVERIES ----
-  type DFile = { url: string; name: string; type: string }
+  type DFile = { url: string; name: string; type: string; label: string }
   type DeliveryT = { id: string; client: string; note: string; files: DFile[]; createdAt: number }
+  const DELIVERY_LABELS = ['UGC Video Ad', 'Cinematic Film', 'Static Ad Image', 'Product Photoshoot', 'Campaign Asset']
   const [deliveries, setDeliveries] = useState<DeliveryT[]>([])
   const [dClient, setDClient] = useState('')
   const [dNote, setDNote] = useState('')
   const [dFiles, setDFiles] = useState<DFile[]>([])
+  const [dLabel, setDLabel] = useState(DELIVERY_LABELS[0])
   const [dUploading, setDUploading] = useState(false)
   const [dPct, setDPct] = useState(0)
   const [dErr, setDErr] = useState('')
@@ -128,7 +130,7 @@ function Admin() {
         clientPayload: JSON.stringify({ password: pw }),
         onUploadProgress: (p) => setDPct(Math.round(p.percentage)),
       })
-      setDFiles((prev) => [...prev, { url: blob.url, name: file.name, type: file.type }])
+      setDFiles((prev) => [...prev, { url: blob.url, name: file.name, type: file.type, label: dLabel }])
     } catch (e) {
       setDErr('Upload failed: ' + String(e instanceof Error ? e.message : e))
     } finally {
@@ -245,6 +247,12 @@ function Admin() {
         <h2>Client deliveries ({deliveries.length})</h2>
         <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Upload a client's finished files, create a delivery, then send them the private link.</p>
 
+        <div className="adm-form" style={{ marginBottom: 14 }}>
+          <div className="field"><label>Service type for the next file</label>
+            <select value={dLabel} onChange={(e) => setDLabel(e.target.value)}>{DELIVERY_LABELS.map((l) => <option key={l}>{l}</option>)}</select>
+          </div>
+        </div>
+
         <div className="adm-upload">
           <label className="adm-drop">
             <input type="file" style={{ display: 'none' }}
@@ -252,7 +260,7 @@ function Admin() {
             {dUploading ? (
               <div className="adm-prog"><div className="adm-prog-bar" style={{ width: `${dPct}%` }} /><span>Uploading… {dPct}%</span></div>
             ) : (
-              <div className="adm-drop-in"><span className="adm-drop-plus">↑</span><strong>Upload a finished file for the client</strong><span className="adm-drop-hint">Add them one at a time · videos or images · up to 500MB each</span></div>
+              <div className="adm-drop-in"><span className="adm-drop-plus">↑</span><strong>Upload a finished file for the client</strong><span className="adm-drop-hint">Pick the service type above · one file at a time · up to 500MB each</span></div>
             )}
           </label>
         </div>
@@ -261,7 +269,7 @@ function Admin() {
           <div className="adm-dfiles">
             {dFiles.map((f, i) => (
               <div className="adm-dfile" key={i}>
-                <span className="adm-dfile-name">✓ {f.name}</span>
+                <span className="adm-dfile-name">✓ <strong style={{ color: 'var(--gold)' }}>{f.label}</strong> · {f.name}</span>
                 <button className="adm-del" onClick={() => setDFiles((prev) => prev.filter((_, idx) => idx !== i))}>Remove</button>
               </div>
             ))}
