@@ -166,7 +166,9 @@ function Admin() {
   }
 
   const copyLink = (id: string) => {
-    const link = `${window.location.origin}/delivery/${id}`
+    // Always use the public domain so delivery links never point to the SSO-protected *.vercel.app host
+    const origin = window.location.hostname.endsWith('rexran.com') ? window.location.origin : 'https://rexran.com'
+    const link = `${origin}/delivery/${id}`
     navigator.clipboard?.writeText(link).then(() => {
       setCopiedId(id); setTimeout(() => setCopiedId(''), 1800)
     }).catch(() => {})
