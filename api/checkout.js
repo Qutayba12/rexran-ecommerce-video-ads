@@ -48,7 +48,8 @@ export default async function handler(req, res) {
   if (Array.isArray(o.items) && o.items.length) {
     const summary = o.items.map((it) => {
       const sizes = (it.ratios && it.ratios.length) ? ` (${it.ratios.join('/')})` : ''
-      return `${it.qty ? it.qty + '× ' : ''}${it.label}${sizes}`
+      const dur = it.duration ? ` ${it.duration}` : ''
+      return `${it.qty ? it.qty + '× ' : ''}${it.label}${dur}${sizes}`
     }).join(', ')
     params.append('metadata[services]', summary.slice(0, 480))
   }

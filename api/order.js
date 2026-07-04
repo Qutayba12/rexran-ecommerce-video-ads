@@ -43,7 +43,8 @@ export default async function handler(req, res) {
         o.items.forEach((it) => {
           const sizes = (it.ratios && it.ratios.length) ? it.ratios.join(', ') : 'any'
           const qty = it.qty ? `×${it.qty} ` : ''
-          lines.push(`• ${qty}${it.label} — ${sizes}`)
+          const dur = it.duration ? ` ${it.duration}` : ''
+          lines.push(`• ${qty}${it.label}${dur} — ${sizes}`)
         })
       }
       if (o.notes) {
@@ -90,7 +91,7 @@ export default async function handler(req, res) {
             <tr><td style="padding:4px 0;color:#666">Email</td><td style="padding:4px 0">${o.email || '—'}</td></tr>
             <tr><td style="padding:4px 0;color:#666">Language</td><td style="padding:4px 0">${o.language || '—'}</td></tr>
           </table>
-          ${(o.items && o.items.length) ? `<h3 style="margin:18px 0 6px">Services &amp; sizes</h3><ul style="margin:0;padding-left:18px">${o.items.map((it) => { const sizes = (it.ratios && it.ratios.length) ? it.ratios.join(', ') : 'any'; const qty = it.qty ? `×${it.qty} ` : ''; return `<li>${qty}${it.label} — ${sizes}</li>` }).join('')}</ul>` : ''}
+          ${(o.items && o.items.length) ? `<h3 style="margin:18px 0 6px">Services &amp; sizes</h3><ul style="margin:0;padding-left:18px">${o.items.map((it) => { const sizes = (it.ratios && it.ratios.length) ? it.ratios.join(', ') : 'any'; const qty = it.qty ? `×${it.qty} ` : ''; const dur = it.duration ? ` ${it.duration}` : ''; return `<li>${qty}${it.label}${dur} — ${sizes}</li>` }).join('')}</ul>` : ''}
           ${o.notes ? `<h3 style="margin:18px 0 6px">Notes</h3><p style="margin:0;white-space:pre-wrap">${o.notes}</p>` : ''}
         </div>`
         const mailRes = await fetch('https://api.resend.com/emails', {

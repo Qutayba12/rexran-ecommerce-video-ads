@@ -25,10 +25,11 @@ function useScrolled() {
 const VIDEO_RATIOS = ['9:16', '16:9', '1:1', '21:9', '4:3', '3:4']
 const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
 
-type Service = { key: string; label: string; price: number; ratios: string[] }
+type Duration = { secs: number; price: number }
+type Service = { key: string; label: string; price: number; ratios: string[]; durations?: Duration[] }
 const SERVICES: Service[] = [
-  { key: 'ugc', label: 'UGC Video Ad', price: 49, ratios: VIDEO_RATIOS },
-  { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS },
+  { key: 'ugc', label: 'UGC Video Ad', price: 59, ratios: VIDEO_RATIOS, durations: [{ secs: 15, price: 59 }, { secs: 30, price: 79 }] },
+  { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS, durations: [{ secs: 15, price: 79 }, { secs: 30, price: 109 }] },
   { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
   { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
 ]
@@ -79,8 +80,8 @@ const PROOF = [
   { k: 'Speed + economics', t: 'Two-day turnaround, no agency retainer', p: 'The output quality of a studio at the speed of a freelancer — launch-ready creative in days, priced for stores still scaling their spend.' },
 ]
 
-type Line = { qty: number; ratios: string[] }
-const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [] }]))
+type Line = { qty: number; ratios: string[]; duration: number | null }
+const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [], duration: null }]))
 
 type VideoItem = { id: string; title: string; url: string; type: string; poster?: string }
 function isImageUrl(u: string) {
@@ -156,13 +157,24 @@ export default function App() {
   // custom builder lines
   const [build, setBuild] = useState<Record<string, Line>>(() => ({ ...emptyLines() }))
   const setQty = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, d: number) => {
-    const q = Math.max(0, state[key].qty + d); set({ ...state, [key]: { qty: q, ratios: q === 0 ? [] : state[key].ratios } })
+    const q = Math.max(0, state[key].qty + d); set({ ...state, [key]: { qty: q, ratios: q === 0 ? [] : state[key].ratios, duration: q === 0 ? null : state[key].duration } })
   }
   const toggleRatio = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, r: string) => {
     const line = state[key]; const ratios = line.ratios.includes(r) ? line.ratios.filter((x) => x !== r) : [...line.ratios, r]
     set({ ...state, [key]: { ...line, ratios } })
   }
-  const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * sv.price, 0)
+  const setDuration = (key: string, secs: number) => {
+    setBuild((state) => ({ ...state, [key]: { ...state[key], duration: secs } }))
+  }
+  // unit price for a service: if it has durations, use the picked one (fallback to its base price)
+  const unitPrice = (sv: Service, line: Line) => {
+    if (sv.durations && sv.durations.length) {
+      const d = sv.durations.find((x) => x.secs === line.duration)
+      return d ? d.price : sv.durations[0].price
+    }
+    return sv.price
+  }
+  const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * unitPrice(sv, build[sv.key]), 0)
 
   const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -179,25 +191,29 @@ export default function App() {
   const [badFields, setBadFields] = useState<Record<string, boolean>>({})
   const [sizeErr, setSizeErr] = useState('')
   const [badSizes, setBadSizes] = useState<Record<string, boolean>>({})
+  const [badDur, setBadDur] = useState<Record<string, boolean>>({})
 
   // Validate size selection on step 0 before continuing to details
   const goToDetails = () => {
     const bad: Record<string, boolean> = {}
+    const badD: Record<string, boolean> = {}
     if (isCustom) {
-      // every selected service (qty>0) that HAS size options must have at least one size
       SERVICES.forEach((sv) => {
+        // selected service must have a size (if it offers sizes)
         if (build[sv.key].qty > 0 && sv.ratios.length > 0 && build[sv.key].ratios.length === 0) bad[sv.key] = true
+        // selected video service must have a duration chosen
+        if (build[sv.key].qty > 0 && sv.durations && sv.durations.length && build[sv.key].duration == null) badD[sv.key] = true
       })
       if (buildTotal < MIN_ORDER) { setSizeErr(`Minimum order is $${MIN_ORDER}. Add a little more to continue.`); return }
     } else {
-      // every content line in the fixed plan must have at least one size
       ;(PLAN_CONTENTS[checkout!] || []).forEach((c) => {
         if ((planRatios[c.key] || []).length === 0) bad[c.key] = true
       })
     }
     setBadSizes(bad)
-    if (Object.keys(bad).length) {
-      setSizeErr('Please pick at least one size for the highlighted item(s).')
+    setBadDur(badD)
+    if (Object.keys(bad).length || Object.keys(badD).length) {
+      setSizeErr('Please complete the highlighted item(s) — pick a size' + (Object.keys(badD).length ? ' and a duration' : '') + '.')
       return
     }
     setSizeErr('')
@@ -257,7 +273,7 @@ export default function App() {
   }
 
   const open = (plan: string) => { setCheckout(plan); setStep(0) }
-  const close = () => { setCheckout(null); setStep(0); setSubmitErr(''); setInfoErr(''); setBadFields({}); setSizeErr(''); setBadSizes({}) }
+  const close = () => { setCheckout(null); setStep(0); setSubmitErr(''); setInfoErr(''); setBadFields({}); setSizeErr(''); setBadSizes({}); setBadDur({}) }
 
   const isCustom = checkout === 'Custom'
   const planObj = PLANS.find((p) => p.name === checkout)
@@ -268,6 +284,7 @@ export default function App() {
     if (isCustom) {
       return SERVICES.filter((sv) => build[sv.key].qty > 0).map((sv) => ({
         label: sv.label, qty: build[sv.key].qty, ratios: build[sv.key].ratios,
+        duration: build[sv.key].duration ? `${build[sv.key].duration}s` : undefined,
       }))
     }
     return (PLAN_CONTENTS[checkout!] || []).map((c) => ({
@@ -518,19 +535,33 @@ export default function App() {
               <>
                 {isCustom ? (
                   <>
-                    <p className="modal-lede">Pick each service, set the quantity, and choose its sizes. Price updates live.</p>
+                    <p className="modal-lede">Pick each service, set the quantity, choose its duration and sizes. Price updates live.</p>
                     {SERVICES.map((sv) => {
                       const line = build[sv.key]; const on = line.qty > 0
+                      const priceLabel = sv.durations && sv.durations.length
+                        ? `from $${Math.min(...sv.durations.map((d) => d.price))} each`
+                        : `$${sv.price} each`
                       return (
                         <div className={`bsvc${on ? ' on' : ''}`} key={sv.key}>
                           <div className="bitem">
-                            <div className="bitem-info"><h4>{sv.label}</h4><p>${sv.price} each</p></div>
+                            <div className="bitem-info"><h4>{sv.label}</h4><p>{priceLabel}</p></div>
                             <div className="stepper">
                               <button onClick={() => setQty(build, setBuild, sv.key, -1)} disabled={line.qty === 0} aria-label="Decrease">−</button>
                               <span className="qty">{line.qty}</span>
                               <button onClick={() => setQty(build, setBuild, sv.key, 1)} aria-label="Increase">+</button>
                             </div>
                           </div>
+                          {on && sv.durations && sv.durations.length > 0 && (
+                            <div className={`bratios${badDur[sv.key] ? ' bad' : ''}`}>
+                              <span className="svc-qty-lab">Video duration</span>
+                              <div className="chips">
+                                {sv.durations.map((d) => (
+                                  <button type="button" key={d.secs} className={`chip sm${line.duration === d.secs ? ' on' : ''}`}
+                                    onClick={() => { setDuration(sv.key, d.secs); setBadDur((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}>{d.secs}s · ${d.price}</button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           {on && sv.ratios.length > 0 && (
                             <div className={`bratios${badSizes[sv.key] ? ' bad' : ''}`}>
                               <span className="svc-qty-lab">Sizes for this service</span>
