@@ -50,3 +50,8 @@
 .adm-prog span { font-family: var(--mono); font-size: 13px; color: var(--gold-hi); }
 .adm-uploaded { margin-top: 12px; font-size: 13.5px; color: var(--gold-hi); }
 .adm-or { text-align: center; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); margin: 6px 0 20px; }
+
+/* Client deliveries */
+.adm-dfiles { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.adm-dfile { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: rgba(212,175,55,.04); }
+.adm-dfile-name { font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
