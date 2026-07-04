@@ -530,6 +530,7 @@ export default function App() {
             {/* header */}
             <h3>{isCustom ? <>Build <em>your own.</em></> : <>{checkout} <em>package.</em></>}</h3>
 
+            <div className="step-anim" key={step}>
             {/* STEP 0 — SIZES */}
             {step === 0 && (
               <>
@@ -656,6 +657,7 @@ export default function App() {
                 <p>Payment received — thank you. Your order is confirmed. Rexran will be in touch by email shortly with your timeline, and your finished ads will arrive on a private download page, ready to run.</p>
               </div>
             )}
+            </div>
           </div>
         </div>
       )}

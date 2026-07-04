@@ -465,3 +465,13 @@
   .mobile-menu-inner a:hover, .mobile-menu-inner button:hover { color: var(--gold-hi); }
   .mobile-menu-inner .cta { font-family: var(--mono); font-size: 13px; justify-content: center; margin-top: 20px; border-bottom: none; }
 }
+
+/* Smooth step transitions in the order modal */
+.step-anim { animation: stepIn .38s cubic-bezier(.16,1,.3,1); }
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-anim { animation: none; }
+}

@@ -40,7 +40,12 @@ function Delivery() {
       </header>
 
       <main className="dl-main">
-        {state === 'loading' && <p className="dl-status">Loading your delivery…</p>}
+        {state === 'loading' && (
+          <div className="dl-loading">
+            <div className="dl-spinner" />
+            <p className="dl-status">Preparing your delivery…</p>
+          </div>
+        )}
 
         {state === 'notfound' && (
           <div className="dl-empty">

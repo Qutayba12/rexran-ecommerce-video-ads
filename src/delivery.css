@@ -5,6 +5,9 @@
 
 .dl-main { flex: 1; width: min(1000px, 100% - 48px); margin: 0 auto; padding: 64px 0 80px; }
 .dl-status { color: var(--ink-mut); font-family: var(--mono); font-size: 14px; }
+.dl-loading { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 80px 0; }
+.dl-spinner { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(212,175,55,.18); border-top-color: var(--gold); animation: dl-spin .8s linear infinite; }
+@keyframes dl-spin { to { transform: rotate(360deg); } }
 .dl-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; }
 .dl h1 { font-family: var(--display); font-size: clamp(30px, 5vw, 48px); line-height: 1.08; letter-spacing: -.02em; margin-bottom: 16px; }
 .dl-note { color: var(--ink-mut); font-size: 16px; line-height: 1.7; max-width: 60ch; margin-bottom: 8px; }
