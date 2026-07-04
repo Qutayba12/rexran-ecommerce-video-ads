@@ -101,15 +101,8 @@
   display: flex; flex-direction: column; justify-content: flex-end; min-height: 300px;
   opacity: 0; transform: translateY(24px);
   transition: transform .5s cubic-bezier(.16,1,.3,1), border-color .4s, box-shadow .4s; }
-.reel.in .tile { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards; }
-.reel.in .tile:nth-child(1) { animation-delay: .05s; }
-.reel.in .tile:nth-child(2) { animation-delay: .13s; }
-.reel.in .tile:nth-child(3) { animation-delay: .21s; }
-.reel.in .tile:nth-child(4) { animation-delay: .29s; }
-.reel.in .tile:nth-child(5) { animation-delay: .37s; }
 @keyframes tileIn { to { opacity: 1; transform: translateY(0); } }
-.tile:hover { transform: translateY(-8px); border-color: rgba(212,175,55,.45);
-  box-shadow: 0 20px 50px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(212,175,55,.12); }
+.tile { border-color: var(--line); }
 .tile .glow { position: absolute; inset: 0; opacity: 0; transition: opacity .5s; border-radius: inherit;
   background: radial-gradient(300px circle at var(--mx,50%) var(--my,50%), rgba(212,175,55,.18), transparent 60%); }
 .tile:hover .glow { opacity: 1; }
@@ -128,10 +121,6 @@
 .step { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 36px 30px; background: rgba(14,12,18,.4); backdrop-filter: blur(6px);
   opacity: 0; transform: translateY(24px);
   transition: transform .5s cubic-bezier(.16,1,.3,1), border-color .4s, box-shadow .4s; }
-.steps.in .step { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards; }
-.steps.in .step:nth-child(1) { animation-delay: .06s; }
-.steps.in .step:nth-child(2) { animation-delay: .18s; }
-.steps.in .step:nth-child(3) { animation-delay: .30s; }
 .step:hover { transform: translateY(-8px); border-color: rgba(212,175,55,.45);
   box-shadow: 0 20px 50px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(212,175,55,.12); }
 .step .glow { position: absolute; inset: 0; opacity: 0; transition: opacity .5s; border-radius: inherit;
@@ -474,4 +463,50 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .step-anim { animation: none; }
+}
+
+/* ===== THE WORK — continuous luxe 3D float (user can still hover to bring forward) ===== */
+.reel { perspective: 1400px; }
+.tile { transform-style: preserve-3d; }
+.reel.in .tile { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards, workFloat 9s ease-in-out infinite; }
+.reel.in .tile:nth-child(1) { animation-delay: .05s, 0s; }
+.reel.in .tile:nth-child(2) { animation-delay: .13s, .9s; }
+.reel.in .tile:nth-child(3) { animation-delay: .21s, 1.8s; }
+.reel.in .tile:nth-child(4) { animation-delay: .29s, 2.7s; }
+.reel.in .tile:nth-child(5) { animation-delay: .37s, 3.6s; }
+@keyframes workFloat {
+  0%   { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+  25%  { transform: translateY(-9px) rotateX(3.5deg) rotateY(-4deg); }
+  50%  { transform: translateY(0) rotateX(0deg) rotateY(4deg); }
+  75%  { transform: translateY(-6px) rotateX(-3deg) rotateY(-2deg); }
+  100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+}
+/* hover pauses the drift and lifts the card cleanly to the front */
+.reel .tile:hover {
+  animation-play-state: paused;
+  transform: translateY(-10px) rotateX(0deg) rotateY(0deg) scale(1.04) !important;
+  z-index: 5;
+  border-color: rgba(212,175,55,.5);
+  box-shadow: 0 26px 60px -22px rgba(0,0,0,.75), 0 0 0 1px rgba(212,175,55,.14);
+}
+
+/* ===== THE PROCESS — slow breathing zoom in/out ===== */
+.steps.in .step { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards, procBreathe 7s ease-in-out infinite; }
+.steps.in .step:nth-child(1) { animation-delay: .05s, 0s; }
+.steps.in .step:nth-child(2) { animation-delay: .15s, 1.2s; }
+.steps.in .step:nth-child(3) { animation-delay: .25s, 2.4s; }
+@keyframes procBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+.steps .step:hover {
+  animation-play-state: paused;
+  transform: translateY(-6px) scale(1.05) !important;
+  z-index: 5;
+  border-color: rgba(212,175,55,.5);
+  box-shadow: 0 26px 60px -22px rgba(0,0,0,.75), 0 0 0 1px rgba(212,175,55,.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel.in .tile, .steps.in .step { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards; }
 }
