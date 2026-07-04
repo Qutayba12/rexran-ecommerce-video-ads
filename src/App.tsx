@@ -618,7 +618,24 @@ export default function App() {
                 <div className="fgrid two">
                   <div className={`field${badFields.email ? ' bad' : ''}`}><label>Email</label><input type="email" value={info.email} onChange={(e) => setField('email', e.target.value)} placeholder="you@store.com" /></div>
                   <div className="field"><label>Primary language</label>
-                    <select value={info.language} onChange={(e) => setField('language', e.target.value)}><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
+                    <select value={info.language} onChange={(e) => setField('language', e.target.value)}>
+                      <option>English</option>
+                      <option>Arabic</option>
+                      <option>Spanish</option>
+                      <option>French</option>
+                      <option>German</option>
+                      <option>Portuguese</option>
+                      <option>Italian</option>
+                      <option>Dutch</option>
+                      <option>Turkish</option>
+                      <option>Russian</option>
+                      <option>Hindi</option>
+                      <option>Japanese</option>
+                      <option>Korean</option>
+                      <option>Chinese (Mandarin)</option>
+                      <option>Bilingual</option>
+                      <option>Other</option>
+                    </select>
                   </div>
                 </div>
                 <div style={{ height: 22 }} />
