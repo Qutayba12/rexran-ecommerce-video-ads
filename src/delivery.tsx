@@ -11,6 +11,10 @@ type Delivery = { client: string; note: string; files: FileItem[]; createdAt: nu
 const isImage = (u: string) => /\.(jpe?g|png|webp|gif|avif)(\?|#|$)/i.test(u)
 const isVideo = (u: string) => /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(u)
 
+// Vercel Blob forces a real download (not in-browser view) when ?download=1 is added.
+// This works even cross-origin, where the HTML `download` attribute is ignored.
+const forceDownloadUrl = (u: string) => (u.includes('?') ? `${u}&download=1` : `${u}?download=1`)
+
 function Delivery() {
   const [state, setState] = useState<'loading' | 'ok' | 'notfound' | 'error'>('loading')
   const [data, setData] = useState<Delivery | null>(null)
@@ -34,12 +38,11 @@ function Delivery() {
     data.files.forEach((f, i) => {
       setTimeout(() => {
         const a = document.createElement('a')
-        a.href = f.url
-        a.download = f.name || ''
+        a.href = forceDownloadUrl(f.url)
         document.body.appendChild(a)
         a.click()
         a.remove()
-      }, i * 400)
+      }, i * 500)
     })
   }
 
@@ -91,7 +94,7 @@ function Delivery() {
                   </div>
                   <div className="dl-card-foot">
                     <span className="dl-name">{f.name}</span>
-                    <a className="dl-dl" href={f.url} download={f.name}>Download</a>
+                    <a className="dl-dl" href={forceDownloadUrl(f.url)}>Download</a>
                   </div>
                 </div>
               ))}
