@@ -63,13 +63,13 @@ const TILES = [
 const STEPS = [
   { n: '01', t: 'You send the product', p: 'Pick a package, drop your product link and photos, choose your services and sizes. That is the whole brief.' },
   { n: '02', t: 'Rexran directs the creative', p: 'Every asset is produced by hand — scripting, casting the AI actor, shooting, grading — so it fits your brand, not a template.' },
-  { n: '03', t: 'You run it in 48 hours', p: 'Final files land in your Instagram DMs as clean downloads, ready to upload straight to your ad account.' },
+  { n: '03', t: 'You run it in 48 hours', p: 'Final files arrive on a private download page as clean, full-quality files — ready to upload straight to your ad account.' },
 ]
 
 const WHY = [
   { t: 'No studio, no crew', p: 'You skip the photographer, the actors, the editor, and the week of back-and-forth. One link in, finished ads out.' },
   { t: 'Built to convert', p: 'Every asset leads with a hook and is sized natively for the feed — made to stop the scroll, not just look pretty.' },
-  { t: '48-hour turnaround', p: 'Most agencies take two weeks. You get launch-ready creative in two days, straight to your DMs.' },
+  { t: '48-hour turnaround', p: 'Most agencies take two weeks. You get launch-ready creative in two days, delivered as full-quality downloads.' },
   { t: 'Done entirely for you', p: 'No tool to learn, no prompts to write. You approve the brief, Rexran handles the rest end to end.' },
 ]
 
@@ -333,7 +333,7 @@ export default function App() {
         </h1>
         <p className="hero-sub">
           Rexran turns one product link into cinematic UGC video, scroll-stopping statics, and 4K product
-          films — produced by hand, delivered to your DMs in 48 hours. No actors. No crew. No software to learn.
+          films — produced by hand, delivered as full-quality downloads in 48 hours. No actors. No crew. No software to learn.
         </p>
         <div className="hero-actions">
           <a className="cta" href="#pricing">Start a project</a>
@@ -604,10 +604,10 @@ export default function App() {
             {/* STEP 2 — PAYMENT */}
             {step === 2 && (
               <>
-                <p className="modal-lede">Secure checkout, powered by Stripe. Your files arrive in your Instagram DMs, ready to run.</p>
+                <p className="modal-lede">Secure checkout, powered by Stripe. Your finished files arrive on a private download page, ready to run.</p>
                 <div className="pay-sum">
                   <div className="pay-row"><span>{isCustom ? 'Custom package' : `${checkout} package`}</span><strong>${planTotal}</strong></div>
-                  <div className="pay-row muted"><span>Delivery</span><span>Fast turnaround · Instagram DMs</span></div>
+                  <div className="pay-row muted"><span>Delivery</span><span>Fast turnaround · private download link</span></div>
                 </div>
                 <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>🔒 You'll be taken to Stripe's secure page to enter your card. Rexran never sees your card details. By paying you agree to our <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-hi)' }}>Terms</a>.</p>
                 {submitErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b' }}>{submitErr}</p>}
@@ -622,7 +622,7 @@ export default function App() {
             {step === 3 && (
               <div className="done" style={{ marginTop: 10 }}>
                 <span className="dot" />
-                <p>Payment received — thank you. Your order is confirmed. Rexran will reach out on Instagram shortly with your timeline, and your finished ads will land in your DMs ready to run.</p>
+                <p>Payment received — thank you. Your order is confirmed. Rexran will be in touch by email shortly with your timeline, and your finished ads will arrive on a private download page, ready to run.</p>
               </div>
             )}
           </div>
