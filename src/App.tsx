@@ -31,8 +31,10 @@ const SERVICES: Service[] = [
   { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS },
   { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
   { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
+  // TEST ITEM — remove after payment testing
+  { key: 'test', label: 'Test item ($1)', price: 1, ratios: [] },
 ]
-const MIN_ORDER = 25
+const MIN_ORDER = 1
 
 const PLANS = [
   { name: 'Spark', price: '$39', per: '/ project', desc: 'A quick test spot to see how AI creative performs for your product.',
@@ -485,7 +487,7 @@ export default function App() {
                               <button onClick={() => setQty(build, setBuild, sv.key, 1)} aria-label="Increase">+</button>
                             </div>
                           </div>
-                          {on && (
+                          {on && sv.ratios.length > 0 && (
                             <div className="bratios">
                               <span className="svc-qty-lab">Sizes for this service</span>
                               <div className="chips">
