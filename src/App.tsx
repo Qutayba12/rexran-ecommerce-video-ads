@@ -154,7 +154,7 @@ export default function App() {
     setPlanRatios((p) => { const c = p[k] || []; return { ...p, [k]: c.includes(r) ? c.filter((x) => x !== r) : [...c, r] } })
 
   // custom builder lines
-  const [build, setBuild] = useState<Record<string, Line>>(() => ({ ...emptyLines(), ugc: { qty: 1, ratios: ['9:16'] }, static: { qty: 2, ratios: ['1:1'] } }))
+  const [build, setBuild] = useState<Record<string, Line>>(() => ({ ...emptyLines() }))
   const setQty = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, d: number) => {
     const q = Math.max(0, state[key].qty + d); set({ ...state, [key]: { qty: q, ratios: q === 0 ? [] : state[key].ratios } })
   }
@@ -172,18 +172,52 @@ export default function App() {
 
   // client details
   const [info, setInfo] = useState({ brand: '', productUrl: '', instagram: '', email: '', language: 'English', notes: '' })
-  const setField = (k: string, v: string) => setInfo((s) => ({ ...s, [k]: v }))
+  const setField = (k: string, v: string) => { setInfo((s) => ({ ...s, [k]: v })); setBadFields((b) => (b[k] ? { ...b, [k]: false } : b)) }
   const [submitting, setSubmitting] = useState(false)
   const [submitErr, setSubmitErr] = useState('')
   const [infoErr, setInfoErr] = useState('')
+  const [badFields, setBadFields] = useState<Record<string, boolean>>({})
+  const [sizeErr, setSizeErr] = useState('')
+  const [badSizes, setBadSizes] = useState<Record<string, boolean>>({})
 
-  // Validate required details before allowing payment
+  // Validate size selection on step 0 before continuing to details
+  const goToDetails = () => {
+    const bad: Record<string, boolean> = {}
+    if (isCustom) {
+      // every selected service (qty>0) that HAS size options must have at least one size
+      SERVICES.forEach((sv) => {
+        if (build[sv.key].qty > 0 && sv.ratios.length > 0 && build[sv.key].ratios.length === 0) bad[sv.key] = true
+      })
+      if (buildTotal < MIN_ORDER) { setSizeErr(`Minimum order is $${MIN_ORDER}. Add a little more to continue.`); return }
+    } else {
+      // every content line in the fixed plan must have at least one size
+      ;(PLAN_CONTENTS[checkout!] || []).forEach((c) => {
+        if ((planRatios[c.key] || []).length === 0) bad[c.key] = true
+      })
+    }
+    setBadSizes(bad)
+    if (Object.keys(bad).length) {
+      setSizeErr('Please pick at least one size for the highlighted item(s).')
+      return
+    }
+    setSizeErr('')
+    setStep(1)
+  }
+
+  // Validate required details before allowing payment; mark every bad field red
   const goToPayment = () => {
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email.trim())
-    if (!info.brand.trim()) { setInfoErr('Please add your brand or store name.'); return }
-    if (!emailOk) { setInfoErr('Please enter a valid email so we can reach you.'); return }
-    if (!info.productUrl.trim()) { setInfoErr('Please add a link to your product.'); return }
-    if (!info.notes.trim()) { setInfoErr('Please add a few product details so we can produce the right creative.'); return }
+    const bad: Record<string, boolean> = {
+      brand: !info.brand.trim(),
+      email: !emailOk,
+      productUrl: !info.productUrl.trim(),
+      notes: !info.notes.trim(),
+    }
+    setBadFields(bad)
+    if (Object.values(bad).some(Boolean)) {
+      setInfoErr('Please complete the highlighted fields before continuing.')
+      return
+    }
     setInfoErr('')
     setStep(2)
   }
@@ -223,7 +257,7 @@ export default function App() {
   }
 
   const open = (plan: string) => { setCheckout(plan); setStep(0) }
-  const close = () => { setCheckout(null); setStep(0); setSubmitErr(''); setInfoErr('') }
+  const close = () => { setCheckout(null); setStep(0); setSubmitErr(''); setInfoErr(''); setBadFields({}); setSizeErr(''); setBadSizes({}) }
 
   const isCustom = checkout === 'Custom'
   const planObj = PLANS.find((p) => p.name === checkout)
@@ -498,12 +532,12 @@ export default function App() {
                             </div>
                           </div>
                           {on && sv.ratios.length > 0 && (
-                            <div className="bratios">
+                            <div className={`bratios${badSizes[sv.key] ? ' bad' : ''}`}>
                               <span className="svc-qty-lab">Sizes for this service</span>
                               <div className="chips">
                                 {sv.ratios.map((r) => (
                                   <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
-                                    onClick={() => toggleRatio(build, setBuild, sv.key, r)}>{r}</button>
+                                    onClick={() => { toggleRatio(build, setBuild, sv.key, r); setBadSizes((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}>{r}</button>
                                 ))}
                               </div>
                             </div>
@@ -518,12 +552,12 @@ export default function App() {
                     {(PLAN_CONTENTS[checkout!] || []).map((c) => (
                       <div className="bsvc on" key={c.key}>
                         <div className="bitem"><div className="bitem-info"><h4>{c.label}</h4></div></div>
-                        <div className="bratios">
+                        <div className={`bratios${badSizes[c.key] ? ' bad' : ''}`}>
                           <span className="svc-qty-lab">Pick the size(s) you want</span>
                           <div className="chips">
                             {c.ratios.map((r) => (
                               <button type="button" key={r} className={`chip sm${(planRatios[c.key] || []).includes(r) ? ' on' : ''}`}
-                                onClick={() => togglePlanRatio(c.key, r)}>{r}</button>
+                                onClick={() => { togglePlanRatio(c.key, r); setBadSizes((b) => (b[c.key] ? { ...b, [c.key]: false } : b)) }}>{r}</button>
                             ))}
                           </div>
                         </div>
@@ -533,9 +567,10 @@ export default function App() {
                 )}
                 <div className="btotal">
                   <div className="sum"><span className="lab">{isCustom ? 'Your total' : 'Package price'}</span>${planTotal}</div>
-                  <button className="cta" disabled={isCustom && buildTotal < MIN_ORDER} onClick={() => setStep(1)}>Continue</button>
+                  <button className="cta" disabled={isCustom && buildTotal < MIN_ORDER} onClick={goToDetails}>Continue</button>
                 </div>
                 {isCustom && buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
+                {sizeErr && <p className="bmin" style={{ color: '#e6896b' }}>{sizeErr}</p>}
               </>
             )}
 
@@ -544,20 +579,20 @@ export default function App() {
               <>
                 <p className="modal-lede">Tell us about the product so Rexran can produce the right creative.</p>
                 <div className="fgrid two">
-                  <div className="field"><label>Brand / store name</label><input value={info.brand} onChange={(e) => setField('brand', e.target.value)} placeholder="Acme Supply Co." /></div>
-                  <div className="field"><label>Product link</label><input type="url" value={info.productUrl} onChange={(e) => setField('productUrl', e.target.value)} placeholder="https://…/your-product" /></div>
+                  <div className={`field${badFields.brand ? ' bad' : ''}`}><label>Brand / store name</label><input value={info.brand} onChange={(e) => setField('brand', e.target.value)} placeholder="Acme Supply Co." /></div>
+                  <div className={`field${badFields.productUrl ? ' bad' : ''}`}><label>Product link</label><input type="url" value={info.productUrl} onChange={(e) => setField('productUrl', e.target.value)} placeholder="https://…/your-product" /></div>
                 </div>
                 <div style={{ height: 22 }} />
                 <div className="fgrid two">
                   <div className="field"><label>Instagram handle</label><input value={info.instagram} onChange={(e) => setField('instagram', e.target.value)} placeholder="@yourstore" /></div>
-                  <div className="field"><label>Email</label><input type="email" value={info.email} onChange={(e) => setField('email', e.target.value)} placeholder="you@store.com" /></div>
+                  <div className={`field${badFields.email ? ' bad' : ''}`}><label>Email</label><input type="email" value={info.email} onChange={(e) => setField('email', e.target.value)} placeholder="you@store.com" /></div>
                 </div>
                 <div style={{ height: 22 }} />
                 <div className="field"><label>Primary language</label>
                   <select value={info.language} onChange={(e) => setField('language', e.target.value)}><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
                 </div>
                 <div style={{ height: 22 }} />
-                <div className="field"><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
+                <div className={`field${badFields.notes ? ' bad' : ''}`}><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
                 {infoErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b', marginTop: 14 }}>{infoErr}</p>}
                 <div className="modal-nav">
                   <button className="cta ghost" onClick={() => setStep(0)}>Back</button>

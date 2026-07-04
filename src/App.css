@@ -183,6 +183,11 @@
 .field select option { background: var(--bg2); }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); background: rgba(212,175,55,.04); outline: none; }
 .field textarea { resize: vertical; min-height: 100px; }
+.field.bad label { color: #e6896b; }
+.field.bad input, .field.bad select, .field.bad textarea { border-color: #d9563a; background: rgba(217,86,58,.06); }
+.field.bad input:focus, .field.bad select:focus, .field.bad textarea:focus { border-color: #e6896b; background: rgba(217,86,58,.08); }
+.bratios.bad { border: 1px solid #d9563a; border-radius: var(--r-sm); padding: 12px; background: rgba(217,86,58,.05); }
+.bratios.bad .svc-qty-lab { color: #e6896b; }
 .chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .chip { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; padding: 10px 16px; border: 1px solid var(--line); border-radius: 100px; color: var(--ink-mut); background: transparent; transition: all .2s; }
 .chip:hover { border-color: var(--gold-deep); color: var(--ink); }
