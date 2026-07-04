@@ -179,6 +179,7 @@
 .fgrid { display: grid; gap: 26px; }
 @media (min-width: 680px) { .fgrid.two { grid-template-columns: 1fr 1fr; } }
 .field label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 11px; }
+.field label .opt { color: var(--gold-deep); text-transform: none; letter-spacing: 0; margin-left: 6px; }
 .field input, .field select, .field textarea { width: 100%; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font: 15px var(--body); padding: 13px 15px; transition: border-color .25s, background .25s; }
 .field select option { background: var(--bg2); }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); background: rgba(212,175,55,.04); outline: none; }

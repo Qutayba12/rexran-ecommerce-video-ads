@@ -58,7 +58,7 @@ async function notify(session) {
       `• Name: ${name}`,
       `• Email: ${email}`,
       `• Brand: ${m.brand || '—'}`,
-      `• Instagram: ${m.instagram || '—'}`,
+      ...(m.offer ? [`• Offer: ${m.offer}`] : []),
       `• Product: ${m.product_url || '—'}`,
       ...(m.services ? ['', '*Services*', m.services] : []),
       ...(m.notes ? ['', '*Notes*', m.notes] : []),
@@ -84,7 +84,7 @@ async function notify(session) {
         <tr><td style="padding:4px 0;color:#666;width:120px">Name</td><td style="padding:4px 0">${name}</td></tr>
         <tr><td style="padding:4px 0;color:#666">Email</td><td style="padding:4px 0">${email}</td></tr>
         <tr><td style="padding:4px 0;color:#666">Brand</td><td style="padding:4px 0">${m.brand || '—'}</td></tr>
-        <tr><td style="padding:4px 0;color:#666">Instagram</td><td style="padding:4px 0">${m.instagram || '—'}</td></tr>
+        ${m.offer ? `<tr><td style="padding:4px 0;color:#666">Offer</td><td style="padding:4px 0">${m.offer}</td></tr>` : ''}
         <tr><td style="padding:4px 0;color:#666">Product</td><td style="padding:4px 0">${m.product_url || '—'}</td></tr>
       </table>
       ${m.services ? `<h3 style="margin:18px 0 6px">Services</h3><p style="margin:0">${m.services}</p>` : ''}

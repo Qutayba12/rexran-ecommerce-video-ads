@@ -41,7 +41,7 @@ export default async function handler(req, res) {
   if (o.email) params.append('customer_email', String(o.email).slice(0, 200))
   // Save order context so it shows on the payment in the Stripe dashboard
   if (o.brand) params.append('metadata[brand]', String(o.brand).slice(0, 200))
-  if (o.instagram) params.append('metadata[instagram]', String(o.instagram).slice(0, 200))
+  if (o.offer) params.append('metadata[offer]', String(o.offer).slice(0, 200))
   if (o.productUrl) params.append('metadata[product_url]', String(o.productUrl).slice(0, 400))
   if (o.language) params.append('metadata[language]', String(o.language).slice(0, 60))
   if (o.notes) params.append('metadata[notes]', String(o.notes).slice(0, 480))

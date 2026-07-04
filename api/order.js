@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       lines.push('*Client*')
       lines.push(`• Brand: ${o.brand || '—'}`)
       lines.push(`• Product: ${o.productUrl || '—'}`)
-      lines.push(`• Instagram: ${o.instagram || '—'}`)
+      if (o.offer) lines.push(`• Offer: ${o.offer}`)
       lines.push(`• Email: ${o.email || '—'}`)
       lines.push(`• Language: ${o.language || '—'}`)
       if (o.items && o.items.length) {
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
           <table style="border-collapse:collapse;width:100%;max-width:520px">
             <tr><td style="padding:4px 0;color:#666;width:120px">Brand</td><td style="padding:4px 0">${o.brand || '—'}</td></tr>
             <tr><td style="padding:4px 0;color:#666">Product</td><td style="padding:4px 0">${o.productUrl || '—'}</td></tr>
-            <tr><td style="padding:4px 0;color:#666">Instagram</td><td style="padding:4px 0">${o.instagram || '—'}</td></tr>
+            ${o.offer ? `<tr><td style="padding:4px 0;color:#666">Offer</td><td style="padding:4px 0">${o.offer}</td></tr>` : ""}
             <tr><td style="padding:4px 0;color:#666">Email</td><td style="padding:4px 0">${o.email || '—'}</td></tr>
             <tr><td style="padding:4px 0;color:#666">Language</td><td style="padding:4px 0">${o.language || '—'}</td></tr>
           </table>

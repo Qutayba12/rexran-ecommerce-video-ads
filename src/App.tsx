@@ -171,7 +171,7 @@ export default function App() {
   }
 
   // client details
-  const [info, setInfo] = useState({ brand: '', productUrl: '', instagram: '', email: '', language: 'English', notes: '' })
+  const [info, setInfo] = useState({ brand: '', productUrl: '', offer: '', email: '', language: 'English', notes: '' })
   const setField = (k: string, v: string) => { setInfo((s) => ({ ...s, [k]: v })); setBadFields((b) => (b[k] ? { ...b, [k]: false } : b)) }
   const [submitting, setSubmitting] = useState(false)
   const [submitErr, setSubmitErr] = useState('')
@@ -280,7 +280,7 @@ export default function App() {
     const payload = {
       package: isCustom ? 'Custom' : checkout,
       total: planTotal,
-      brand: info.brand, productUrl: info.productUrl, instagram: info.instagram,
+      brand: info.brand, productUrl: info.productUrl, offer: info.offer,
       email: info.email, language: info.language, notes: info.notes,
       items: orderItems(),
     }
@@ -584,15 +584,15 @@ export default function App() {
                 </div>
                 <div style={{ height: 22 }} />
                 <div className="fgrid two">
-                  <div className="field"><label>Instagram handle</label><input value={info.instagram} onChange={(e) => setField('instagram', e.target.value)} placeholder="@yourstore" /></div>
                   <div className={`field${badFields.email ? ' bad' : ''}`}><label>Email</label><input type="email" value={info.email} onChange={(e) => setField('email', e.target.value)} placeholder="you@store.com" /></div>
+                  <div className="field"><label>Primary language</label>
+                    <select value={info.language} onChange={(e) => setField('language', e.target.value)}><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
+                  </div>
                 </div>
                 <div style={{ height: 22 }} />
-                <div className="field"><label>Primary language</label>
-                  <select value={info.language} onChange={(e) => setField('language', e.target.value)}><option>English</option><option>Arabic</option><option>Bilingual</option><option>Other</option></select>
-                </div>
+                <div className="field"><label>Offer to feature <span className="opt">optional</span></label><input value={info.offer} onChange={(e) => setField('offer', e.target.value)} placeholder="e.g. Buy 1 Get 1 Free · 20% off · Free gift · Free shipping" /></div>
                 <div style={{ height: 22 }} />
-                <div className={`field${badFields.notes ? ' bad' : ''}`}><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle or offer to push, any text or logo that must appear…" /></div>
+                <div className={`field${badFields.notes ? ' bad' : ''}`}><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle to push, any text or logo that must appear…" /></div>
                 {infoErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b', marginTop: 14 }}>{infoErr}</p>}
                 <div className="modal-nav">
                   <button className="cta ghost" onClick={() => setStep(0)}>Back</button>
