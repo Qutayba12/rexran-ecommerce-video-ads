@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import RexMark from './RexMark'
+import { trackPurchase } from './analytics'
 
 function useReveal() {
   useEffect(() => {
@@ -80,6 +81,19 @@ const PROOF = [
   { k: 'Speed + economics', t: 'Two-day turnaround, no agency retainer', p: 'The output quality of a studio at the speed of a freelancer — launch-ready creative in days, priced for stores still scaling their spend.' },
 ]
 
+// Every answer here mirrors the actual Terms of Service — nothing promised
+// that isn't already true in /terms.
+const FAQ = [
+  { q: 'How fast is delivery, really?', a: 'Most orders land in 48 hours from the moment we have your brief. Turnaround is an estimate in business days and can shift slightly with scope or revisions — but speed is the whole point of Rexran.' },
+  { q: 'What do I need to send to get started?', a: "Just your product link, a few photos, and a short brief on what to highlight. Pick your package and sizes at checkout — that's the whole intake." },
+  { q: 'Is this actually AI-generated, or does a human make it?', a: 'AI is the camera and crew; the direction is human. Every script, cast, shot, and grade is directed by hand so the result reads like a brand, not a prompt.' },
+  { q: 'Can I choose the aspect ratio and format?', a: "Yes — pick the sizes you need per asset (9:16, 1:1, 16:9, and more) right in the order builder, so every file arrives ready for the exact placement you're running." },
+  { q: 'What if I need changes after delivery?', a: 'Reasonable revisions within your original brief are included. A new concept, extra assets, or a different product is treated as a new order.' },
+  { q: 'Is payment secure? Do you store my card?', a: "Checkout runs entirely on Stripe's secure page — your card details never touch our servers." },
+  { q: "What's your refund policy?", a: "Because every asset is custom-produced for you, orders are generally non-refundable once production begins. If something's gone wrong, email us and we'll work in good faith to make it right." },
+  { q: 'Who owns the final files?', a: 'You do. Once your order is paid in full, the rights to use the delivered creative for your own advertising are yours.' },
+]
+
 type Line = { qty: number; ratios: string[]; duration: number | null }
 const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [], duration: null }]))
 
@@ -110,6 +124,14 @@ function ExpandIcon() {
   return (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3" />
+    </svg>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   )
 }
@@ -256,9 +278,13 @@ export default function App() {
   const [checkout, setCheckout] = useState<string | null>(() => (isPaidReturn() ? 'Growth' : null))
   const [step, setStep] = useState(() => (isPaidReturn() ? 3 : 0)) // 0 sizes, 1 info, 2 pay, 3 done
 
-  // Clean the URL so a refresh doesn't re-trigger the confirmation step.
+  // Clean the URL so a refresh doesn't re-trigger the confirmation step, and
+  // fire a purchase-conversion event (no-op until an analytics provider is
+  // actually configured — see src/analytics.ts).
   useEffect(() => {
     if (isPaidReturn()) {
+      const sessionId = new URLSearchParams(window.location.search).get('session_id')
+      trackPurchase(sessionId)
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
@@ -361,6 +387,9 @@ export default function App() {
   const photoItems = videos.filter((v) => isImageUrl(v.url))
   const [photoLightbox, setPhotoLightbox] = useState<VideoItem | null>(null)
 
+  // FAQ accordion — single item open at a time
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
+
   // contact modal
   const [contactOpen, setContactOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -452,6 +481,7 @@ export default function App() {
           <a href="#work" onClick={() => setMenuOpen(false)}>Work</a>
           <a href="#about" onClick={() => setMenuOpen(false)}>Studio</a>
           <a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
+          <a href="#faq" onClick={() => setMenuOpen(false)}>FAQ</a>
           <button onClick={() => { setMenuOpen(false); openContact() }}>Contact</button>
           <a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)}>Instagram</a>
           <a className="cta" href="#pricing" onClick={() => setMenuOpen(false)}>Start a project</a>
@@ -630,10 +660,31 @@ export default function App() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="sec" id="faq">
+        <div className="wrap">
+          <div className="reveal">
+            <div className="sec-tag">Questions</div>
+            <h2 className="sec-h">Everything you need to <em>know first.</em></h2>
+          </div>
+          <div className="faq-list reveal">
+            {FAQ.map((f, i) => (
+              <div className={`faq-item${openFaq === i ? ' open' : ''}`} key={f.q}>
+                <button className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)} aria-expanded={openFaq === i}>
+                  <span>{f.q}</span>
+                  <span className="faq-icon"><PlusIcon /></span>
+                </button>
+                <div className="faq-a-wrap"><div className="faq-a-inner"><p className="faq-a">{f.a}</p></div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <footer className="foot">
         <div className="wrap foot-in">
           <a className="brand" href="#top" style={{ fontSize: 20 }}><RexMark className="brand-logo" />Rexran</a>
-          <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><button className="foot-linkbtn" onClick={openContact}>Contact</button><a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer">Instagram</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
+          <div className="foot-links"><a href="#work">Work</a><a href="#about">Studio</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><button className="foot-linkbtn" onClick={openContact}>Contact</button><a href="https://instagram.com/rexran.media" target="_blank" rel="noreferrer">Instagram</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
           <div className="foot-fine">© 2026 Rexran — AI-Directed Ad Studio</div>
         </div>
       </footer>
