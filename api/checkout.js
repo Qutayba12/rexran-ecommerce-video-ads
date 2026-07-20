@@ -2,9 +2,14 @@
 // The browser redirects the customer to that URL to pay on Stripe's secure page.
 // No card data ever touches our server.
 import { computeTotal, MIN_ORDER } from './_lib/pricing.js'
+import { limitRequest } from './_lib/rateLimit.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  if (!(await limitRequest(req, 'checkout', 20, 10 * 60))) {
+    return res.status(429).json({ error: 'Too many requests. Please try again shortly.' })
+  }
 
   const secret = process.env.STRIPE_SECRET_KEY
   if (!secret) return res.status(500).json({ error: 'Payments are not configured yet.' })

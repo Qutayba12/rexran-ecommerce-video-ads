@@ -3,6 +3,7 @@
 // No onUploadCompleted callback (that's what stalled the browser previously).
 import { handleUpload } from '@vercel/blob/client'
 import { checkPassword } from './_lib/auth.js'
+import { isBlockedByFailedAttempts, recordFailedAttempt } from './_lib/rateLimit.js'
 
 const blobToken =
   process.env.BLOB_READ_WRITE_TOKEN ||
@@ -20,7 +21,11 @@ export default async function handler(req, res) {
       onBeforeGenerateToken: async (_pathname, clientPayload) => {
         let pw = ''
         try { pw = clientPayload ? JSON.parse(clientPayload).password : '' } catch { pw = '' }
+        if (await isBlockedByFailedAttempts(req, 'admin', 10)) {
+          throw new Error('Too many attempts. Try again later.')
+        }
         if (!checkPassword(pw, process.env.ADMIN_PASSWORD)) {
+          await recordFailedAttempt(req, 'admin', 15 * 60)
           throw new Error('Unauthorized')
         }
         return {

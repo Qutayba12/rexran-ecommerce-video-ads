@@ -2,6 +2,7 @@
 // Body: { password, action: 'add'|'delete', video?: {...}, id? }
 import { Redis } from '@upstash/redis'
 import { checkPassword } from './_lib/auth.js'
+import { isBlockedByFailedAttempts, recordFailedAttempt } from './_lib/rateLimit.js'
 
 const redis = Redis.fromEnv()
 const KEY = 'rexran:videos'
@@ -11,7 +12,11 @@ export default async function handler(req, res) {
 
   const { password, action, video, id } = req.body || {}
 
+  if (await isBlockedByFailedAttempts(req, 'admin', 10)) {
+    return res.status(429).json({ error: 'Too many attempts. Try again later.' })
+  }
   if (!checkPassword(password, process.env.ADMIN_PASSWORD)) {
+    await recordFailedAttempt(req, 'admin', 15 * 60)
     return res.status(401).json({ error: 'Unauthorized' })
   }
 

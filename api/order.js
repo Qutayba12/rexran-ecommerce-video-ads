@@ -1,9 +1,15 @@
 // Vercel Serverless Function — receives a contact-form message and sends it
 // to Telegram + email. Real orders are notified via the Stripe webhook, only
 // after payment succeeds — see api/stripe-webhook.js.
+import { limitRequest } from './_lib/rateLimit.js'
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  if (!(await limitRequest(req, 'contact', 5, 10 * 60))) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' })
   }
 
   const token = process.env.TELEGRAM_BOT_TOKEN
