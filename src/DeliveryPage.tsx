@@ -56,6 +56,7 @@ export default function Delivery() {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [feedback, setFeedback] = useState('')
+  const [reviewerName, setReviewerName] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [sendErr, setSendErr] = useState('')
@@ -69,7 +70,7 @@ export default function Delivery() {
         if (!r.ok) { setState('error'); return null }
         return r.json()
       })
-      .then((d) => { if (d) { setData(d); setState('ok') } })
+      .then((d) => { if (d) { setData(d); setReviewerName(d.client || ''); setState('ok') } })
       .catch(() => setState('error'))
   }, [])
 
@@ -101,7 +102,7 @@ export default function Delivery() {
       const r = await fetch('/api/testimonials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deliveryId: id, client: data?.client, rating: rating || undefined, text: feedback }),
+        body: JSON.stringify({ deliveryId: id, client: reviewerName.trim(), rating: rating || undefined, text: feedback }),
       })
       if (!r.ok) {
         const d = await r.json().catch(() => ({}))
@@ -232,6 +233,13 @@ export default function Delivery() {
                     ))}
                   </div>
 
+                  <input
+                    className="dl-feedback-input dl-feedback-name"
+                    value={reviewerName}
+                    onChange={(e) => setReviewerName(e.target.value)}
+                    placeholder="Your name or store (optional, but it's more credible with one!)"
+                    maxLength={120}
+                  />
                   <textarea
                     className="dl-feedback-input"
                     value={feedback}
