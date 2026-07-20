@@ -283,7 +283,7 @@ export default function App() {
   const orderItems = () => {
     if (isCustom) {
       return SERVICES.filter((sv) => build[sv.key].qty > 0).map((sv) => ({
-        label: sv.label, qty: build[sv.key].qty, ratios: build[sv.key].ratios,
+        key: sv.key, label: sv.label, qty: build[sv.key].qty, ratios: build[sv.key].ratios,
         duration: build[sv.key].duration ? `${build[sv.key].duration}s` : undefined,
       }))
     }

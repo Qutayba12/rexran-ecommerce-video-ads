@@ -1,18 +1,29 @@
 // POST /api/checkout — creates a Stripe Checkout Session and returns its URL.
 // The browser redirects the customer to that URL to pay on Stripe's secure page.
 // No card data ever touches our server.
+import { computeTotal, MIN_ORDER } from './_lib/pricing.js'
+import { limitRequest } from './_lib/rateLimit.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  if (!(await limitRequest(req, 'checkout', 20, 10 * 60))) {
+    return res.status(429).json({ error: 'Too many requests. Please try again shortly.' })
+  }
 
   const secret = process.env.STRIPE_SECRET_KEY
   if (!secret) return res.status(500).json({ error: 'Payments are not configured yet.' })
 
   const o = req.body || {}
   const packageName = (o.package || 'Rexran order').toString().slice(0, 120)
-  const total = Number(o.total)
 
-  if (!total || total < 1) return res.status(400).json({ error: 'Invalid amount' })
+  // The charge amount is always recomputed from the canonical price table —
+  // the client-sent total is display-only and never trusted here.
+  const total = computeTotal(o)
+  if (!total || total < 1) return res.status(400).json({ error: 'Invalid order' })
+  if (o.package === 'Custom' && total < MIN_ORDER) {
+    return res.status(400).json({ error: `Minimum order is $${MIN_ORDER}` })
+  }
 
   // Base URL for redirects (works on rexran.com and preview URLs)
   const proto = (req.headers['x-forwarded-proto'] || 'https').toString().split(',')[0]
