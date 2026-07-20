@@ -134,17 +134,17 @@ export default function App() {
   useReveal()
   const scrolled = useScrolled()
 
-  // checkout modal: which plan ('Spark'..) or 'Custom'
-  const [checkout, setCheckout] = useState<string | null>(null)
-  const [step, setStep] = useState(0) // 0 sizes, 1 info, 2 pay, 3 done
+  const isPaidReturn = () => new URLSearchParams(window.location.search).get('paid') === '1'
 
-  // When the customer returns from Stripe after paying, show the confirmation
+  // checkout modal: which plan ('Spark'..) or 'Custom'. If the customer just
+  // returned from Stripe, resolve straight into the confirmation step —
+  // computed in the lazy initializer so no effect-time setState is needed.
+  const [checkout, setCheckout] = useState<string | null>(() => (isPaidReturn() ? 'Growth' : null))
+  const [step, setStep] = useState(() => (isPaidReturn() ? 3 : 0)) // 0 sizes, 1 info, 2 pay, 3 done
+
+  // Clean the URL so a refresh doesn't re-trigger the confirmation step.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('paid') === '1') {
-      setCheckout('Growth') // any plan just to mount the modal
-      setStep(3)
-      // clean the URL so a refresh doesn't re-trigger
+    if (isPaidReturn()) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
