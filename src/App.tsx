@@ -87,10 +87,36 @@ type VideoItem = { id: string; title: string; url: string; type: string; poster?
 function isImageUrl(u: string) {
   return /\.(jpe?g|png|webp|gif|avif)(\?|#|$)/i.test(u)
 }
-function MediaCard({ v }: { v: VideoItem }) {
+
+// Real 3D tilt (rotateX/rotateY tracking the cursor) plus a glow that
+// follows the pointer — real pointer devices only (see the matching
+// @media (hover: hover) guards in App.css), so touch never gets stuck mid-tilt.
+function tilt3D(e: React.MouseEvent<HTMLElement>) {
+  const el = e.currentTarget
+  const r = el.getBoundingClientRect()
+  const px = (e.clientX - r.left) / r.width - 0.5
+  const py = (e.clientY - r.top) / r.height - 0.5
+  el.style.setProperty('--rx', `${(-py * 8).toFixed(2)}deg`)
+  el.style.setProperty('--ry', `${(px * 8).toFixed(2)}deg`)
+  el.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  el.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
+function resetTilt3D(e: React.MouseEvent<HTMLElement>) {
+  e.currentTarget.style.setProperty('--rx', '0deg')
+  e.currentTarget.style.setProperty('--ry', '0deg')
+}
+
+function ExpandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3" />
+    </svg>
+  )
+}
+
+function VideoCard({ v }: { v: VideoItem }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [muted, setMuted] = useState(true)
-  const image = isImageUrl(v.url)
 
   const onClick = () => {
     const el = ref.current
@@ -107,26 +133,114 @@ function MediaCard({ v }: { v: VideoItem }) {
   }
 
   return (
-    <figure className="vid-card">
-      {image ? (
-        <div className="vid-frame">
-          <img src={v.url} alt="" loading="lazy" />
-        </div>
-      ) : (
-        <div className="vid-frame" onClick={onClick}>
-          <video ref={ref} src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline preload="auto" />
-          {muted && (
-            <button className="vid-sound" aria-label="Unmute">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 5 6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
-              </svg>
-              <span>Tap for sound</span>
-            </button>
-          )}
-        </div>
-      )}
+    <figure className="vid3d-card" onMouseMove={tilt3D} onMouseLeave={resetTilt3D}>
+      <div className="glow" />
+      <div className="vid-frame" onClick={onClick}>
+        <video ref={ref} src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline preload="auto" />
+        {muted && (
+          <button className="vid-sound" aria-label="Unmute">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5 6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+            <span>Tap for sound</span>
+          </button>
+        )}
+      </div>
       <figcaption><span className="vid-type">{v.type}</span></figcaption>
     </figure>
+  )
+}
+
+// Auto-advances horizontally (never vertically) to the next video, fully
+// under the customer's control: hover/touch/drag pause it, arrow buttons and
+// native swipe/drag step it manually, and it resumes a few seconds after the
+// customer stops interacting. Respects prefers-reduced-motion (no autoplay).
+function VideoCarousel({ items }: { items: VideoItem[] }) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [paused, setPaused] = useState(false)
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const dragging = useRef(false)
+  const didDrag = useRef(false)
+  const dragStartX = useRef(0)
+  const dragStartScroll = useRef(0)
+
+  const pauseNow = () => {
+    setPaused(true)
+    if (resumeTimer.current) clearTimeout(resumeTimer.current)
+  }
+  const scheduleResume = (delay: number) => {
+    if (resumeTimer.current) clearTimeout(resumeTimer.current)
+    resumeTimer.current = setTimeout(() => setPaused(false), delay)
+  }
+  const advance = (dir: 1 | -1) => {
+    const track = trackRef.current
+    if (!track) return
+    const step = track.clientWidth * 0.86
+    if (dir === 1) {
+      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4
+      track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + step, behavior: 'smooth' })
+    } else {
+      const atStart = track.scrollLeft <= 4
+      track.scrollTo({ left: atStart ? track.scrollWidth : track.scrollLeft - step, behavior: 'smooth' })
+    }
+  }
+
+  useEffect(() => {
+    if (items.length <= 1) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = setInterval(() => { if (!paused) advance(1) }, 4200)
+    return () => clearInterval(id)
+  }, [paused, items.length])
+
+  const step = (dir: 1 | -1) => { pauseNow(); advance(dir); scheduleResume(4500) }
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse' || !trackRef.current) { pauseNow(); return }
+    dragging.current = true
+    didDrag.current = false
+    dragStartX.current = e.clientX
+    dragStartScroll.current = trackRef.current.scrollLeft
+    pauseNow()
+  }
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging.current || !trackRef.current) return
+    const dx = e.clientX - dragStartX.current
+    if (Math.abs(dx) > 6) didDrag.current = true
+    trackRef.current.scrollLeft = dragStartScroll.current - dx
+  }
+  const endInteraction = () => { dragging.current = false; scheduleResume(3500) }
+
+  return (
+    <div className="vids-wrap" onMouseEnter={pauseNow} onMouseLeave={() => scheduleResume(1200)}
+      onTouchStart={pauseNow} onTouchEnd={() => scheduleResume(3500)}>
+      <div className="vids-track" ref={trackRef}
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endInteraction} onPointerLeave={endInteraction}
+        onClickCapture={(e) => { if (didDrag.current) { e.preventDefault(); e.stopPropagation(); didDrag.current = false } }}>
+        {items.map((v) => <VideoCard key={v.id} v={v} />)}
+      </div>
+      {items.length > 1 && (
+        <>
+          <button className="vids-arrow prev" aria-label="Previous video" onClick={() => step(-1)}>‹</button>
+          <button className="vids-arrow next" aria-label="Next video" onClick={() => step(1)}>›</button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function PhotoGrid({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoItem) => void }) {
+  return (
+    <div className="photo-grid">
+      {items.map((v) => (
+        <figure className="photo-card" key={v.id} onMouseMove={tilt3D} onMouseLeave={resetTilt3D}
+          onClick={() => onOpen(v)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen(v)}>
+          <div className="glow" />
+          <img src={v.url} alt="" loading="lazy" />
+          <span className="photo-expand" aria-hidden="true"><ExpandIcon /></span>
+          <figcaption><span className="vid-type">{v.type}</span></figcaption>
+        </figure>
+      ))}
+    </div>
   )
 }
 
@@ -238,11 +352,14 @@ export default function App() {
     setStep(2)
   }
 
-  // portfolio videos from admin
-  const [videos, setVideos] = useState<{ id: string; title: string; url: string; type: string; poster?: string }[]>([])
+  // portfolio videos from admin — split into a video carousel and a photo grid
+  const [videos, setVideos] = useState<VideoItem[]>([])
   useEffect(() => {
     fetch('/api/videos').then((r) => r.json()).then((d) => setVideos(d.videos || [])).catch(() => {})
   }, [])
+  const videoItems = videos.filter((v) => !isImageUrl(v.url))
+  const photoItems = videos.filter((v) => isImageUrl(v.url))
+  const [photoLightbox, setPhotoLightbox] = useState<VideoItem | null>(null)
 
   // contact modal
   const [contactOpen, setContactOpen] = useState(false)
@@ -374,11 +491,20 @@ export default function App() {
             <h2 className="sec-h">Every format your <em>ad account</em> is hungry for.</h2>
             <p className="sec-lede">Pick one, mix them, or get a recommended set built to convert for your product.</p>
           </div>
-          {videos.length > 0 && (
-            <div className="vid-grid">
-              {videos.map((v) => (
-                <MediaCard key={v.id} v={v} />
-              ))}
+          {/* Not wrapped in .reveal: that IntersectionObserver only scans for
+              .reveal elements once on mount, but these sections mount later
+              (after the async /api/videos fetch resolves) — they'd never be
+              observed and would stay stuck at opacity: 0 forever. */}
+          {videoItems.length > 0 && (
+            <div>
+              <div className="sec-tag med-tag">Videos</div>
+              <VideoCarousel items={videoItems} />
+            </div>
+          )}
+          {photoItems.length > 0 && (
+            <div>
+              <div className="sec-tag med-tag">Photos</div>
+              <PhotoGrid items={photoItems} onOpen={setPhotoLightbox} />
             </div>
           )}
           <div className="reel reveal">
@@ -705,6 +831,16 @@ export default function App() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* PHOTO LIGHTBOX */}
+      {photoLightbox && (
+        <div className="modal-back photo-lightbox-back" onClick={() => setPhotoLightbox(null)}>
+          <div className="photo-lightbox" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-x" onClick={() => setPhotoLightbox(null)} aria-label="Close">✕</button>
+            <img src={photoLightbox.url} alt="" />
           </div>
         </div>
       )}
