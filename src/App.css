@@ -426,6 +426,15 @@
 #reviews .sec-tag { animation: tileIn .6s ease forwards; opacity: 0; transform: translateY(16px); }
 #reviews .sec-h { animation: tileIn .6s ease .08s forwards; opacity: 0; transform: translateY(16px); }
 
+.tst-static-grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .tst-static-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 980px) { .tst-static-grid { grid-template-columns: repeat(3, 1fr); } }
+.tst-static-grid .tst-card { width: auto; animation: tileIn .6s cubic-bezier(.16,1,.3,1) forwards; opacity: 0; transform: translateY(20px); }
+.tst-static-grid .tst-card:nth-child(2) { animation-delay: .08s; }
+.tst-static-grid .tst-card:nth-child(3) { animation-delay: .16s; }
+.tst-static-grid .tst-card:nth-child(4) { animation-delay: .24s; }
+.tst-static-grid .tst-card:nth-child(5) { animation-delay: .32s; }
+
 .tst-rows { display: flex; flex-direction: column; gap: 18px; }
 .tst-row { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
 .tst-track { display: flex; gap: 16px; width: max-content; animation-name: tst-scroll; animation-timing-function: linear; animation-iteration-count: infinite; }
@@ -456,7 +465,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tst-track { animation: none; }
-  #reviews .sec-tag, #reviews .sec-h { animation: none; opacity: 1; transform: none; }
+  #reviews .sec-tag, #reviews .sec-h, .tst-static-grid .tst-card { animation: none; opacity: 1; transform: none; }
 }
 
 @media (max-width: 640px) {

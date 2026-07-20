@@ -267,13 +267,12 @@ function TestimonialCard({ t }: { t: Testimonial }) {
 
 // One endless row of small cards, drifting continuously in one direction —
 // ambient background motion, not something the customer needs to steer
-// (unlike the Videos carousel above). Content is duplicated to fill the row
-// and then doubled again so the loop point is invisible.
+// (unlike the Videos carousel above). The array is doubled exactly once —
+// the minimum needed so the loop point is invisible — never padded with
+// extra repeats, so a single real testimonial never reads as several.
 function ReviewMarquee({ items, direction }: { items: Testimonial[]; direction: 'left' | 'right' }) {
-  const filled: Testimonial[] = []
-  while (filled.length < Math.max(6, items.length)) filled.push(...items)
-  const track = [...filled, ...filled]
-  const duration = Math.max(22, track.length * 3.4)
+  const track = [...items, ...items]
+  const duration = Math.max(18, track.length * 5)
 
   return (
     <div className={`tst-row tst-row-${direction}`}>
@@ -710,10 +709,24 @@ export default function App() {
             <div className="sec-tag">What Clients Say</div>
             <h2 className="sec-h">Real notes, from real deliveries.</h2>
           </div>
-          <div className="tst-rows">
-            <ReviewMarquee items={testimonials.filter((_, i) => i % 2 === 0)} direction="right" />
-            <ReviewMarquee items={testimonials.filter((_, i) => i % 2 === 1).length > 0 ? testimonials.filter((_, i) => i % 2 === 1) : testimonials} direction="left" />
-          </div>
+          {testimonials.length >= 6 ? (
+            // Enough distinct reviews that a two-row endless marquee reads as
+            // variety, not repetition — each row still shows every one of
+            // its cards exactly once per loop, just doubled for the seam.
+            <div className="tst-rows">
+              <ReviewMarquee items={testimonials.filter((_, i) => i % 2 === 0)} direction="right" />
+              <ReviewMarquee items={testimonials.filter((_, i) => i % 2 === 1)} direction="left" />
+            </div>
+          ) : (
+            // Too few reviews for a marquee to feel varied — show each one
+            // exactly once in a static grid instead of looping the same
+            // handful of cards past the customer on repeat.
+            <div className="wrap">
+              <div className="tst-static-grid">
+                {testimonials.map((t) => <TestimonialCard key={t.id} t={t} />)}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
