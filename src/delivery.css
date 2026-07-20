@@ -96,6 +96,21 @@
 .dl-dl { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #0c0a10; background: var(--gold); padding: 8px 13px; border-radius: 100px; text-decoration: none; transition: background .2s; }
 .dl-dl:hover { background: var(--gold-hi); }
 
+/* ===== SHARE / FEEDBACK PANEL — a goodwill ask at the peak-satisfaction
+   moment (files just arrived), no discount code or invented incentive. ===== */
+.dl-share {
+  position: relative; overflow: hidden; margin-top: 56px; padding: 40px 36px; text-align: center;
+  border: 1px solid rgba(212,175,55,.3); border-radius: var(--r-lg);
+  background: linear-gradient(160deg, rgba(212,175,55,.06), rgba(14,12,18,.4));
+}
+.dl-share-glow {
+  position: absolute; inset: -40%; pointer-events: none; opacity: .5;
+  background: radial-gradient(420px circle at 50% 0%, rgba(212,175,55,.25), transparent 65%);
+}
+.dl-share h3 { position: relative; font-family: var(--display); font-size: clamp(22px, 3vw, 28px); font-style: italic; color: var(--ink); margin-bottom: 10px; }
+.dl-share p { position: relative; color: var(--ink-mut); font-size: 15px; max-width: 46ch; margin: 0 auto 24px; }
+.dl-share-actions { position: relative; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
 .dl-empty { max-width: 60ch; }
 .dl-empty h1 { margin-bottom: 12px; }
 .dl-empty p, .dl-help { color: var(--ink-mut); font-size: 15px; line-height: 1.7; }
@@ -145,6 +160,11 @@
 
   .dl-help { margin-top: 32px; padding-top: 20px; font-size: 14px; }
   .dl-lightbox-foot { flex-wrap: wrap; }
+
+  .dl-share { margin-top: 40px; padding: 30px 22px; }
+  .dl-share p { font-size: 14px; }
+  .dl-share-actions { flex-direction: column; }
+  .dl-share-actions .cta { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 380px) {
