@@ -62,6 +62,7 @@ function Admin() {
       setAuthed(true)
       await loadVideos()
       await loadDeliveries(pw)
+      await loadOrders(pw)
     } catch {
       setErr('Could not connect. Try again.')
     } finally { setLoading(false) }
@@ -118,6 +119,24 @@ function Admin() {
       })
       const d = await r.json()
       if (r.ok) setDeliveries(d.deliveries || [])
+    } catch { /* ignore */ }
+  }
+
+  // ---- ORDERS (paid, recorded by the Stripe webhook) ----
+  type OrderT = {
+    id: string; package: string; amount: number | null; currency: string
+    email: string; name: string; brand: string; offer: string; productUrl: string
+    language: string; services: string; notes: string; createdAt: number
+  }
+  const [orders, setOrders] = useState<OrderT[]>([])
+  const loadOrders = async (pwd: string) => {
+    try {
+      const r = await fetch('/api/orders', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd }),
+      })
+      const d = await r.json()
+      if (r.ok) setOrders(d.orders || [])
     } catch { /* ignore */ }
   }
 
@@ -292,6 +311,23 @@ function Admin() {
               </div>
               <button className="cta ghost" style={{ padding: '9px 14px', fontSize: 12 }} onClick={() => copyLink(d.id)}>{copiedId === d.id ? 'Copied ✓' : 'Copy link'}</button>
               <button className="adm-del" onClick={() => removeDelivery(d.id)} disabled={loading}>Delete</button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="adm-section">
+        <h2>Orders ({orders.length})</h2>
+        <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Every payment confirmed by Stripe is recorded here, even if the Telegram/email alert fails to send.</p>
+        {orders.length === 0 && <p className="adm-empty">No paid orders yet.</p>}
+        <div className="adm-list">
+          {orders.map((o) => (
+            <div className="adm-item" key={o.id}>
+              <div className="adm-meta">
+                <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}</strong>
+                <span className="adm-url">{o.brand || '—'} · {o.email || '—'} · {new Date(o.createdAt).toLocaleString()}</span>
+                {o.services && <span className="adm-url">{o.services}</span>}
+              </div>
             </div>
           ))}
         </div>

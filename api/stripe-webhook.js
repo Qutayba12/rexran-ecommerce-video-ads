@@ -2,9 +2,40 @@
 // Fires ONLY after a real successful payment, then notifies the studio
 // (Telegram + email) with a "paid" confirmation.
 import crypto from 'crypto'
+import { Redis } from '@upstash/redis'
 
 // Stripe needs the raw request body to verify the signature
 export const config = { api: { bodyParser: false } }
+
+const redis = Redis.fromEnv()
+const ORDERS_KEY = 'rexran:orders'
+
+// Persists a confirmed order so it survives even if Telegram/email delivery
+// fails, and doubles as an idempotency guard: Stripe can redeliver the same
+// webhook event, so we skip re-notifying once a session id is already saved.
+async function saveOrder(session) {
+  const m = session.metadata || {}
+  const order = {
+    id: session.id,
+    package: m.package || '',
+    amount: session.amount_total != null ? session.amount_total / 100 : null,
+    currency: (session.currency || 'usd').toUpperCase(),
+    email: session.customer_details?.email || session.customer_email || '',
+    name: session.customer_details?.name || '',
+    brand: m.brand || '',
+    offer: m.offer || '',
+    productUrl: m.product_url || '',
+    language: m.language || '',
+    services: m.services || '',
+    notes: m.notes || '',
+    createdAt: session.created ? session.created * 1000 : Date.now(),
+  }
+  const list = (await redis.get(ORDERS_KEY)) || []
+  if (list.some((o) => o.id === order.id)) return false
+  list.unshift(order)
+  await redis.set(ORDERS_KEY, list)
+  return true
+}
 
 function readRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -138,9 +169,11 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
-    // Only notify for genuinely paid sessions
+    // Only record/notify for genuinely paid sessions
     if (session.payment_status === 'paid') {
-      await notify(session)
+      const isNewOrder = await saveOrder(session)
+      // Skip re-notifying if Stripe redelivered an event we already recorded
+      if (isNewOrder) await notify(session)
     }
   }
 
