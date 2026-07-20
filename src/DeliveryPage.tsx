@@ -53,6 +53,12 @@ export default function Delivery() {
   const [lightbox, setLightbox] = useState<FileItem | null>(null)
   const [copied, setCopied] = useState(false)
   const [shared, setShared] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [feedback, setFeedback] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [sendErr, setSendErr] = useState('')
 
   useEffect(() => {
     const id = getDeliveryId()
@@ -85,6 +91,28 @@ export default function Delivery() {
     navigator.clipboard?.writeText(shareData.url).then(() => {
       setShared(true); setTimeout(() => setShared(false), 1800)
     }).catch(() => {})
+  }
+
+  const submitFeedback = async () => {
+    const id = getDeliveryId()
+    if (!id || (!rating && feedback.trim().length < 3)) return
+    setSending(true); setSendErr('')
+    try {
+      const r = await fetch('/api/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deliveryId: id, client: data?.client, rating: rating || undefined, text: feedback }),
+      })
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}))
+        throw new Error(d.error || 'Could not send')
+      }
+      setSent(true)
+    } catch (e) {
+      setSendErr(e instanceof Error ? e.message : 'Could not send. Please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -178,12 +206,52 @@ export default function Delivery() {
 
             <div className="dl-share">
               <div className="dl-share-glow" />
-              <h3>Loved your ads?</h3>
-              <p>A quick word helps other stores find us — and if you know a brand that needs this too, send them our way.</p>
-              <div className="dl-share-actions">
-                <a className="cta ghost" href="mailto:hello@rexran.com?subject=Loved%20my%20Rexran%20ads&body=Hey%20Rexran%2C%0A%0A">Leave feedback</a>
-                <button className="cta ghost" onClick={shareRexran}>{shared ? 'Link copied ✓' : 'Share Rexran'}</button>
-              </div>
+              {sent ? (
+                <div className="dl-share-thanks">
+                  <h3>Thank you.</h3>
+                  <p>We read every word — really appreciate you taking the time.</p>
+                </div>
+              ) : (
+                <>
+                  <h3>Loved your ads?</h3>
+                  <p>A quick word helps other stores find us — and if you know a brand that needs this too, send them our way.</p>
+
+                  <div className="dl-stars" role="radiogroup" aria-label="Rate your experience">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`dl-star${n <= (hoverRating || rating) ? ' on' : ''}`}
+                        role="radio"
+                        aria-checked={rating === n}
+                        aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                        onMouseEnter={() => setHoverRating(n)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(n)}
+                      >★</button>
+                    ))}
+                  </div>
+
+                  <textarea
+                    className="dl-feedback-input"
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Tell us what you think (optional, but it helps!)"
+                    maxLength={600}
+                    rows={3}
+                  />
+                  {sendErr && <p className="dl-share-err">{sendErr}</p>}
+
+                  <div className="dl-share-actions">
+                    <button
+                      className="cta"
+                      onClick={submitFeedback}
+                      disabled={sending || (!rating && feedback.trim().length < 3)}
+                    >{sending ? 'Sending…' : 'Send feedback'}</button>
+                    <button className="cta ghost" onClick={shareRexran}>{shared ? 'Link copied ✓' : 'Share Rexran'}</button>
+                  </div>
+                </>
+              )}
             </div>
 
             <p className="dl-help">Questions or need a tweak? Reply to our email or reach us at <a href="mailto:hello@rexran.com">hello@rexran.com</a>.</p>
