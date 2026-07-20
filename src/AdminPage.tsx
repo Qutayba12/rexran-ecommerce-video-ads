@@ -5,9 +5,38 @@ import RexMark from './RexMark'
 type Video = { id: string; title: string; url: string; type: string; poster?: string }
 const TYPES = ['UGC', 'Static', 'Cinematic', 'Photoshoot', 'Campaign']
 
+type WorkspaceView = 'hub' | 'videos' | 'deliveries'
+
+// Follows the cursor position into --mx/--my so the .glow radial gradient
+// tracks the pointer — same pattern used site-wide (see App.tsx's `tilt`).
+const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
+
+function PortfolioIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="5.5" width="14" height="13" rx="2" />
+      <path d="M16.5 10.3 21.5 7v10l-5-3.3" />
+    </svg>
+  )
+}
+function DeliveriesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3 21 7.5v9L12 21 3 16.5v-9Z" />
+      <path d="M3 7.5 12 12l9-4.5" />
+      <path d="M12 12v9" />
+    </svg>
+  )
+}
+
 export default function Admin() {
   const [pw, setPw] = useState('')
   const [authed, setAuthed] = useState(false)
+  const [view, setView] = useState<WorkspaceView>('hub')
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
@@ -228,6 +257,38 @@ export default function Admin() {
         <a className="cta ghost" href="/">View site →</a>
       </header>
 
+      {view === 'hub' && (
+        <div className="adm-hub">
+          <div className="adm-hub-head">
+            <h1>What are we doing today?</h1>
+            <p>Pick a workspace to continue.</p>
+          </div>
+          <div className="adm-hub-grid">
+            <div className="adm-hub-card" onMouseMove={tilt} onClick={() => setView('videos')}
+              role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setView('videos')}>
+              <div className="glow" />
+              <div className="adm-hub-icon"><PortfolioIcon /></div>
+              <h2>Portfolio</h2>
+              <p className="adm-hub-desc">Publish and manage the videos and photos shown on the site.</p>
+              <div className="adm-hub-stats"><span>{videos.length} live</span></div>
+              <span className="adm-hub-go">Open workspace →</span>
+            </div>
+            <div className="adm-hub-card" onMouseMove={tilt} onClick={() => setView('deliveries')}
+              role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setView('deliveries')}>
+              <div className="glow" />
+              <div className="adm-hub-icon"><DeliveriesIcon /></div>
+              <h2>Client Deliveries</h2>
+              <p className="adm-hub-desc">Review paid orders and hand finished files off to clients.</p>
+              <div className="adm-hub-stats"><span>{orders.length} orders</span><span>{deliveries.length} deliveries</span></div>
+              <span className="adm-hub-go">Open workspace →</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {view === 'videos' && (
+      <>
+      <button className="adm-back" onClick={() => setView('hub')}>← Back to hub</button>
       <section className="adm-section">
         <h2>Add a video</h2>
         <div className="adm-upload">
@@ -268,6 +329,28 @@ export default function Admin() {
                 <a href={v.url} target="_blank" rel="noreferrer" className="adm-url">{v.url}</a>
               </div>
               <button className="adm-del" onClick={() => removeVideo(v.id)} disabled={loading}>Delete</button>
+            </div>
+          ))}
+        </div>
+      </section>
+      </>
+      )}
+
+      {view === 'deliveries' && (
+      <>
+      <button className="adm-back" onClick={() => setView('hub')}>← Back to hub</button>
+      <section className="adm-section">
+        <h2>Orders ({orders.length})</h2>
+        <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Every payment confirmed by Stripe is recorded here, even if the Telegram/email alert fails to send.</p>
+        {orders.length === 0 && <p className="adm-empty">No paid orders yet.</p>}
+        <div className="adm-list">
+          {orders.map((o) => (
+            <div className="adm-item" key={o.id}>
+              <div className="adm-meta">
+                <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}</strong>
+                <span className="adm-url">{o.brand || '—'} · {o.email || '—'} · {new Date(o.createdAt).toLocaleString()}</span>
+                {o.services && <span className="adm-url">{o.services}</span>}
+              </div>
             </div>
           ))}
         </div>
@@ -325,23 +408,8 @@ export default function Admin() {
           ))}
         </div>
       </section>
-
-      <section className="adm-section">
-        <h2>Orders ({orders.length})</h2>
-        <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Every payment confirmed by Stripe is recorded here, even if the Telegram/email alert fails to send.</p>
-        {orders.length === 0 && <p className="adm-empty">No paid orders yet.</p>}
-        <div className="adm-list">
-          {orders.map((o) => (
-            <div className="adm-item" key={o.id}>
-              <div className="adm-meta">
-                <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}</strong>
-                <span className="adm-url">{o.brand || '—'} · {o.email || '—'} · {new Date(o.createdAt).toLocaleString()}</span>
-                {o.services && <span className="adm-url">{o.services}</span>}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      </>
+      )}
     </div>
   )
 }
