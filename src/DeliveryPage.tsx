@@ -52,6 +52,7 @@ export default function Delivery() {
   const [data, setData] = useState<Delivery | null>(null)
   const [lightbox, setLightbox] = useState<FileItem | null>(null)
   const [copied, setCopied] = useState(false)
+  const [shared, setShared] = useState(false)
 
   useEffect(() => {
     const id = getDeliveryId()
@@ -69,6 +70,20 @@ export default function Delivery() {
   const copyLink = () => {
     navigator.clipboard?.writeText(window.location.href).then(() => {
       setCopied(true); setTimeout(() => setCopied(false), 1800)
+    }).catch(() => {})
+  }
+
+  const shareRexran = async () => {
+    const shareData = {
+      title: 'Rexran — AI-Directed Ad Studio',
+      text: 'Rexran turned my product into scroll-stopping ads in 48 hours.',
+      url: 'https://rexran.com',
+    }
+    if (navigator.share) {
+      try { await navigator.share(shareData); return } catch { /* cancelled or unsupported, fall through */ }
+    }
+    navigator.clipboard?.writeText(shareData.url).then(() => {
+      setShared(true); setTimeout(() => setShared(false), 1800)
     }).catch(() => {})
   }
 
@@ -159,6 +174,16 @@ export default function Delivery() {
                   </div>
                 )
               })}
+            </div>
+
+            <div className="dl-share">
+              <div className="dl-share-glow" />
+              <h3>Loved your ads?</h3>
+              <p>A quick word helps other stores find us — and if you know a brand that needs this too, send them our way.</p>
+              <div className="dl-share-actions">
+                <a className="cta ghost" href="mailto:hello@rexran.com?subject=Loved%20my%20Rexran%20ads&body=Hey%20Rexran%2C%0A%0A">Leave feedback</a>
+                <button className="cta ghost" onClick={shareRexran}>{shared ? 'Link copied ✓' : 'Share Rexran'}</button>
+              </div>
             </div>
 
             <p className="dl-help">Questions or need a tweak? Reply to our email or reach us at <a href="mailto:hello@rexran.com">hello@rexran.com</a>.</p>
