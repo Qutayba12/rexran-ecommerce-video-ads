@@ -46,6 +46,10 @@ Set these in the Vercel project settings (Production + Preview):
 | `RESEND_API_KEY` | `api/order.js`, `api/stripe-webhook.js` | Sends the same alerts by email. Optional — emails are skipped if unset. |
 | `ORDER_EMAIL` | same as above | Inbox that receives order/contact/payment emails. Defaults to `hello@rexran.com`. |
 | `ORDER_FROM` | same as above | Verified "from" address for outgoing email. Defaults to a `resend.dev` sandbox address. |
+| `VITE_GA_MEASUREMENT_ID` | `src/analytics.ts` (client-side, must be set at **build** time, not just runtime) | Google Analytics 4 measurement ID (`G-XXXXXXX`). Optional — analytics stays fully off, no script loads, until this is set. |
+| `VITE_META_PIXEL_ID` | `src/analytics.ts` (client-side, build time) | Meta (Facebook) Pixel ID. Optional — same as above. |
+
+**Before setting either `VITE_*` variable in production**, update `privacy.html` — it currently states outright that Rexran does not use advertising or tracking cookies, which stops being true the moment a real analytics ID goes live.
 
 ## How an order flows
 
