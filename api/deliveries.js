@@ -3,6 +3,7 @@
 // Each delivery gets a hard-to-guess public id used in /delivery/:id
 import { Redis } from '@upstash/redis'
 import crypto from 'crypto'
+import { checkPassword } from './_lib/auth.js'
 
 const redis = Redis.fromEnv()
 const KEY = 'rexran:deliveries'
@@ -15,10 +16,9 @@ function makeId() {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const adminPw = process.env.ADMIN_PASSWORD
   const { password, action, delivery, id } = req.body || {}
 
-  if (!adminPw || password !== adminPw) {
+  if (!checkPassword(password, process.env.ADMIN_PASSWORD)) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 

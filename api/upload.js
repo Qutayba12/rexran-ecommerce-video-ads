@@ -2,6 +2,7 @@
 // the file DIRECTLY to Vercel Blob (bypasses the 4.5MB serverless body limit).
 // No onUploadCompleted callback (that's what stalled the browser previously).
 import { handleUpload } from '@vercel/blob/client'
+import { checkPassword } from './_lib/auth.js'
 
 const blobToken =
   process.env.BLOB_READ_WRITE_TOKEN ||
@@ -19,7 +20,7 @@ export default async function handler(req, res) {
       onBeforeGenerateToken: async (_pathname, clientPayload) => {
         let pw = ''
         try { pw = clientPayload ? JSON.parse(clientPayload).password : '' } catch { pw = '' }
-        if (!process.env.ADMIN_PASSWORD || pw !== process.env.ADMIN_PASSWORD) {
+        if (!checkPassword(pw, process.env.ADMIN_PASSWORD)) {
           throw new Error('Unauthorized')
         }
         return {
