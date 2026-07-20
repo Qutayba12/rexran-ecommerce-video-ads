@@ -402,7 +402,7 @@ export default function Admin() {
                 <strong>{d.client || 'Delivery'} · {d.files.length} file{d.files.length !== 1 ? 's' : ''}</strong>
                 <span className="adm-url">/delivery/{d.id}</span>
               </div>
-              <button className="cta ghost" style={{ padding: '9px 14px', fontSize: 12 }} onClick={() => copyLink(d.id)}>{copiedId === d.id ? 'Copied ✓' : 'Copy link'}</button>
+              <button className="cta ghost adm-copylink" onClick={() => copyLink(d.id)}>{copiedId === d.id ? 'Copied ✓' : 'Copy link'}</button>
               <button className="adm-del" onClick={() => removeDelivery(d.id)} disabled={loading}>Delete</button>
             </div>
           ))}
