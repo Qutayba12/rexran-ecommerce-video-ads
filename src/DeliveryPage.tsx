@@ -74,16 +74,34 @@ export default function Delivery() {
 
   return (
     <div className="dl">
+      <div className="stage">
+        <div className="aurora a1" /><div className="aurora a2" /><div className="aurora a3" /><div className="mesh" />
+      </div>
+      <div className="grain" />
+
       <header className="dl-head">
         <a className="dl-brand" href="/"><RexMark className="dl-logo" />Rexran</a>
       </header>
 
       <main className="dl-main">
         {state === 'loading' && (
-          <div className="dl-loading">
-            <div className="dl-spinner" />
-            <p className="dl-status">Preparing your delivery…</p>
-          </div>
+          <>
+            <div className="dl-loading">
+              <div className="dl-spinner" />
+              <p className="dl-status">Preparing your delivery…</p>
+            </div>
+            <div className="dl-grid" style={{ marginTop: 24 }} aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <div className="dl-skel" key={i} style={{ animationDelay: `${i * 0.1}s` }}>
+                  <div className="dl-skel-preview" />
+                  <div className="dl-card-foot">
+                    <div className="dl-skel-line" style={{ width: '60%' }} />
+                    <div className="dl-skel-line dl-skel-btn" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {state === 'notfound' && (
@@ -104,11 +122,13 @@ export default function Delivery() {
 
         {state === 'ok' && data && (
           <>
-            <div className="dl-kicker-row">
-              <div className="dl-kicker">Your creative is ready</div>
-              <button className="dl-copy" onClick={copyLink}>{copied ? 'Link copied ✓' : 'Copy link'}</button>
+            <div className="dl-welcome">
+              <div className="dl-kicker-row">
+                <div className="dl-kicker">Your creative is ready</div>
+                <button className="dl-copy" onClick={copyLink}>{copied ? 'Link copied ✓' : 'Copy link'}</button>
+              </div>
+              <h1>{data.client ? `${data.client}, your ads have landed.` : 'Your ads have landed.'}</h1>
             </div>
-            <h1>{data.client ? `${data.client}, your ads have landed.` : 'Your ads have landed.'}</h1>
             {data.note && <p className="dl-note">{data.note}</p>}
             <p className="dl-count">{data.files.length} file{data.files.length !== 1 ? 's' : ''} ready to run</p>
 
