@@ -102,6 +102,7 @@ export default function Admin() {
       await loadVideos()
       await loadDeliveries(pw)
       await loadOrders(pw)
+      await loadTestimonials(pw)
     } catch {
       setErr('Could not connect. Try again.')
     } finally { setLoading(false) }
@@ -177,6 +178,45 @@ export default function Admin() {
       const d = await r.json()
       if (r.ok) setOrders(d.orders || [])
     } catch { /* ignore */ }
+  }
+
+  // ---- TESTIMONIALS (client feedback submitted from the delivery page) ----
+  type TestimonialT = {
+    id: string; deliveryId: string; client: string; rating: number | null
+    text: string; status: 'pending' | 'approved' | 'rejected'; createdAt: number
+  }
+  const [testimonials, setTestimonials] = useState<TestimonialT[]>([])
+  const loadTestimonials = async (pwd: string) => {
+    try {
+      const r = await fetch('/api/admin-testimonials', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd, action: 'list' }),
+      })
+      const d = await r.json()
+      if (r.ok) setTestimonials(d.testimonials || [])
+    } catch { /* ignore */ }
+  }
+  const setTestimonialStatus = async (id: string, action: 'approve' | 'reject') => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/admin-testimonials', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw, action, id }),
+      })
+      const d = await r.json()
+      if (r.ok) setTestimonials(d.testimonials)
+    } finally { setLoading(false) }
+  }
+  const removeTestimonial = async (id: string) => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/admin-testimonials', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw, action: 'delete', id }),
+      })
+      const d = await r.json()
+      if (r.ok) setTestimonials(d.testimonials)
+    } finally { setLoading(false) }
   }
 
   const uploadDeliveryFile = async (file: File) => {
@@ -279,7 +319,12 @@ export default function Admin() {
               <div className="adm-hub-icon"><DeliveriesIcon /></div>
               <h2>Client Deliveries</h2>
               <p className="adm-hub-desc">Review paid orders and hand finished files off to clients.</p>
-              <div className="adm-hub-stats"><span>{orders.length} orders</span><span>{deliveries.length} deliveries</span></div>
+              <div className="adm-hub-stats">
+                <span>{orders.length} orders</span><span>{deliveries.length} deliveries</span>
+                {testimonials.some((t) => t.status === 'pending') && (
+                  <span className="adm-hub-badge">{testimonials.filter((t) => t.status === 'pending').length} new review{testimonials.filter((t) => t.status === 'pending').length !== 1 ? 's' : ''}</span>
+                )}
+              </div>
               <span className="adm-hub-go">Open workspace →</span>
             </div>
           </div>
@@ -406,6 +451,38 @@ export default function Admin() {
               <button className="adm-del" onClick={() => removeDelivery(d.id)} disabled={loading}>Delete</button>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="adm-section">
+        <h2>Client testimonials ({testimonials.length})</h2>
+        <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Feedback clients submit from their delivery page. Approve the ones you want to feature on the site — nothing goes public until you do.</p>
+        {testimonials.length === 0 && <p className="adm-empty">No feedback submitted yet.</p>}
+        <div className="adm-list">
+          {[...testimonials]
+            .sort((a, b) => {
+              const order = { pending: 0, approved: 1, rejected: 2 }
+              if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status]
+              return b.createdAt - a.createdAt
+            })
+            .map((t) => (
+              <div className="adm-item adm-testimonial" key={t.id}>
+                <div className="adm-meta">
+                  <strong>
+                    {t.client || 'Anonymous client'}
+                    {t.rating ? ` · ${'★'.repeat(t.rating)}${'☆'.repeat(5 - t.rating)}` : ''}
+                    {' · '}<span className={`adm-tstatus adm-tstatus-${t.status}`}>{t.status}</span>
+                  </strong>
+                  {t.text && <span className="adm-url adm-tstext">"{t.text}"</span>}
+                  <span className="adm-url">{new Date(t.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="adm-tactions">
+                  {t.status !== 'approved' && <button className="cta ghost adm-copylink" onClick={() => setTestimonialStatus(t.id, 'approve')} disabled={loading}>Approve</button>}
+                  {t.status !== 'rejected' && <button className="cta ghost adm-copylink" onClick={() => setTestimonialStatus(t.id, 'reject')} disabled={loading}>Reject</button>}
+                  <button className="adm-del" onClick={() => removeTestimonial(t.id)} disabled={loading}>Delete</button>
+                </div>
+              </div>
+            ))}
         </div>
       </section>
       </>

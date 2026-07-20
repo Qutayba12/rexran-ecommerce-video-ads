@@ -250,6 +250,40 @@ function VideoCarousel({ items }: { items: VideoItem[] }) {
   )
 }
 
+type Testimonial = { id: string; client: string; rating: number | null; text: string; createdAt: number }
+
+function TestimonialCard({ t }: { t: Testimonial }) {
+  return (
+    <div className="tst-card" onMouseMove={tilt3D} onMouseLeave={resetTilt3D}>
+      <div className="glow" />
+      {t.rating ? (
+        <div className="tst-stars" aria-hidden="true">{'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}</div>
+      ) : null}
+      {t.text && <p className="tst-text">&ldquo;{t.text}&rdquo;</p>}
+      <div className="tst-client">{t.client || 'Verified client'}</div>
+    </div>
+  )
+}
+
+// One endless row of small cards, drifting continuously in one direction —
+// ambient background motion, not something the customer needs to steer
+// (unlike the Videos carousel above). Content is duplicated to fill the row
+// and then doubled again so the loop point is invisible.
+function ReviewMarquee({ items, direction }: { items: Testimonial[]; direction: 'left' | 'right' }) {
+  const filled: Testimonial[] = []
+  while (filled.length < Math.max(6, items.length)) filled.push(...items)
+  const track = [...filled, ...filled]
+  const duration = Math.max(22, track.length * 3.4)
+
+  return (
+    <div className={`tst-row tst-row-${direction}`}>
+      <div className="tst-track" style={{ animationDuration: `${duration}s` }}>
+        {track.map((t, i) => <TestimonialCard key={`${t.id}-${i}`} t={t} />)}
+      </div>
+    </div>
+  )
+}
+
 function PhotoGrid({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoItem) => void }) {
   return (
     <div className="photo-grid">
@@ -386,6 +420,13 @@ export default function App() {
   const videoItems = videos.filter((v) => !isImageUrl(v.url))
   const photoItems = videos.filter((v) => isImageUrl(v.url))
   const [photoLightbox, setPhotoLightbox] = useState<VideoItem | null>(null)
+
+  // Real client testimonials — only ones a studio admin has approved ever
+  // reach this list (see /api/testimonials); nothing here is invented.
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  useEffect(() => {
+    fetch('/api/testimonials').then((r) => r.json()).then((d) => setTestimonials(d.testimonials || [])).catch(() => {})
+  }, [])
 
   // FAQ accordion — single item open at a time
   const [openFaq, setOpenFaq] = useState<number | null>(0)
@@ -659,6 +700,22 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* REVIEWS — real, admin-approved client feedback only. Not wrapped in
+          .reveal: the whole section mounts after the async /api/testimonials
+          fetch resolves, same reasoning as the Videos/Photos sections above. */}
+      {testimonials.length > 0 && (
+        <section className="sec" id="reviews">
+          <div className="wrap">
+            <div className="sec-tag">What Clients Say</div>
+            <h2 className="sec-h">Real notes, from real deliveries.</h2>
+          </div>
+          <div className="tst-rows">
+            <ReviewMarquee items={testimonials.filter((_, i) => i % 2 === 0)} direction="right" />
+            <ReviewMarquee items={testimonials.filter((_, i) => i % 2 === 1).length > 0 ? testimonials.filter((_, i) => i % 2 === 1) : testimonials} direction="left" />
+          </div>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="sec" id="faq">

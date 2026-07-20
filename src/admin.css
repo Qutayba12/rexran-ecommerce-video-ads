@@ -38,6 +38,13 @@
 .adm-del:hover { border-color: #e6896b; color: #e6896b; }
 .adm-copylink { padding: 9px 14px; font-size: 12px; }
 
+.adm-tactions { display: flex; gap: 8px; flex: none; }
+.adm-tstext { white-space: normal; }
+.adm-tstatus { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+.adm-tstatus-pending { color: var(--gold-hi); }
+.adm-tstatus-approved { color: #7fbf7f; }
+.adm-tstatus-rejected { color: #e6896b; }
+
 /* ===== ADMIN UPLOAD ===== */
 .adm-upload { margin-bottom: 20px; }
 .adm-drop { display: block; border: 1px dashed var(--gold-deep); border-radius: var(--r); padding: 34px 24px; text-align: center; cursor: pointer; background: rgba(212,175,55,.03); transition: all .25s; }
@@ -133,6 +140,7 @@
 .adm-hub-card h2 { position: relative; font-size: clamp(19px, 2.2vw, 24px); font-style: italic; margin-bottom: 9px; }
 .adm-hub-desc { position: relative; color: var(--ink-mut); font-size: 13.5px; line-height: 1.6; margin-bottom: auto; }
 .adm-hub-stats { position: relative; display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--gold-hi); }
+.adm-hub-badge { color: #0c0a10; background: var(--gold); padding: 3px 10px; border-radius: 100px; }
 .adm-hub-go { position: relative; margin-top: 20px; display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-mut); transition: color .25s; }
 
 .adm-back {
@@ -187,6 +195,8 @@
   .adm-thumb { width: 52px; height: 52px; }
   .adm-meta { flex: 1 1 150px; }
   .adm-item > button { flex: 1 1 130px; justify-content: center; padding: 12px 14px; font-size: 12.5px; }
+  .adm-tactions { width: 100%; }
+  .adm-tactions button { flex: 1 1 100px; justify-content: center; padding: 12px 14px; font-size: 12.5px; }
 
   .adm-dfile { flex-wrap: wrap; row-gap: 8px; }
 

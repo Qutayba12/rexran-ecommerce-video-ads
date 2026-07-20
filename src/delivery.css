@@ -110,6 +110,29 @@
 .dl-share h3 { position: relative; font-family: var(--display); font-size: clamp(22px, 3vw, 28px); font-style: italic; color: var(--ink); margin-bottom: 10px; }
 .dl-share p { position: relative; color: var(--ink-mut); font-size: 15px; max-width: 46ch; margin: 0 auto 24px; }
 .dl-share-actions { position: relative; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.dl-share-thanks { position: relative; }
+.dl-share-thanks p { margin-bottom: 0; }
+
+.dl-stars { position: relative; display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; }
+.dl-star {
+  background: transparent; border: none; font-size: 26px; line-height: 1; padding: 4px; cursor: pointer;
+  color: rgba(212,175,55,.25); transition: color .15s, transform .15s;
+}
+.dl-star.on { color: var(--gold); }
+@media (hover: hover) and (pointer: fine) {
+  .dl-star:hover { transform: scale(1.12); }
+}
+
+.dl-feedback-input {
+  position: relative; width: 100%; max-width: 480px; margin: 0 auto 18px; display: block;
+  font-family: inherit; font-size: 14.5px; color: var(--ink); background: rgba(7,6,10,.5);
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; resize: vertical;
+  transition: border-color .2s;
+}
+.dl-feedback-input:focus { outline: none; border-color: rgba(212,175,55,.5); }
+.dl-feedback-input::placeholder { color: var(--ink-faint); }
+
+.dl-share-err { position: relative; color: #e08a8a; font-size: 13.5px; margin: -6px auto 16px; }
 
 .dl-empty { max-width: 60ch; }
 .dl-empty h1 { margin-bottom: 12px; }

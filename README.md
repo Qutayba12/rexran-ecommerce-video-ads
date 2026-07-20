@@ -66,6 +66,10 @@ Set these in the Vercel project settings (Production + Preview):
 5. The studio uploads finished files in the admin panel, which creates a
    `delivery` record with an unguessable id; the customer opens
    `/delivery/:id` to download their files.
+6. From that same page, the customer can optionally leave a star rating and
+   a note. It's stored as "pending" and never shown anywhere until a studio
+   admin approves it in the admin panel — approved testimonials then appear
+   in the "What Clients Say" section on the homepage.
 
 ## API surface
 
@@ -73,11 +77,14 @@ Set these in the Vercel project settings (Production + Preview):
 | --- | --- | --- |
 | `GET /api/videos` | public | Portfolio videos shown on the site. |
 | `GET /api/delivery?id=` | public (unguessable id) | One client delivery's files. |
+| `GET /api/testimonials` | public | Approved client testimonials shown on the site. |
+| `POST /api/testimonials` | rate-limited | A client submits feedback tied to their delivery id — stored as pending, never shown until approved. |
 | `POST /api/order` | rate-limited | Contact-form message → Telegram/email. |
 | `POST /api/checkout` | rate-limited | Create a Stripe Checkout session. |
 | `POST /api/stripe-webhook` | Stripe signature | Payment confirmation → record + notify. |
 | `POST /api/admin-videos` | admin password | Add/remove portfolio videos. |
 | `POST /api/deliveries` | admin password | Create/list/remove client deliveries. |
+| `POST /api/admin-testimonials` | admin password | List/approve/reject/delete client testimonials. |
 | `POST /api/orders` | admin password | List recorded paid orders. |
 | `POST /api/upload` | admin password (via client payload) | Issue a Vercel Blob client-upload token. |
 
