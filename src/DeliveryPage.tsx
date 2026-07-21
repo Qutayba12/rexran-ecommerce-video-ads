@@ -89,7 +89,13 @@ export default function Delivery() {
       const res = await fetch(f.url)
       if (!res.ok) throw new Error('fetch failed')
       const blob = await res.blob()
-      const file = new File([blob], f.label || f.name || 'rexran-file', { type: blob.type })
+      // iOS only offers "Save Video"/"Save Image" in the share sheet when the
+      // shared file's name carries a real extension — the friendly label
+      // alone (e.g. "Cinematic Film") makes it fall back to "Save to Files".
+      const ext = f.name.includes('.') ? f.name.slice(f.name.lastIndexOf('.')) : ''
+      const base = f.label || f.name || 'rexran-file'
+      const filename = ext && !base.toLowerCase().endsWith(ext.toLowerCase()) ? `${base}${ext}` : base
+      const file = new File([blob], filename, { type: f.type || blob.type })
       if (navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({ files: [file] })
