@@ -4,7 +4,7 @@
 .adm-logo { font-size: 64px; color: var(--gold); margin-bottom: 22px; }
 .adm-card h1 { font-size: 30px; margin-bottom: 10px; }
 .adm-card p { color: var(--ink-mut); font-size: 14.5px; margin-bottom: 26px; }
-.adm-card input { width: 100%; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font: 15px var(--body); padding: 13px 15px; margin-bottom: 18px; transition: border-color .25s; }
+.adm-card input { width: 100%; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font: 16px var(--body); padding: 13px 15px; margin-bottom: 18px; transition: border-color .25s; }
 .adm-card input:focus { border-color: var(--gold); outline: none; }
 .adm-card .cta { width: 100%; justify-content: center; }
 
@@ -20,7 +20,7 @@
 .adm-form { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; margin-bottom: 22px; }
 @media (max-width: 600px) { .adm-form { grid-template-columns: 1fr; } }
 .adm-form .field label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
-.adm-form .field input, .adm-form .field select { width: 100%; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font: 15px var(--body); padding: 12px 14px; transition: border-color .25s; }
+.adm-form .field input, .adm-form .field select { width: 100%; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font: 16px var(--body); padding: 12px 14px; transition: border-color .25s; }
 .adm-form .field select option { background: var(--bg2); }
 .adm-form .field input:focus, .adm-form .field select:focus { border-color: var(--gold); outline: none; }
 
@@ -67,15 +67,15 @@
 .adm-dfile { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: rgba(212,175,55,.04); }
 .adm-dfile-name { font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ===== ADMIN HUB — luxe 3D workspace picker =====
-   Reuses the tileIn / edgePulse / ambientDrift / sheenSweep keyframes
-   already defined in App.css (imported alongside this stylesheet). */
+/* ===== ADMIN HUB — workspace picker. Cards stay static (no ambient
+   float/pulse motion) — only the entrance fade-in and hover/tap feedback
+   animate. Reuses the tileIn keyframe already defined in App.css. ===== */
 .adm-hub { margin-top: 4px; }
 .adm-hub-head { text-align: center; margin-bottom: 46px; }
 .adm-hub-head h1 { font-size: clamp(26px, 4vw, 38px); }
 .adm-hub-head p { color: var(--ink-mut); font-size: 15px; margin-top: 10px; }
 
-.adm-hub-grid { perspective: 1800px; display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.adm-hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
 @media (max-width: 680px) { .adm-hub-grid { grid-template-columns: 1fr; } }
 
 .adm-hub-card {
@@ -84,51 +84,29 @@
   background: linear-gradient(160deg, var(--bg2), #050409);
   padding: 40px 34px; min-height: 280px;
   display: flex; flex-direction: column;
-  transform-style: preserve-3d; will-change: transform;
   opacity: 0; transform: translateY(24px);
-  animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards,
-             hubFloat 11s ease-in-out infinite,
-             edgePulse 5.5s ease-in-out infinite;
-  transition: box-shadow .4s, border-color .4s;
+  animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards;
+  box-shadow: 0 14px 34px -22px rgba(0,0,0,.7);
+  transition: box-shadow .4s, border-color .4s, transform .3s cubic-bezier(.16,1,.3,1);
 }
-.adm-hub-card:nth-child(1) { animation-delay: .05s, 0s, 0s; }
-.adm-hub-card:nth-child(2) { animation-delay: .15s, 1.4s, .8s; }
-
-@keyframes hubFloat {
-  0%   { transform: translateY(0) rotateX(0deg) rotateY(0deg); box-shadow: 0 14px 34px -22px rgba(0,0,0,.7); }
-  25%  { transform: translateY(-10px) rotateX(3deg) rotateY(-4deg); box-shadow: 0 30px 56px -24px rgba(0,0,0,.78); }
-  50%  { transform: translateY(-3px) rotateX(0deg) rotateY(4deg); box-shadow: 0 20px 44px -24px rgba(0,0,0,.74); }
-  75%  { transform: translateY(-8px) rotateX(-3deg) rotateY(-2deg); box-shadow: 0 28px 50px -24px rgba(0,0,0,.78); }
-  100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); box-shadow: 0 14px 34px -22px rgba(0,0,0,.7); }
-}
+.adm-hub-card:nth-child(1) { animation-delay: .05s; }
+.adm-hub-card:nth-child(2) { animation-delay: .12s; }
+.adm-hub-card:nth-child(3) { animation-delay: .19s; }
+.adm-hub-card:nth-child(4) { animation-delay: .26s; }
 
 .adm-hub-card .glow {
   position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 1;
   background: radial-gradient(340px circle at var(--mx,50%) var(--my,30%), rgba(212,175,55,.18), transparent 62%);
-  animation: ambientDrift 12s ease-in-out infinite;
 }
-.adm-hub-card:nth-child(2) .glow { animation-delay: 1.6s; }
 
-.adm-hub-card::after {
-  content: ''; position: absolute; top: 0; left: -70%; width: 55%; height: 100%; pointer-events: none;
-  background: linear-gradient(105deg, transparent, rgba(255,255,255,.09), transparent);
-  transform: skewX(-18deg); animation: sheenSweep 7s ease-in-out infinite;
-}
-.adm-hub-card:nth-child(2)::after { animation-delay: 2s; }
-
-/* :hover-driven pause+lift is scoped to devices with a real pointer.
-   Touch browsers can leave :hover "stuck" after a tap (there's no pointer
-   to move away), which would otherwise freeze this card's fade-in/float
-   animations mid-cycle — permanently dimming it. Touch gets a `:active`
-   tap-feedback instead, which reliably clears on touch-end. */
+/* :hover-driven lift is scoped to devices with a real pointer. Touch gets
+   a `:active` tap-feedback instead, which reliably clears on touch-end. */
 @media (hover: hover) and (pointer: fine) {
   .adm-hub-card:hover {
-    animation-play-state: paused;
-    transform: translateY(-10px) rotateX(0deg) rotateY(0deg) scale(1.03) !important;
+    transform: translateY(-10px) scale(1.03);
     z-index: 5; border-color: rgba(212,175,55,.6);
     box-shadow: 0 30px 70px -22px rgba(0,0,0,.8), 0 0 44px -8px rgba(212,175,55,.28), 0 0 0 1px rgba(212,175,55,.2);
   }
-  .adm-hub-card:hover .glow { animation-play-state: paused; opacity: 1; }
   .adm-hub-card:hover .adm-hub-go { color: var(--gold-hi); }
 }
 .adm-hub-card:active { transform: scale(0.98); border-color: rgba(212,175,55,.5); }
@@ -154,11 +132,6 @@
 }
 .adm-back:hover { border-color: var(--gold); color: var(--gold-hi); }
 
-@media (prefers-reduced-motion: reduce) {
-  .adm-hub-card { animation: tileIn .7s cubic-bezier(.16,1,.3,1) forwards; }
-  .adm-hub-card .glow, .adm-hub-card::after { animation: none; }
-}
-
 /* ===== ADMIN — MOBILE ===== */
 @media (max-width: 640px) {
   .adm-gate { padding: 18px; }
@@ -177,13 +150,6 @@
   .adm-hub-icon { width: 46px; height: 46px; margin-bottom: 18px; }
   .adm-hub-desc { margin-bottom: 20px; }
   .adm-hub-stats { margin-top: 0; }
-
-  /* Calmer motion on small/touch screens: keep the breathing lift plus the
-     ambient glow/sheen/edge-pulse chrome, drop the rotateX/rotateY parallax
-     — there's no cursor to justify it, and it's needless GPU work on
-     handhelds where a tilt effect barely reads on a flat, small screen. */
-  .adm-hub-card { animation-name: tileIn, hubFloatMobile, edgePulse; }
-  .adm-hub-card:hover { transform: translateY(-6px) scale(1.02) !important; }
 
   .adm-section { margin-bottom: 34px; }
   .adm-section h2 { font-size: 19px; margin-bottom: 16px; }
@@ -204,11 +170,6 @@
   .adm-dfile { flex-wrap: wrap; row-gap: 8px; }
 
   .adm-back { width: 100%; justify-content: center; padding: 12px 18px; }
-}
-
-@keyframes hubFloatMobile {
-  0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 14px 34px -22px rgba(0,0,0,.7); }
-  50%      { transform: translateY(-6px) scale(1.015); box-shadow: 0 22px 44px -24px rgba(0,0,0,.75); }
 }
 
 /* Very small phones */

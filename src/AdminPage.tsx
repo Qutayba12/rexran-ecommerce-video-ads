@@ -5,7 +5,7 @@ import RexMark from './RexMark'
 type Video = { id: string; title: string; url: string; type: string; poster?: string }
 const TYPES = ['UGC', 'Static', 'Cinematic', 'Photoshoot', 'Campaign']
 
-type WorkspaceView = 'hub' | 'videos' | 'deliveries'
+type WorkspaceView = 'hub' | 'videos' | 'orders' | 'deliveries' | 'testimonials'
 
 // Follows the cursor position into --mx/--my so the .glow radial gradient
 // tracks the pointer — same pattern used site-wide (see App.tsx's `tilt`).
@@ -23,12 +23,27 @@ function PortfolioIcon() {
     </svg>
   )
 }
+function OrdersIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z" />
+      <path d="M9 8h6M9 12h6M9 16h3" />
+    </svg>
+  )
+}
 function DeliveriesIcon() {
   return (
     <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 3 21 7.5v9L12 21 3 16.5v-9Z" />
       <path d="M3 7.5 12 12l9-4.5" />
       <path d="M12 12v9" />
+    </svg>
+  )
+}
+function TestimonialsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2.5 14.5 8l5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4L11.5 8Z" />
     </svg>
   )
 }
@@ -313,16 +328,34 @@ export default function Admin() {
               <div className="adm-hub-stats"><span>{videos.length} live</span></div>
               <span className="adm-hub-go">Open workspace →</span>
             </div>
+            <div className="adm-hub-card" onMouseMove={tilt} onClick={() => setView('orders')}
+              role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setView('orders')}>
+              <div className="glow" />
+              <div className="adm-hub-icon"><OrdersIcon /></div>
+              <h2>Orders</h2>
+              <p className="adm-hub-desc">Every payment confirmed by Stripe, recorded automatically.</p>
+              <div className="adm-hub-stats"><span>{orders.length} order{orders.length !== 1 ? 's' : ''}</span></div>
+              <span className="adm-hub-go">Open workspace →</span>
+            </div>
             <div className="adm-hub-card" onMouseMove={tilt} onClick={() => setView('deliveries')}
               role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setView('deliveries')}>
               <div className="glow" />
               <div className="adm-hub-icon"><DeliveriesIcon /></div>
-              <h2>Client Deliveries</h2>
-              <p className="adm-hub-desc">Review paid orders and hand finished files off to clients.</p>
+              <h2>Deliveries</h2>
+              <p className="adm-hub-desc">Hand finished files off to clients with a private link.</p>
+              <div className="adm-hub-stats"><span>{deliveries.length} {deliveries.length === 1 ? 'delivery' : 'deliveries'}</span></div>
+              <span className="adm-hub-go">Open workspace →</span>
+            </div>
+            <div className="adm-hub-card" onMouseMove={tilt} onClick={() => setView('testimonials')}
+              role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setView('testimonials')}>
+              <div className="glow" />
+              <div className="adm-hub-icon"><TestimonialsIcon /></div>
+              <h2>Testimonials</h2>
+              <p className="adm-hub-desc">Approve client feedback before it appears on the site.</p>
               <div className="adm-hub-stats">
-                <span>{orders.length} orders</span><span>{deliveries.length} deliveries</span>
+                <span>{testimonials.length} total</span>
                 {testimonials.some((t) => t.status === 'pending') && (
-                  <span className="adm-hub-badge">{testimonials.filter((t) => t.status === 'pending').length} new review{testimonials.filter((t) => t.status === 'pending').length !== 1 ? 's' : ''}</span>
+                  <span className="adm-hub-badge">{testimonials.filter((t) => t.status === 'pending').length} new</span>
                 )}
               </div>
               <span className="adm-hub-go">Open workspace →</span>
@@ -381,7 +414,7 @@ export default function Admin() {
       </>
       )}
 
-      {view === 'deliveries' && (
+      {view === 'orders' && (
       <>
       <button className="adm-back" onClick={() => setView('hub')}>← Back to hub</button>
       <section className="adm-section">
@@ -407,6 +440,12 @@ export default function Admin() {
           ))}
         </div>
       </section>
+      </>
+      )}
+
+      {view === 'deliveries' && (
+      <>
+      <button className="adm-back" onClick={() => setView('hub')}>← Back to hub</button>
       <section className="adm-section">
         <h2>Client deliveries ({deliveries.length})</h2>
         <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Upload a client's finished files, create a delivery, then send them the private link.</p>
@@ -460,7 +499,12 @@ export default function Admin() {
           ))}
         </div>
       </section>
+      </>
+      )}
 
+      {view === 'testimonials' && (
+      <>
+      <button className="adm-back" onClick={() => setView('hub')}>← Back to hub</button>
       <section className="adm-section">
         <h2>Client testimonials ({testimonials.length})</h2>
         <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Feedback clients submit from their delivery page. Approve the ones you want to feature on the site — nothing goes public until you do.</p>
