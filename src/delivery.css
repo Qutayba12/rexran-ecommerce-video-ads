@@ -33,8 +33,24 @@
   100% { opacity: 0; transform: scale(1.7); }
 }
 
+/* A gold "delivered" seal — a small piece of ceremony for the moment a
+   paying client opens their finished work, like a wax seal on a package.
+   The check draws itself on, then the ring settles with a soft gold halo. */
+.dl-seal {
+  width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: var(--gold-hi); margin-bottom: 24px;
+  background: radial-gradient(circle at 50% 32%, rgba(212,175,55,.28), rgba(14,12,18,.55));
+  border: 1px solid rgba(212,175,55,.5);
+  box-shadow: 0 0 0 6px rgba(212,175,55,.06), 0 12px 34px -12px rgba(212,175,55,.45), inset 0 1px 0 rgba(255,255,255,.14);
+  animation: dl-seal-in .75s cubic-bezier(.16,1,.3,1) both;
+}
+.dl-seal svg path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: dl-seal-draw .5s ease .35s forwards; }
+@keyframes dl-seal-in { 0% { opacity: 0; transform: scale(.4) rotate(-10deg); } 60% { opacity: 1; } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes dl-seal-draw { to { stroke-dashoffset: 0; } }
+
 .dl-kicker-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-.dl-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 0; }
+.dl-kicker { display: flex; align-items: center; gap: 11px; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 0; }
+.dl-kicker::before { content: ''; width: 6px; height: 6px; flex: none; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 10px rgba(212,175,55,.5); }
 .dl-copy { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mut); background: transparent; border: 1px solid var(--line); border-radius: 100px; padding: 8px 16px; transition: all .2s; }
 .dl-copy:hover { border-color: var(--gold); color: var(--gold-hi); }
 
@@ -93,14 +109,18 @@
 
 .dl-card-foot { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
 .dl-name { font-size: 13px; color: var(--ink-mut); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dl-dl { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #0c0a10; background: var(--gold); padding: 8px 13px; border: none; border-radius: 100px; text-decoration: none; cursor: pointer; transition: background .2s; }
-.dl-dl:hover { background: var(--gold-hi); }
+.dl-dl { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #0c0a10; background: linear-gradient(180deg, var(--gold-hi), var(--gold) 65%, var(--gold-deep)); padding: 8px 13px; border: none; border-radius: 100px; text-decoration: none; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); transition: filter .2s; }
+.dl-dl:hover { filter: brightness(1.08); }
 .dl-dl:disabled { opacity: .7; cursor: wait; }
+
+/* Ornamental gold divider (shared .sec-divider from App.css) separating the
+   files from the feedback ask. */
+.dl-divider { margin-top: 60px; margin-bottom: 0; }
 
 /* ===== SHARE / FEEDBACK PANEL — a goodwill ask at the peak-satisfaction
    moment (files just arrived), no discount code or invented incentive. ===== */
 .dl-share {
-  position: relative; overflow: hidden; margin-top: 56px; padding: 40px 36px; text-align: center;
+  position: relative; overflow: hidden; margin-top: 40px; padding: 40px 36px; text-align: center;
   border: 1px solid rgba(212,175,55,.3); border-radius: var(--r-lg);
   background: linear-gradient(160deg, rgba(212,175,55,.06), rgba(14,12,18,.4));
 }
@@ -158,6 +178,8 @@
   .dl-card::after { display: none; }
   .dl-skel-preview, .dl-skel-line { animation: none; }
   .dl-welcome::before { display: none; }
+  .dl-seal { animation: none; }
+  .dl-seal svg path { stroke-dashoffset: 0; animation: none; }
 }
 
 /* ===== MOBILE ===== */
@@ -170,6 +192,9 @@
   .dl h1 { font-size: 26px; }
   .dl-note { font-size: 14.5px; }
   .dl-welcome::before { width: 180px; height: 180px; top: -30px; left: -30px; }
+  .dl-seal { width: 54px; height: 54px; margin-bottom: 20px; }
+  .dl-seal svg { width: 23px; height: 23px; }
+  .dl-divider { margin-top: 44px; }
 
   .dl-loading { padding: 16px 0 6px; gap: 16px; }
   .dl-status { font-size: 13px; }
