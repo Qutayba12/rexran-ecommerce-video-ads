@@ -23,6 +23,17 @@ function useScrolled() {
   return s
 }
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const on = () => setReduced(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return reduced
+}
+
 const VIDEO_RATIOS = ['9:16', '16:9', '1:1', '21:9', '4:3', '3:4']
 const IMAGE_RATIOS = ['1:1', '16:9', '9:16', '3:2', '2:3']
 
@@ -136,7 +147,7 @@ function PlusIcon() {
   )
 }
 
-function VideoCard({ v }: { v: VideoItem }) {
+function VideoCard({ v, onOpen }: { v: VideoItem; onOpen: (v: VideoItem) => void }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [muted, setMuted] = useState(true)
 
@@ -167,6 +178,9 @@ function VideoCard({ v }: { v: VideoItem }) {
             <span>Tap for sound</span>
           </button>
         )}
+        <button className="vid-expand" aria-label="Expand video" onClick={(e) => { e.stopPropagation(); onOpen(v) }}>
+          <ExpandIcon />
+        </button>
       </div>
       <figcaption><span className="vid-type">{v.type}</span></figcaption>
     </figure>
@@ -177,7 +191,7 @@ function VideoCard({ v }: { v: VideoItem }) {
 // under the customer's control: hover/touch/drag pause it, arrow buttons and
 // native swipe/drag step it manually, and it resumes a few seconds after the
 // customer stops interacting. Respects prefers-reduced-motion (no autoplay).
-function VideoCarousel({ items }: { items: VideoItem[] }) {
+function VideoCarousel({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoItem) => void }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -238,7 +252,7 @@ function VideoCarousel({ items }: { items: VideoItem[] }) {
       <div className="vids-track" ref={trackRef}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endInteraction} onPointerLeave={endInteraction}
         onClickCapture={(e) => { if (didDrag.current) { e.preventDefault(); e.stopPropagation(); didDrag.current = false } }}>
-        {items.map((v) => <VideoCard key={v.id} v={v} />)}
+        {items.map((v) => <VideoCard key={v.id} v={v} onOpen={onOpen} />)}
       </div>
       {items.length > 1 && (
         <>
@@ -278,6 +292,47 @@ function ReviewMarquee({ items, direction }: { items: Testimonial[]; direction: 
     <div className={`tst-row tst-row-${direction}`}>
       <div className="tst-track" style={{ animationDuration: `${duration}s` }}>
         {track.map((t, i) => <TestimonialCard key={`${t.id}-${i}`} t={t} />)}
+      </div>
+    </div>
+  )
+}
+
+// Endless carousel of small cards drifting continuously in one direction,
+// with whichever card is nearest the center scaling up ("zoomed in") while
+// the rest sit smaller — used for the Formats and Process sections. Reuses
+// the doubled-array loop trick from ReviewMarquee. Center detection runs on
+// a plain interval (not requestAnimationFrame) since a ~150ms cadence is
+// plenty smooth for a scale swap and costs far less CPU continuously.
+function ZoomMarquee({ items, direction }: { items: React.ReactNode[]; direction: 'left' | 'right' }) {
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const doubled = [...items, ...items]
+  const duration = Math.max(20, doubled.length * 3.6)
+
+  useEffect(() => {
+    const wrap = wrapRef.current
+    const track = trackRef.current
+    if (!wrap || !track) return
+    const id = setInterval(() => {
+      const wrapRect = wrap.getBoundingClientRect()
+      const centerX = wrapRect.left + wrapRect.width / 2
+      let closest: Element | null = null
+      let closestDist = Infinity
+      track.querySelectorAll('.zc-item').forEach((el) => {
+        const r = el.getBoundingClientRect()
+        const dist = Math.abs(r.left + r.width / 2 - centerX)
+        if (dist < closestDist) { closestDist = dist; closest = el }
+      })
+      track.querySelectorAll('.zc-item.zc-center').forEach((el) => { if (el !== closest) el.classList.remove('zc-center') })
+      if (closest) (closest as Element).classList.add('zc-center')
+    }, 150)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div className={`zc-wrap zc-${direction}`} ref={wrapRef}>
+      <div className="zc-track" ref={trackRef} style={{ animationDuration: `${duration}s` }}>
+        {doubled.map((child, i) => <div className="zc-item" key={i}>{child}</div>)}
       </div>
     </div>
   )
@@ -651,6 +706,7 @@ function CheckoutModal({ plan, initialStep, onClose }: { plan: string; initialSt
 export default function App() {
   useReveal()
   const scrolled = useScrolled()
+  const reducedMotion = usePrefersReducedMotion()
 
   const isPaidReturn = () => new URLSearchParams(window.location.search).get('paid') === '1'
 
@@ -683,7 +739,7 @@ export default function App() {
   }, [])
   const videoItems = videos.filter((v) => !isImageUrl(v.url))
   const photoItems = videos.filter((v) => isImageUrl(v.url))
-  const [photoLightbox, setPhotoLightbox] = useState<VideoItem | null>(null)
+  const [mediaLightbox, setMediaLightbox] = useState<VideoItem | null>(null)
 
   // Real client testimonials — only ones a studio admin has approved ever
   // reach this list (see /api/testimonials); nothing here is invented.
@@ -793,23 +849,34 @@ export default function App() {
           {videoItems.length > 0 && (
             <div>
               <div className="sec-tag med-tag">Videos</div>
-              <VideoCarousel items={videoItems} />
+              <VideoCarousel items={videoItems} onOpen={setMediaLightbox} />
             </div>
           )}
           {photoItems.length > 0 && (
             <div>
               <div className="sec-tag med-tag">Photos</div>
-              <PhotoGrid items={photoItems} onOpen={setPhotoLightbox} />
+              <PhotoGrid items={photoItems} onOpen={setMediaLightbox} />
             </div>
           )}
-          <div className="reel reveal">
-            {TILES.map((t) => (
-              <div className={`tile ${t.c}`} key={t.n} onMouseMove={tilt}>
-                <div className="glow" /><span className="ph">{t.ph}</span>
-                <div className="num">{t.n}</div><h3>{t.t}</h3><p>{t.p}</p>
-              </div>
-            ))}
-          </div>
+          {reducedMotion ? (
+            <div className="reel reveal">
+              {TILES.map((t) => (
+                <div className={`tile ${t.c}`} key={t.n} onMouseMove={tilt}>
+                  <div className="glow" /><span className="ph">{t.ph}</span>
+                  <div className="num">{t.n}</div><h3>{t.t}</h3><p>{t.p}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="reveal">
+              <ZoomMarquee direction="right" items={TILES.map((t) => (
+                <div className={`tile zc-tile ${t.c}`} key={t.n} onMouseMove={tilt}>
+                  <div className="glow" /><span className="ph">{t.ph}</span>
+                  <div className="num">{t.n}</div><h3>{t.t}</h3><p>{t.p}</p>
+                </div>
+              ))} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -819,14 +886,25 @@ export default function App() {
             <div className="sec-tag">The Process</div>
             <h2 className="sec-h">Three steps. <em>Zero overhead</em> on your side.</h2>
           </div>
-          <div className="steps reveal">
-            {STEPS.map((s) => (
-              <div className="step" key={s.n} onMouseMove={tilt}>
-                <div className="glow" />
-                <div className="step-n">{s.n}</div><h3>{s.t}</h3><p>{s.p}</p>
-              </div>
-            ))}
-          </div>
+          {reducedMotion ? (
+            <div className="steps reveal">
+              {STEPS.map((s) => (
+                <div className="step" key={s.n} onMouseMove={tilt}>
+                  <div className="glow" />
+                  <div className="step-n">{s.n}</div><h3>{s.t}</h3><p>{s.p}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="reveal">
+              <ZoomMarquee direction="left" items={STEPS.map((s) => (
+                <div className="step zc-step" key={s.n} onMouseMove={tilt}>
+                  <div className="glow" />
+                  <div className="step-n">{s.n}</div><h3>{s.t}</h3><p>{s.p}</p>
+                </div>
+              ))} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -1001,12 +1079,16 @@ export default function App() {
         </div>
       )}
 
-      {/* PHOTO LIGHTBOX */}
-      {photoLightbox && (
-        <div className="modal-back photo-lightbox-back" onClick={() => setPhotoLightbox(null)}>
+      {/* MEDIA LIGHTBOX — shared by the Videos carousel and the Photos grid */}
+      {mediaLightbox && (
+        <div className="modal-back photo-lightbox-back" onClick={() => setMediaLightbox(null)}>
           <div className="photo-lightbox" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-x" onClick={() => setPhotoLightbox(null)} aria-label="Close">✕</button>
-            <img src={photoLightbox.url} alt="" />
+            <button className="modal-x" onClick={() => setMediaLightbox(null)} aria-label="Close">✕</button>
+            {isImageUrl(mediaLightbox.url) ? (
+              <img src={mediaLightbox.url} alt="" />
+            ) : (
+              <video src={mediaLightbox.url} controls autoPlay playsInline />
+            )}
           </div>
         </div>
       )}
