@@ -869,7 +869,7 @@ export default function App() {
             </div>
           ) : (
             <div className="reveal">
-              <ZoomMarquee direction="right" items={TILES.map((t) => (
+              <ZoomMarquee direction="left" items={TILES.map((t) => (
                 <div className={`tile zc-tile ${t.c}`} key={t.n} onMouseMove={tilt}>
                   <div className="glow" /><span className="ph">{t.ph}</span>
                   <div className="num">{t.n}</div><h3>{t.t}</h3><p>{t.p}</p>
