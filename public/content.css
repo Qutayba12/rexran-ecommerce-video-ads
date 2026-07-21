@@ -1,11 +1,28 @@
 /* Shared stylesheet for standalone content pages (Studio, Guides) — same
    static-HTML pattern as privacy.html/terms.html: no JS, fast, indexable.
-   Kept separate from those two so their already-shipped markup is untouched. */
-:root{--bg:#07060a;--bg2:#0e0c12;--gold:#d4af37;--gold-hi:#f4d97b;--ink:#f7f3e9;--ink-mut:#a8a092;--ink-faint:#635c52;--line:rgba(212,175,55,.16);--display:'Fraunces',Georgia,serif;--body:'Manrope',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
+   Kept separate from those two so their already-shipped markup is untouched.
+   Mirrors the homepage's dark/gold luxury language (App.css) — ambient gold
+   aurora, fine grain, the diamond motif, brushed-foil buttons and lifting
+   cards — so a client who clicks "Studio" or "Guides" never leaves that
+   world. All of it is pure CSS: the shipped page markup is unchanged. */
+:root{--bg:#07060a;--bg2:#0e0c12;--gold:#d4af37;--gold-hi:#f4d97b;--gold-deep:#8a6d1f;--ink:#f7f3e9;--ink-mut:#a8a092;--ink-faint:#635c52;--line:rgba(212,175,55,.16);--display:'Fraunces',Georgia,serif;--body:'Manrope',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;background:var(--bg);scrollbar-color:var(--gold-deep) var(--bg);scrollbar-width:thin}
+::selection{background:var(--gold);color:#000}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--gold-deep),var(--gold));border-radius:10px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--gold-hi)}
+:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+body{position:relative;background:transparent;color:var(--ink);font:16px/1.75 var(--body);-webkit-font-smoothing:antialiased}
+/* Ambient atmosphere — a fixed gold aurora + fine grain sitting behind all
+   content, the same signature as the homepage, added without touching markup. */
+body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:radial-gradient(46vw 46vw at 88% -8%,rgba(212,175,55,.13),transparent 60%),radial-gradient(42vw 42vw at -8% 12%,rgba(138,109,31,.12),transparent 62%)}
+body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.045;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .wrap{max-width:840px;margin:0 auto;padding:0 24px}
-header{border-bottom:1px solid var(--line);padding:24px 0}
+header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);padding:20px 0;background:rgba(7,6,10,.72);backdrop-filter:blur(16px)}
 header .wrap{display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-size:22px;color:var(--gold);text-decoration:none}
 .brand svg{width:26px;height:26px}
@@ -18,10 +35,12 @@ h1{font-family:var(--display);font-size:clamp(34px,6vw,52px);line-height:1.08;le
 .lead{font-family:var(--display);font-size:clamp(20px,2.6vw,26px);line-height:1.45;color:var(--ink);max-width:44ch;margin-bottom:40px}
 .lead em{color:var(--gold-hi);font-style:italic}
 .updated{color:var(--ink-faint);font-family:var(--mono);font-size:12.5px;margin-bottom:44px}
-h2{font-family:var(--display);font-size:clamp(21px,3vw,26px);margin:48px 0 14px;color:var(--ink)}
+h2{font-family:var(--display);font-size:clamp(21px,3vw,26px);margin:48px 0 14px;color:var(--ink);display:flex;align-items:center;gap:13px}
+h2::before{content:'';width:7px;height:7px;flex:none;background:var(--gold);transform:rotate(45deg);box-shadow:0 0 12px rgba(212,175,55,.45)}
 p{color:var(--ink-mut);margin-bottom:16px;max-width:68ch}
 ul{color:var(--ink-mut);margin:0 0 16px;padding-left:22px;max-width:68ch}
 li{margin-bottom:9px}
+li::marker{color:var(--gold)}
 a{color:var(--gold-hi)}
 strong{color:var(--ink)}
 .sign{margin-top:48px;display:inline-flex;align-items:center;gap:12px;padding-top:26px;border-top:1px solid var(--line)}
@@ -30,28 +49,43 @@ strong{color:var(--ink)}
 footer{border-top:1px solid var(--line);padding:34px 0;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
 
-/* Card grid — used for the Studio "how it works" steps and the Guides index */
+/* Card grid — used for the Studio "how it works" steps and the Guides index.
+   Mirrors the homepage cards: gradient face, gold border on hover, a clean
+   lift, and a soft sheen that glides across once on hover. */
 .grid3{display:grid;gap:16px;grid-template-columns:1fr;margin:22px 0 8px}
 @media (min-width:760px){.grid3{grid-template-columns:repeat(3,1fr)}}
-.card{border:1px solid var(--line);border-radius:14px;padding:24px 22px;background:rgba(14,12,18,.4);transition:border-color .3s,transform .3s}
-.card:hover{border-color:rgba(212,175,55,.4);transform:translateY(-4px)}
-.card .n{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.08em;margin-bottom:10px;display:block}
-.card h3{font-family:var(--display);font-size:18px;color:var(--ink);margin-bottom:8px;font-weight:400}
-.card p{font-size:14px;margin-bottom:0}
+.card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;padding:24px 22px;background:linear-gradient(160deg,rgba(20,17,24,.6),rgba(14,12,18,.4));transition:border-color .3s,transform .3s,box-shadow .3s}
+.card::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.06),transparent);transform:skewX(-18deg);transition:left .7s ease;pointer-events:none}
+.card:hover{border-color:rgba(212,175,55,.4);transform:translateY(-4px);box-shadow:0 20px 46px -24px rgba(0,0,0,.8),0 0 0 1px rgba(212,175,55,.1)}
+.card:hover::after{left:130%}
+.card .n{position:relative;font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.08em;margin-bottom:10px;display:block}
+.card h3{position:relative;font-family:var(--display);font-size:18px;color:var(--ink);margin-bottom:8px;font-weight:400}
+.card p{position:relative;font-size:14px;margin-bottom:0}
 
-/* CTA button — mirrors the main site's .cta pill */
-.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#0c0a10;background:var(--gold);padding:14px 26px;border-radius:100px;text-decoration:none;transition:background .2s}
-.btn:hover{background:var(--gold-hi)}
+/* CTA button — mirrors the main site's .cta pill (brushed-gold foil). The
+   page markup already ends the label with a literal "→", so no pseudo arrow. */
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#0c0a10;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 65%,var(--gold-deep));padding:15px 28px;border-radius:100px;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 3px rgba(0,0,0,.18);transition:transform .25s,box-shadow .25s,background .25s}
+.btn:hover{transform:translateY(-2px);background:linear-gradient(180deg,var(--gold-hi),var(--gold-hi) 65%,var(--gold));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 3px rgba(0,0,0,.18),0 14px 40px rgba(212,175,55,.3)}
 .btn-row{margin-top:40px}
 
 /* Guides index cards */
 .guide-list{display:grid;gap:18px;margin-top:32px}
-.guide-card{display:block;border:1px solid var(--line);border-radius:16px;padding:28px 26px;background:rgba(14,12,18,.4);text-decoration:none;transition:border-color .3s,transform .3s}
-.guide-card:hover{border-color:rgba(212,175,55,.4);transform:translateY(-3px)}
-.guide-card h2{margin:0 0 10px;font-size:21px}
-.guide-card p{color:var(--ink-mut);font-size:14.5px;margin-bottom:0;max-width:none}
-.guide-card .go{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-hi)}
+.guide-card{position:relative;overflow:hidden;display:block;border:1px solid var(--line);border-radius:16px;padding:28px 26px;background:linear-gradient(160deg,rgba(20,17,24,.6),rgba(14,12,18,.4));text-decoration:none;transition:border-color .3s,transform .3s,box-shadow .3s}
+.guide-card::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.06),transparent);transform:skewX(-18deg);transition:left .7s ease;pointer-events:none}
+.guide-card:hover{border-color:rgba(212,175,55,.4);transform:translateY(-3px);box-shadow:0 22px 50px -24px rgba(0,0,0,.8),0 0 0 1px rgba(212,175,55,.1)}
+.guide-card:hover::after{left:130%}
+/* Card titles use <h2>; keep the section-heading diamond off them here. */
+.guide-card h2{position:relative;display:block;margin:0 0 10px;font-size:21px}
+.guide-card h2::before{display:none}
+.guide-card p{position:relative;color:var(--ink-mut);font-size:14.5px;margin-bottom:0;max-width:none}
+.guide-card .go{position:relative;display:inline-block;margin-top:14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-hi);transition:letter-spacing .3s}
+.guide-card:hover .go{letter-spacing:.14em}
 
 /* Related guides row at the bottom of an article */
 .related{margin-top:56px;padding-top:32px;border-top:1px solid var(--line)}
 .related .kicker{margin-bottom:20px}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms!important}
+}
