@@ -1,0 +1,57 @@
+/* Shared stylesheet for standalone content pages (Studio, Guides) — same
+   static-HTML pattern as privacy.html/terms.html: no JS, fast, indexable.
+   Kept separate from those two so their already-shipped markup is untouched. */
+:root{--bg:#07060a;--bg2:#0e0c12;--gold:#d4af37;--gold-hi:#f4d97b;--ink:#f7f3e9;--ink-mut:#a8a092;--ink-faint:#635c52;--line:rgba(212,175,55,.16);--display:'Fraunces',Georgia,serif;--body:'Manrope',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:840px;margin:0 auto;padding:0 24px}
+header{border-bottom:1px solid var(--line);padding:24px 0}
+header .wrap{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-size:22px;color:var(--gold);text-decoration:none}
+.brand svg{width:26px;height:26px}
+.back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mut);text-decoration:none;transition:color .2s}
+.back:hover{color:var(--gold-hi)}
+main{padding:64px 0 90px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:12px}
+.kicker::before{content:'';width:22px;height:1px;background:var(--gold)}
+h1{font-family:var(--display);font-size:clamp(34px,6vw,52px);line-height:1.08;letter-spacing:-.02em;margin-bottom:20px;max-width:20ch}
+.lead{font-family:var(--display);font-size:clamp(20px,2.6vw,26px);line-height:1.45;color:var(--ink);max-width:44ch;margin-bottom:40px}
+.lead em{color:var(--gold-hi);font-style:italic}
+.updated{color:var(--ink-faint);font-family:var(--mono);font-size:12.5px;margin-bottom:44px}
+h2{font-family:var(--display);font-size:clamp(21px,3vw,26px);margin:48px 0 14px;color:var(--ink)}
+p{color:var(--ink-mut);margin-bottom:16px;max-width:68ch}
+ul{color:var(--ink-mut);margin:0 0 16px;padding-left:22px;max-width:68ch}
+li{margin-bottom:9px}
+a{color:var(--gold-hi)}
+strong{color:var(--ink)}
+.sign{margin-top:48px;display:inline-flex;align-items:center;gap:12px;padding-top:26px;border-top:1px solid var(--line)}
+.sign svg{width:28px;height:28px;color:var(--gold)}
+.sign span{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+footer{border-top:1px solid var(--line);padding:34px 0;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
+
+/* Card grid — used for the Studio "how it works" steps and the Guides index */
+.grid3{display:grid;gap:16px;grid-template-columns:1fr;margin:22px 0 8px}
+@media (min-width:760px){.grid3{grid-template-columns:repeat(3,1fr)}}
+.card{border:1px solid var(--line);border-radius:14px;padding:24px 22px;background:rgba(14,12,18,.4);transition:border-color .3s,transform .3s}
+.card:hover{border-color:rgba(212,175,55,.4);transform:translateY(-4px)}
+.card .n{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.08em;margin-bottom:10px;display:block}
+.card h3{font-family:var(--display);font-size:18px;color:var(--ink);margin-bottom:8px;font-weight:400}
+.card p{font-size:14px;margin-bottom:0}
+
+/* CTA button — mirrors the main site's .cta pill */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#0c0a10;background:var(--gold);padding:14px 26px;border-radius:100px;text-decoration:none;transition:background .2s}
+.btn:hover{background:var(--gold-hi)}
+.btn-row{margin-top:40px}
+
+/* Guides index cards */
+.guide-list{display:grid;gap:18px;margin-top:32px}
+.guide-card{display:block;border:1px solid var(--line);border-radius:16px;padding:28px 26px;background:rgba(14,12,18,.4);text-decoration:none;transition:border-color .3s,transform .3s}
+.guide-card:hover{border-color:rgba(212,175,55,.4);transform:translateY(-3px)}
+.guide-card h2{margin:0 0 10px;font-size:21px}
+.guide-card p{color:var(--ink-mut);font-size:14.5px;margin-bottom:0;max-width:none}
+.guide-card .go{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-hi)}
+
+/* Related guides row at the bottom of an article */
+.related{margin-top:56px;padding-top:32px;border-top:1px solid var(--line)}
+.related .kicker{margin-bottom:20px}
