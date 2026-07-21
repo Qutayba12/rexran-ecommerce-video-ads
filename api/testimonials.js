@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    if (!(await limitRequest(req, 'testimonial', 3, 10 * 60))) {
+    if (!(await limitRequest(req, 'testimonial', 8, 10 * 60))) {
       return res.status(429).json({ error: 'Too many requests. Please try again later.' })
     }
 
