@@ -60,6 +60,7 @@ export default function Delivery() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [sendErr, setSendErr] = useState('')
+  const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null)
 
   useEffect(() => {
     const id = getDeliveryId()
@@ -73,6 +74,40 @@ export default function Delivery() {
       .then((d) => { if (d) { setData(d); setReviewerName(d.client || ''); setState('ok') } })
       .catch(() => setState('error'))
   }, [])
+
+  // No website can silently write a file into a phone's Photos/gallery app —
+  // iOS and Android both require one explicit user step for that (otherwise
+  // any site could flood your camera roll). The closest thing to a real
+  // "save straight to my device" on every platform is the native share
+  // sheet with the actual file attached: "Save to Photos"/"Save Video" is
+  // normally the first option there. Falls back to the existing forced
+  // download link wherever file-sharing isn't supported.
+  const downloadFile = async (f: FileItem) => {
+    setDownloadingUrl(f.url)
+    let handled = false
+    try {
+      const res = await fetch(f.url)
+      if (!res.ok) throw new Error('fetch failed')
+      const blob = await res.blob()
+      const file = new File([blob], f.label || f.name || 'rexran-file', { type: blob.type })
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] })
+          handled = true
+        } catch (e) {
+          // AbortError = the customer tapped Cancel on the share sheet —
+          // respect that instead of forcing a download anyway.
+          if (e instanceof Error && e.name === 'AbortError') handled = true
+        }
+      }
+    } catch { /* fetch/blob failed — fall through to the plain download link below */ }
+    if (!handled) {
+      const a = document.createElement('a')
+      a.href = forceDownloadUrl(f.url)
+      a.click()
+    }
+    setDownloadingUrl(null)
+  }
 
   const copyLink = () => {
     navigator.clipboard?.writeText(window.location.href).then(() => {
@@ -198,7 +233,9 @@ export default function Delivery() {
                     </div>
                     <div className="dl-card-foot">
                       <span className="dl-name">{f.label || f.name}</span>
-                      <a className="dl-dl" href={forceDownloadUrl(f.url)}>Download</a>
+                      <button className="dl-dl" onClick={() => downloadFile(f)} disabled={downloadingUrl === f.url}>
+                        {downloadingUrl === f.url ? 'Saving…' : 'Download'}
+                      </button>
                     </div>
                   </div>
                 )
@@ -280,7 +317,9 @@ export default function Delivery() {
             )}
             <div className="dl-lightbox-foot">
               <span>{lightbox.label || lightbox.name}</span>
-              <a className="dl-dl" href={forceDownloadUrl(lightbox.url)}>Download</a>
+              <button className="dl-dl" onClick={() => downloadFile(lightbox)} disabled={downloadingUrl === lightbox.url}>
+                {downloadingUrl === lightbox.url ? 'Saving…' : 'Download'}
+              </button>
             </div>
           </div>
         </div>
