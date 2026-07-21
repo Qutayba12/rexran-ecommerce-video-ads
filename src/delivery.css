@@ -93,8 +93,9 @@
 
 .dl-card-foot { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
 .dl-name { font-size: 13px; color: var(--ink-mut); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dl-dl { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #0c0a10; background: var(--gold); padding: 8px 13px; border-radius: 100px; text-decoration: none; transition: background .2s; }
+.dl-dl { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #0c0a10; background: var(--gold); padding: 8px 13px; border: none; border-radius: 100px; text-decoration: none; cursor: pointer; transition: background .2s; }
 .dl-dl:hover { background: var(--gold-hi); }
+.dl-dl:disabled { opacity: .7; cursor: wait; }
 
 /* ===== SHARE / FEEDBACK PANEL — a goodwill ask at the peak-satisfaction
    moment (files just arrived), no discount code or invented incentive. ===== */
