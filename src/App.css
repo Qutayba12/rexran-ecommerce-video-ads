@@ -41,13 +41,14 @@
 .brand .brand-logo { font-size: 30px; color: var(--gold); }
 .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
   padding: 12px 22px; border: 1px solid var(--gold); color: var(--gold-hi); border-radius: 100px; transition: all .25s; }
-.nav-cta:hover { background: var(--gold); color: #000; box-shadow: 0 8px 28px rgba(212,175,55,.3); }
+.nav-cta:hover { background: linear-gradient(180deg, var(--gold-hi), var(--gold) 70%, var(--gold-deep)); color: #000; box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 8px 28px rgba(212,175,55,.3); }
 
 /* ===== HERO ===== */
 .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column;
   align-items: center; justify-content: center; text-align: center; padding: 130px 22px 90px; }
 .hero-logo { font-size: clamp(80px,14vw,150px); color: var(--gold); margin-bottom: 30px; opacity: 0; animation: rxrise 6s ease-in-out infinite, rise 1s ease .1s forwards; }
-.hero-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; opacity: 0; animation: rise .9s ease .25s forwards; }
+.hero-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; opacity: 0; animation: rise .9s ease .25s forwards; display: inline-flex; align-items: center; gap: 14px; }
+.hero-kicker::before, .hero-kicker::after { content: ''; width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 10px rgba(212,175,55,.5); flex: none; }
 .hero-h { font-family: var(--display); font-weight: 400; font-size: clamp(48px,11vw,150px); line-height: .94; letter-spacing: -.02em; }
 .hero-h .ln { display: block; overflow: hidden; padding: 0 .04em; }
 .hero-h .ln span { display: block; transform: translateY(110%); animation: slideUp 1.1s cubic-bezier(.16,1,.3,1) forwards; }
@@ -188,7 +189,9 @@
 .pcard:hover::after { left: 130%; }
 .pcard > .pflag, .pcard > .pname, .pcard > .pprice, .pcard > .pdesc, .pcard > .pitems, .pcard > .cta { position: relative; z-index: 2; }
 .pcard.feat { border-color: var(--gold-deep); background: linear-gradient(180deg, rgba(212,175,55,.08), rgba(14,12,18,.5)); }
-.pflag { position: absolute; top: 18px; right: 18px; z-index: 3; background: var(--gold); color: #000; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 6px 12px; border-radius: 100px; }
+.pcard.feat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3;
+  background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold-hi) 50%, var(--gold) 80%, transparent); }
+.pflag { position: absolute; top: 18px; right: 18px; z-index: 3; background: linear-gradient(180deg, var(--gold-hi), var(--gold) 70%, var(--gold-deep)); color: #000; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 6px 12px; border-radius: 100px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
 .pname { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mut); margin-bottom: 18px; }
 .pprice { font-family: var(--display); font-size: 50px; line-height: 1; display: flex; align-items: baseline; gap: 7px; }
 .pprice .per { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
