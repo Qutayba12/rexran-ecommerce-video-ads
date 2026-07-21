@@ -139,6 +139,14 @@ function ExpandIcon() {
   )
 }
 
+function SecDivider() {
+  return (
+    <div className="sec-divider" aria-hidden="true">
+      <span className="ln" /><span className="dot" /><span className="ln" />
+    </div>
+  )
+}
+
 function PlusIcon() {
   return (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -881,6 +889,7 @@ export default function App() {
       </section>
 
       <section className="sec" id="process">
+        <SecDivider />
         <div className="wrap">
           <div className="reveal">
             <div className="sec-tag">The Process</div>
@@ -891,6 +900,7 @@ export default function App() {
               {STEPS.map((s) => (
                 <div className="step" key={s.n} onMouseMove={tilt}>
                   <div className="glow" />
+                  <span className="step-num" aria-hidden="true">{s.n}</span>
                   <h3>{s.t}</h3><p>{s.p}</p>
                 </div>
               ))}
@@ -900,6 +910,7 @@ export default function App() {
               <ZoomMarquee direction="left" items={STEPS.map((s) => (
                 <div className="step zc-step" key={s.n} onMouseMove={tilt}>
                   <div className="glow" />
+                  <span className="step-num" aria-hidden="true">{s.n}</span>
                   <h3>{s.t}</h3><p>{s.p}</p>
                 </div>
               ))} />
@@ -909,6 +920,7 @@ export default function App() {
       </section>
 
       <section className="sec" id="pricing">
+        <SecDivider />
         <div className="wrap">
           <div className="reveal">
             <div className="sec-tag">Pricing</div>
@@ -938,6 +950,7 @@ export default function App() {
 
       {/* WHY */}
       <section className="sec" id="why">
+        <SecDivider />
         <div className="wrap">
           <div className="reveal">
             <div className="sec-tag">Why Rexran</div>
@@ -956,6 +969,7 @@ export default function App() {
 
       {/* PROOF + FOUNDING OFFER */}
       <section className="sec" id="proof">
+        <SecDivider />
         <div className="wrap">
           <div className="reveal">
             <div className="sec-tag">Why It Works</div>
@@ -987,6 +1001,7 @@ export default function App() {
           fetch resolves, same reasoning as the Videos/Photos sections above. */}
       {testimonials.length > 0 && (
         <section className="sec" id="reviews">
+          <SecDivider />
           <div className="wrap">
             <div className="sec-tag">What Clients Say</div>
             <h2 className="sec-h">Real notes, from real deliveries.</h2>
@@ -1014,6 +1029,7 @@ export default function App() {
 
       {/* FAQ */}
       <section className="sec" id="faq">
+        <SecDivider />
         <div className="wrap">
           <div className="reveal">
             <div className="sec-tag">Questions</div>
