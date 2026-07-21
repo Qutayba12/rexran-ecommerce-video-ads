@@ -13,6 +13,16 @@ const ORDERS_KEY = 'rexran:orders'
 // Persists a confirmed order so it survives even if Telegram/email delivery
 // fails, and doubles as an idempotency guard: Stripe can redeliver the same
 // webhook event, so we skip re-notifying once a session id is already saved.
+// Photo URLs are spread across metadata[photo_1]..metadata[photo_6] (see
+// api/checkout.js) since a single Stripe metadata value is capped at 500 chars.
+function photosFromMetadata(m) {
+  const photos = []
+  for (let i = 1; i <= 6; i++) {
+    if (m[`photo_${i}`]) photos.push(m[`photo_${i}`])
+  }
+  return photos
+}
+
 async function saveOrder(session) {
   const m = session.metadata || {}
   const order = {
@@ -28,6 +38,7 @@ async function saveOrder(session) {
     language: m.language || '',
     services: m.services || '',
     notes: m.notes || '',
+    photos: photosFromMetadata(m),
     createdAt: session.created ? session.created * 1000 : Date.now(),
   }
   const list = (await redis.get(ORDERS_KEY)) || []
@@ -93,6 +104,9 @@ async function notify(session) {
       `• Product: ${m.product_url || '—'}`,
       ...(m.services ? ['', '*Services*', m.services] : []),
       ...(m.notes ? ['', '*Notes*', m.notes] : []),
+      ...(photosFromMetadata(m).length
+        ? ['', '*Reference photos*', ...photosFromMetadata(m).map((url, i) => `${i + 1}. ${url}`)]
+        : []),
     ]
     try {
       await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -120,6 +134,7 @@ async function notify(session) {
       </table>
       ${m.services ? `<h3 style="margin:18px 0 6px">Services</h3><p style="margin:0">${m.services}</p>` : ''}
       ${m.notes ? `<h3 style="margin:18px 0 6px">Notes</h3><p style="margin:0;white-space:pre-wrap">${m.notes}</p>` : ''}
+      ${photosFromMetadata(m).length ? `<h3 style="margin:18px 0 8px">Reference photos</h3><div>${photosFromMetadata(m).map((url) => `<a href="${url}" target="_blank" style="display:inline-block;margin:0 8px 8px 0"><img src="${url}" width="100" height="100" style="object-fit:cover;border-radius:8px;border:1px solid #ddd" /></a>`).join('')}</div>` : ''}
     </div>`
     try {
       await fetch('https://api.resend.com/emails', {
