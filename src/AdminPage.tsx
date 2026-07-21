@@ -166,7 +166,7 @@ export default function Admin() {
   type OrderT = {
     id: string; package: string; amount: number | null; currency: string
     email: string; name: string; brand: string; offer: string; productUrl: string
-    language: string; services: string; notes: string; createdAt: number
+    language: string; services: string; notes: string; photos?: string[]; createdAt: number
   }
   const [orders, setOrders] = useState<OrderT[]>([])
   const loadOrders = async (pwd: string) => {
@@ -395,6 +395,13 @@ export default function Admin() {
                 <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}</strong>
                 <span className="adm-url">{o.brand || '—'} · {o.email || '—'} · {new Date(o.createdAt).toLocaleString()}</span>
                 {o.services && <span className="adm-url">{o.services}</span>}
+                {o.photos && o.photos.length > 0 && (
+                  <div className="adm-order-photos">
+                    {o.photos.map((url, i) => (
+                      <a href={url} target="_blank" rel="noreferrer" key={i}><img src={url} alt="" loading="lazy" /></a>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}

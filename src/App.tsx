@@ -299,28 +299,15 @@ function PhotoGrid({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoIte
   )
 }
 
-export default function App() {
-  useReveal()
-  const scrolled = useScrolled()
+// Fully self-contained: every field, the qty steppers, and the photo
+// uploader live here, isolated from the homepage's App() component. This is
+// what makes typing/clicking here fast — state changes only re-render this
+// modal, never the marketing sections underneath it.
+function CheckoutModal({ plan, initialStep, onClose }: { plan: string; initialStep: number; onClose: () => void }) {
+  const isCustom = plan === 'Custom'
+  const planObj = PLANS.find((p) => p.name === plan)
 
-  const isPaidReturn = () => new URLSearchParams(window.location.search).get('paid') === '1'
-
-  // checkout modal: which plan ('Spark'..) or 'Custom'. If the customer just
-  // returned from Stripe, resolve straight into the confirmation step —
-  // computed in the lazy initializer so no effect-time setState is needed.
-  const [checkout, setCheckout] = useState<string | null>(() => (isPaidReturn() ? 'Growth' : null))
-  const [step, setStep] = useState(() => (isPaidReturn() ? 3 : 0)) // 0 sizes, 1 info, 2 pay, 3 done
-
-  // Clean the URL so a refresh doesn't re-trigger the confirmation step, and
-  // fire a purchase-conversion event (no-op until an analytics provider is
-  // actually configured — see src/analytics.ts).
-  useEffect(() => {
-    if (isPaidReturn()) {
-      const sessionId = new URLSearchParams(window.location.search).get('session_id')
-      trackPurchase(sessionId)
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [])
+  const [step, setStep] = useState(initialStep) // 0 sizes, 1 info, 2 pay, 3 done
 
   // ready-plan size choices
   const [planRatios, setPlanRatios] = useState<Record<string, string[]>>({})
@@ -348,12 +335,7 @@ export default function App() {
     return sv.price
   }
   const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * unitPrice(sv, build[sv.key]), 0)
-
-  const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
+  const planTotal = isCustom ? buildTotal : (planObj ? parseInt(planObj.price.replace('$', '')) : 0)
 
   // client details
   const [info, setInfo] = useState({ brand: '', productUrl: '', offer: '', email: '', language: 'English', notes: '' })
@@ -365,6 +347,36 @@ export default function App() {
   const [sizeErr, setSizeErr] = useState('')
   const [badSizes, setBadSizes] = useState<Record<string, boolean>>({})
   const [badDur, setBadDur] = useState<Record<string, boolean>>({})
+
+  // product reference photos — uploaded straight from the browser to Vercel
+  // Blob (same pattern as the admin panel's uploads), capped at 6.
+  const MAX_PHOTOS = 6
+  const [photos, setPhotos] = useState<string[]>([])
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const [photoErr, setPhotoErr] = useState('')
+
+  const addPhotos = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setPhotoErr('')
+    const room = MAX_PHOTOS - photos.length
+    if (room <= 0) { setPhotoErr(`Up to ${MAX_PHOTOS} photos.`); return }
+    const toUpload = Array.from(files).slice(0, room)
+    setUploadingPhotos(true)
+    try {
+      // Lazy-loaded: this ~28KB (gzipped) client only downloads when a
+      // customer actually adds a photo, not on every homepage visit.
+      const { upload } = await import('@vercel/blob/client')
+      const uploaded = await Promise.all(toUpload.map((file) =>
+        upload(file.name, file, { access: 'public', handleUploadUrl: '/api/customer-upload' }).then((b) => b.url)
+      ))
+      setPhotos((p) => [...p, ...uploaded])
+    } catch (e) {
+      setPhotoErr('Could not upload one or more photos: ' + String(e instanceof Error ? e.message : e))
+    } finally {
+      setUploadingPhotos(false)
+    }
+  }
+  const removePhoto = (url: string) => setPhotos((p) => p.filter((u) => u !== url))
 
   // Validate size selection on step 0 before continuing to details
   const goToDetails = () => {
@@ -379,7 +391,7 @@ export default function App() {
       })
       if (buildTotal < MIN_ORDER) { setSizeErr(`Minimum order is $${MIN_ORDER}. Add a little more to continue.`); return }
     } else {
-      ;(PLAN_CONTENTS[checkout!] || []).forEach((c) => {
+      ;(PLAN_CONTENTS[plan] || []).forEach((c) => {
         if ((planRatios[c.key] || []).length === 0) bad[c.key] = true
       })
     }
@@ -409,6 +421,259 @@ export default function App() {
     }
     setInfoErr('')
     setStep(2)
+  }
+
+  // assemble services & sizes for the order
+  const orderItems = () => {
+    if (isCustom) {
+      return SERVICES.filter((sv) => build[sv.key].qty > 0).map((sv) => ({
+        key: sv.key, label: sv.label, qty: build[sv.key].qty, ratios: build[sv.key].ratios,
+        duration: build[sv.key].duration ? `${build[sv.key].duration}s` : undefined,
+      }))
+    }
+    return (PLAN_CONTENTS[plan] || []).map((c) => ({
+      label: c.label, qty: 0, ratios: planRatios[c.key] || [],
+    }))
+  }
+
+  const submitOrder = async () => {
+    setSubmitting(true); setSubmitErr('')
+    const payload = {
+      package: isCustom ? 'Custom' : plan,
+      total: planTotal,
+      brand: info.brand, productUrl: info.productUrl, offer: info.offer,
+      email: info.email, language: info.language, notes: info.notes,
+      items: orderItems(), photos,
+    }
+    try {
+      // Create a Stripe Checkout session and redirect to the secure payment page.
+      // Notification is sent by the Stripe webhook only AFTER payment succeeds.
+      const r = await fetch('/api/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+      })
+      const data = await r.json()
+      if (!r.ok || !data.url) throw new Error(data.error || 'checkout failed')
+      window.location.href = data.url
+    } catch (e) {
+      setSubmitErr('Could not start secure checkout: ' + String(e instanceof Error ? e.message : e) + ' — please try again, or email hello@rexran.com.')
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="modal-back" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-x" onClick={onClose} aria-label="Close">✕</button>
+
+        {/* progress */}
+        <div className="steps-bar">
+          {['Sizes', 'Details', 'Payment'].map((lab, i) => (
+            <div className={`stepdot${step === i ? ' on' : ''}${step > i ? ' done' : ''}`} key={lab}>
+              <span className="d">{step > i ? '✓' : i + 1}</span>{lab}
+            </div>
+          ))}
+        </div>
+
+        {/* header */}
+        <h3>{isCustom ? <>Build <em>your own.</em></> : <>{plan} <em>package.</em></>}</h3>
+
+        <div className="step-anim" key={step}>
+        {/* STEP 0 — SIZES */}
+        {step === 0 && (
+          <>
+            {isCustom ? (
+              <>
+                <p className="modal-lede">Pick each service, set the quantity, choose its duration and sizes. Price updates live.</p>
+                {SERVICES.map((sv) => {
+                  const line = build[sv.key]; const on = line.qty > 0
+                  const priceLabel = sv.durations && sv.durations.length
+                    ? `from $${Math.min(...sv.durations.map((d) => d.price))} each`
+                    : `$${sv.price} each`
+                  return (
+                    <div className={`bsvc${on ? ' on' : ''}`} key={sv.key}>
+                      <div className="bitem">
+                        <div className="bitem-info"><h4>{sv.label}</h4><p>{priceLabel}</p></div>
+                        <div className="stepper">
+                          <button onClick={() => setQty(build, setBuild, sv.key, -1)} disabled={line.qty === 0} aria-label="Decrease">−</button>
+                          <span className="qty">{line.qty}</span>
+                          <button onClick={() => setQty(build, setBuild, sv.key, 1)} aria-label="Increase">+</button>
+                        </div>
+                      </div>
+                      {on && sv.durations && sv.durations.length > 0 && (
+                        <div className={`bratios${badDur[sv.key] ? ' bad' : ''}`}>
+                          <span className="svc-qty-lab">Video duration</span>
+                          <div className="chips">
+                            {sv.durations.map((d) => (
+                              <button type="button" key={d.secs} className={`chip sm${line.duration === d.secs ? ' on' : ''}`}
+                                onClick={() => { setDuration(sv.key, d.secs); setBadDur((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}>{d.secs}s · ${d.price}</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {on && sv.ratios.length > 0 && (
+                        <div className={`bratios${badSizes[sv.key] ? ' bad' : ''}`}>
+                          <span className="svc-qty-lab">Sizes for this service</span>
+                          <div className="chips">
+                            {sv.ratios.map((r) => (
+                              <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
+                                onClick={() => { toggleRatio(build, setBuild, sv.key, r); setBadSizes((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}>{r}</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </>
+            ) : (
+              <>
+                <p className="modal-lede">Choose the size(s) you want for each part of your {plan} package.</p>
+                {(PLAN_CONTENTS[plan] || []).map((c) => (
+                  <div className="bsvc on" key={c.key}>
+                    <div className="bitem"><div className="bitem-info"><h4>{c.label}</h4></div></div>
+                    <div className={`bratios${badSizes[c.key] ? ' bad' : ''}`}>
+                      <span className="svc-qty-lab">Pick the size(s) you want</span>
+                      <div className="chips">
+                        {c.ratios.map((r) => (
+                          <button type="button" key={r} className={`chip sm${(planRatios[c.key] || []).includes(r) ? ' on' : ''}`}
+                            onClick={() => { togglePlanRatio(c.key, r); setBadSizes((b) => (b[c.key] ? { ...b, [c.key]: false } : b)) }}>{r}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            <div className="btotal">
+              <div className="sum"><span className="lab">{isCustom ? 'Your total' : 'Package price'}</span>${planTotal}</div>
+              <button className="cta" disabled={isCustom && buildTotal < MIN_ORDER} onClick={goToDetails}>Continue</button>
+            </div>
+            {isCustom && buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
+            {sizeErr && <p className="bmin" style={{ color: '#e6896b' }}>{sizeErr}</p>}
+          </>
+        )}
+
+        {/* STEP 1 — DETAILS */}
+        {step === 1 && (
+          <>
+            <p className="modal-lede">Tell us about the product so Rexran can produce the right creative.</p>
+            <div className="fgrid two">
+              <div className={`field${badFields.brand ? ' bad' : ''}`}><label>Brand / store name</label><input value={info.brand} onChange={(e) => setField('brand', e.target.value)} placeholder="Acme Supply Co." /></div>
+              <div className={`field${badFields.productUrl ? ' bad' : ''}`}><label>Product link</label><input type="url" value={info.productUrl} onChange={(e) => setField('productUrl', e.target.value)} placeholder="https://…/your-product" /></div>
+            </div>
+            <div style={{ height: 22 }} />
+            <div className="fgrid two">
+              <div className={`field${badFields.email ? ' bad' : ''}`}><label>Email</label><input type="email" value={info.email} onChange={(e) => setField('email', e.target.value)} placeholder="you@store.com" /></div>
+              <div className="field"><label>Primary language</label>
+                <select value={info.language} onChange={(e) => setField('language', e.target.value)}>
+                  <option>English</option>
+                  <option>Arabic</option>
+                  <option>Spanish</option>
+                  <option>French</option>
+                  <option>German</option>
+                  <option>Portuguese</option>
+                  <option>Italian</option>
+                  <option>Dutch</option>
+                  <option>Turkish</option>
+                  <option>Russian</option>
+                  <option>Hindi</option>
+                  <option>Japanese</option>
+                  <option>Korean</option>
+                  <option>Chinese (Mandarin)</option>
+                  <option>Bilingual</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ height: 22 }} />
+            <div className="field"><label>Offer to feature <span className="opt">optional</span></label><input value={info.offer} onChange={(e) => setField('offer', e.target.value)} placeholder="e.g. Buy 1 Get 1 Free · 20% off · Free gift · Free shipping" /></div>
+            <div style={{ height: 22 }} />
+            <div className={`field${badFields.notes ? ' bad' : ''}`}><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle to push, any text or logo that must appear…" /></div>
+            <div style={{ height: 22 }} />
+            <div className="field">
+              <label>Product photos <span className="opt">optional, up to {MAX_PHOTOS}</span></label>
+              <div className="photo-picker">
+                {photos.map((url) => (
+                  <div className="photo-thumb" key={url}>
+                    <img src={url} alt="" />
+                    <button type="button" className="photo-thumb-x" aria-label="Remove photo" onClick={() => removePhoto(url)}>✕</button>
+                  </div>
+                ))}
+                {photos.length < MAX_PHOTOS && (
+                  <label className="photo-add">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple style={{ display: 'none' }}
+                      onChange={(e) => { addPhotos(e.target.files); e.target.value = '' }} disabled={uploadingPhotos} />
+                    {uploadingPhotos ? <span className="photo-add-spin" /> : <PlusIcon />}
+                    <span>{uploadingPhotos ? 'Uploading…' : 'Add photos'}</span>
+                  </label>
+                )}
+              </div>
+              {photoErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b', marginTop: 8 }}>{photoErr}</p>}
+            </div>
+            {infoErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b', marginTop: 14 }}>{infoErr}</p>}
+            <div className="modal-nav">
+              <button className="cta ghost" onClick={() => setStep(0)}>Back</button>
+              <button className="cta" onClick={goToPayment}>Continue to payment</button>
+            </div>
+          </>
+        )}
+
+        {/* STEP 2 — PAYMENT */}
+        {step === 2 && (
+          <>
+            <p className="modal-lede">Secure checkout, powered by Stripe. Your finished files arrive on a private download page, ready to run.</p>
+            <div className="pay-sum">
+              <div className="pay-row"><span>{isCustom ? 'Custom package' : `${plan} package`}</span><strong>${planTotal}</strong></div>
+              <div className="pay-row muted"><span>Delivery</span><span>Fast turnaround · private download link</span></div>
+            </div>
+            <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>🔒 You'll be taken to Stripe's secure page to enter your card. Rexran never sees your card details. By paying you agree to our <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-hi)' }}>Terms</a>.</p>
+            {submitErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b' }}>{submitErr}</p>}
+            <div className="modal-nav">
+              <button className="cta ghost" onClick={() => setStep(1)} disabled={submitting}>Back</button>
+              <button className="cta" onClick={submitOrder} disabled={submitting}>{submitting ? 'Starting checkout…' : `Pay $${planTotal} →`}</button>
+            </div>
+          </>
+        )}
+
+        {/* STEP 3 — DONE */}
+        {step === 3 && (
+          <div className="done" style={{ marginTop: 10 }}>
+            <span className="dot" />
+            <p>Payment received — thank you. Your order is confirmed. Rexran will be in touch by email shortly with your timeline, and your finished ads will arrive on a private download page, ready to run.</p>
+          </div>
+        )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  useReveal()
+  const scrolled = useScrolled()
+
+  const isPaidReturn = () => new URLSearchParams(window.location.search).get('paid') === '1'
+
+  // checkout modal: which plan ('Spark'..) or 'Custom'. If the customer just
+  // returned from Stripe, resolve straight into the confirmation step —
+  // computed in the lazy initializer so no effect-time setState is needed.
+  const [checkout, setCheckout] = useState<string | null>(() => (isPaidReturn() ? 'Growth' : null))
+
+  // Clean the URL so a refresh doesn't re-trigger the confirmation step, and
+  // fire a purchase-conversion event (no-op until an analytics provider is
+  // actually configured — see src/analytics.ts).
+  useEffect(() => {
+    if (isPaidReturn()) {
+      const sessionId = new URLSearchParams(window.location.search).get('session_id')
+      trackPurchase(sessionId)
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
+
+  const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
 
   // portfolio videos from admin — split into a video carousel and a photo grid
@@ -458,49 +723,8 @@ export default function App() {
     }
   }
 
-  const open = (plan: string) => { setCheckout(plan); setStep(0) }
-  const close = () => { setCheckout(null); setStep(0); setSubmitErr(''); setInfoErr(''); setBadFields({}); setSizeErr(''); setBadSizes({}); setBadDur({}) }
-
-  const isCustom = checkout === 'Custom'
-  const planObj = PLANS.find((p) => p.name === checkout)
-  const planTotal = isCustom ? buildTotal : (planObj ? parseInt(planObj.price.replace('$', '')) : 0)
-
-  // assemble services & sizes for the order
-  const orderItems = () => {
-    if (isCustom) {
-      return SERVICES.filter((sv) => build[sv.key].qty > 0).map((sv) => ({
-        key: sv.key, label: sv.label, qty: build[sv.key].qty, ratios: build[sv.key].ratios,
-        duration: build[sv.key].duration ? `${build[sv.key].duration}s` : undefined,
-      }))
-    }
-    return (PLAN_CONTENTS[checkout!] || []).map((c) => ({
-      label: c.label, qty: 0, ratios: planRatios[c.key] || [],
-    }))
-  }
-
-  const submitOrder = async () => {
-    setSubmitting(true); setSubmitErr('')
-    const payload = {
-      package: isCustom ? 'Custom' : checkout,
-      total: planTotal,
-      brand: info.brand, productUrl: info.productUrl, offer: info.offer,
-      email: info.email, language: info.language, notes: info.notes,
-      items: orderItems(),
-    }
-    try {
-      // Create a Stripe Checkout session and redirect to the secure payment page.
-      // Notification is sent by the Stripe webhook only AFTER payment succeeds.
-      const r = await fetch('/api/checkout', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-      })
-      const data = await r.json()
-      if (!r.ok || !data.url) throw new Error(data.error || 'checkout failed')
-      window.location.href = data.url
-    } catch (e) {
-      setSubmitErr('Could not start secure checkout: ' + String(e instanceof Error ? e.message : e) + ' — please try again, or email hello@rexran.com.')
-      setSubmitting(false)
-    }
-  }
+  const open = (plan: string) => setCheckout(plan)
+  const close = () => setCheckout(null)
 
   return (
     <>
@@ -740,171 +964,11 @@ export default function App() {
         </div>
       </footer>
 
-      {/* CHECKOUT MODAL (multi-step) */}
+      {/* CHECKOUT MODAL (multi-step) — its own component so typing/clicking
+          inside it (qty steppers, fields, photo uploads) never re-renders
+          this entire homepage tree (videos, testimonials, FAQ, etc.). */}
       {checkout && (
-        <div className="modal-back" onClick={close}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-x" onClick={close} aria-label="Close">✕</button>
-
-            {/* progress */}
-            <div className="steps-bar">
-              {['Sizes', 'Details', 'Payment'].map((lab, i) => (
-                <div className={`stepdot${step === i ? ' on' : ''}${step > i ? ' done' : ''}`} key={lab}>
-                  <span className="d">{step > i ? '✓' : i + 1}</span>{lab}
-                </div>
-              ))}
-            </div>
-
-            {/* header */}
-            <h3>{isCustom ? <>Build <em>your own.</em></> : <>{checkout} <em>package.</em></>}</h3>
-
-            <div className="step-anim" key={step}>
-            {/* STEP 0 — SIZES */}
-            {step === 0 && (
-              <>
-                {isCustom ? (
-                  <>
-                    <p className="modal-lede">Pick each service, set the quantity, choose its duration and sizes. Price updates live.</p>
-                    {SERVICES.map((sv) => {
-                      const line = build[sv.key]; const on = line.qty > 0
-                      const priceLabel = sv.durations && sv.durations.length
-                        ? `from $${Math.min(...sv.durations.map((d) => d.price))} each`
-                        : `$${sv.price} each`
-                      return (
-                        <div className={`bsvc${on ? ' on' : ''}`} key={sv.key}>
-                          <div className="bitem">
-                            <div className="bitem-info"><h4>{sv.label}</h4><p>{priceLabel}</p></div>
-                            <div className="stepper">
-                              <button onClick={() => setQty(build, setBuild, sv.key, -1)} disabled={line.qty === 0} aria-label="Decrease">−</button>
-                              <span className="qty">{line.qty}</span>
-                              <button onClick={() => setQty(build, setBuild, sv.key, 1)} aria-label="Increase">+</button>
-                            </div>
-                          </div>
-                          {on && sv.durations && sv.durations.length > 0 && (
-                            <div className={`bratios${badDur[sv.key] ? ' bad' : ''}`}>
-                              <span className="svc-qty-lab">Video duration</span>
-                              <div className="chips">
-                                {sv.durations.map((d) => (
-                                  <button type="button" key={d.secs} className={`chip sm${line.duration === d.secs ? ' on' : ''}`}
-                                    onClick={() => { setDuration(sv.key, d.secs); setBadDur((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}>{d.secs}s · ${d.price}</button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {on && sv.ratios.length > 0 && (
-                            <div className={`bratios${badSizes[sv.key] ? ' bad' : ''}`}>
-                              <span className="svc-qty-lab">Sizes for this service</span>
-                              <div className="chips">
-                                {sv.ratios.map((r) => (
-                                  <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
-                                    onClick={() => { toggleRatio(build, setBuild, sv.key, r); setBadSizes((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}>{r}</button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </>
-                ) : (
-                  <>
-                    <p className="modal-lede">Choose the size(s) you want for each part of your {checkout} package.</p>
-                    {(PLAN_CONTENTS[checkout!] || []).map((c) => (
-                      <div className="bsvc on" key={c.key}>
-                        <div className="bitem"><div className="bitem-info"><h4>{c.label}</h4></div></div>
-                        <div className={`bratios${badSizes[c.key] ? ' bad' : ''}`}>
-                          <span className="svc-qty-lab">Pick the size(s) you want</span>
-                          <div className="chips">
-                            {c.ratios.map((r) => (
-                              <button type="button" key={r} className={`chip sm${(planRatios[c.key] || []).includes(r) ? ' on' : ''}`}
-                                onClick={() => { togglePlanRatio(c.key, r); setBadSizes((b) => (b[c.key] ? { ...b, [c.key]: false } : b)) }}>{r}</button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-                <div className="btotal">
-                  <div className="sum"><span className="lab">{isCustom ? 'Your total' : 'Package price'}</span>${planTotal}</div>
-                  <button className="cta" disabled={isCustom && buildTotal < MIN_ORDER} onClick={goToDetails}>Continue</button>
-                </div>
-                {isCustom && buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
-                {sizeErr && <p className="bmin" style={{ color: '#e6896b' }}>{sizeErr}</p>}
-              </>
-            )}
-
-            {/* STEP 1 — DETAILS */}
-            {step === 1 && (
-              <>
-                <p className="modal-lede">Tell us about the product so Rexran can produce the right creative.</p>
-                <div className="fgrid two">
-                  <div className={`field${badFields.brand ? ' bad' : ''}`}><label>Brand / store name</label><input value={info.brand} onChange={(e) => setField('brand', e.target.value)} placeholder="Acme Supply Co." /></div>
-                  <div className={`field${badFields.productUrl ? ' bad' : ''}`}><label>Product link</label><input type="url" value={info.productUrl} onChange={(e) => setField('productUrl', e.target.value)} placeholder="https://…/your-product" /></div>
-                </div>
-                <div style={{ height: 22 }} />
-                <div className="fgrid two">
-                  <div className={`field${badFields.email ? ' bad' : ''}`}><label>Email</label><input type="email" value={info.email} onChange={(e) => setField('email', e.target.value)} placeholder="you@store.com" /></div>
-                  <div className="field"><label>Primary language</label>
-                    <select value={info.language} onChange={(e) => setField('language', e.target.value)}>
-                      <option>English</option>
-                      <option>Arabic</option>
-                      <option>Spanish</option>
-                      <option>French</option>
-                      <option>German</option>
-                      <option>Portuguese</option>
-                      <option>Italian</option>
-                      <option>Dutch</option>
-                      <option>Turkish</option>
-                      <option>Russian</option>
-                      <option>Hindi</option>
-                      <option>Japanese</option>
-                      <option>Korean</option>
-                      <option>Chinese (Mandarin)</option>
-                      <option>Bilingual</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-                </div>
-                <div style={{ height: 22 }} />
-                <div className="field"><label>Offer to feature <span className="opt">optional</span></label><input value={info.offer} onChange={(e) => setField('offer', e.target.value)} placeholder="e.g. Buy 1 Get 1 Free · 20% off · Free gift · Free shipping" /></div>
-                <div style={{ height: 22 }} />
-                <div className={`field${badFields.notes ? ' bad' : ''}`}><label>Product details & what to highlight</label><textarea value={info.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="What it is, who it's for, the angle to push, any text or logo that must appear…" /></div>
-                {infoErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b', marginTop: 14 }}>{infoErr}</p>}
-                <div className="modal-nav">
-                  <button className="cta ghost" onClick={() => setStep(0)}>Back</button>
-                  <button className="cta" onClick={goToPayment}>Continue to payment</button>
-                </div>
-              </>
-            )}
-
-            {/* STEP 2 — PAYMENT */}
-            {step === 2 && (
-              <>
-                <p className="modal-lede">Secure checkout, powered by Stripe. Your finished files arrive on a private download page, ready to run.</p>
-                <div className="pay-sum">
-                  <div className="pay-row"><span>{isCustom ? 'Custom package' : `${checkout} package`}</span><strong>${planTotal}</strong></div>
-                  <div className="pay-row muted"><span>Delivery</span><span>Fast turnaround · private download link</span></div>
-                </div>
-                <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>🔒 You'll be taken to Stripe's secure page to enter your card. Rexran never sees your card details. By paying you agree to our <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-hi)' }}>Terms</a>.</p>
-                {submitErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b' }}>{submitErr}</p>}
-                <div className="modal-nav">
-                  <button className="cta ghost" onClick={() => setStep(1)} disabled={submitting}>Back</button>
-                  <button className="cta" onClick={submitOrder} disabled={submitting}>{submitting ? 'Starting checkout…' : `Pay $${planTotal} →`}</button>
-                </div>
-              </>
-            )}
-
-            {/* STEP 3 — DONE */}
-            {step === 3 && (
-              <div className="done" style={{ marginTop: 10 }}>
-                <span className="dot" />
-                <p>Payment received — thank you. Your order is confirmed. Rexran will be in touch by email shortly with your timeline, and your finished ads will arrive on a private download page, ready to run.</p>
-              </div>
-            )}
-            </div>
-          </div>
-        </div>
+        <CheckoutModal plan={checkout} initialStep={isPaidReturn() ? 3 : 0} onClose={close} key={checkout} />
       )}
 
       {/* CONTACT MODAL */}

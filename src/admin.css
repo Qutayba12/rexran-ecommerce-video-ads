@@ -34,6 +34,9 @@
 .adm-meta strong { font-size: 15px; color: var(--ink); }
 .adm-tag { font-family: var(--mono); font-size: 11px; color: var(--gold); }
 .adm-url { font-size: 12px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-order-photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.adm-order-photos img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); transition: border-color .2s; }
+.adm-order-photos a:hover img { border-color: var(--gold); }
 .adm-del { flex: none; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; padding: 9px 16px; border: 1px solid var(--line); border-radius: 100px; background: transparent; color: var(--ink-mut); transition: all .2s; }
 .adm-del:hover { border-color: #e6896b; color: #e6896b; }
 .adm-copylink { padding: 9px 14px; font-size: 12px; }

@@ -175,6 +175,27 @@
 .field textarea { resize: vertical; min-height: 100px; }
 .field.bad label { color: #e6896b; }
 .field.bad input, .field.bad select, .field.bad textarea { border-color: #d9563a; background: rgba(217,86,58,.06); }
+
+/* ===== PRODUCT PHOTO PICKER (checkout, Step 1) ===== */
+.photo-picker { display: flex; flex-wrap: wrap; gap: 12px; }
+.photo-thumb { position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); flex: none; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb-x {
+  position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1;
+  background: rgba(7,6,10,.7); color: var(--ink); border: 1px solid rgba(212,175,55,.3); transition: background .2s;
+}
+.photo-thumb-x:hover { background: #d9563a; border-color: #d9563a; }
+.photo-add {
+  width: 72px; height: 72px; flex: none; border-radius: 10px; border: 1px dashed var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  color: var(--ink-faint); cursor: pointer; transition: border-color .2s, color .2s; text-align: center;
+}
+.photo-add:hover { border-color: var(--gold); color: var(--gold-hi); }
+.photo-add svg { width: 14px; height: 14px; }
+.photo-add span { font-family: var(--mono); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; padding: 0 4px; }
+.photo-add-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(212,175,55,.25); border-top-color: var(--gold); animation: dl-spin .8s linear infinite; }
+@keyframes dl-spin { to { transform: rotate(360deg); } }
 .field.bad input:focus, .field.bad select:focus, .field.bad textarea:focus { border-color: #e6896b; background: rgba(217,86,58,.08); }
 .bratios.bad { border: 1px solid #d9563a; border-radius: var(--r-sm); padding: 12px; background: rgba(217,86,58,.05); }
 .bratios.bad .svc-qty-lab { color: #e6896b; }

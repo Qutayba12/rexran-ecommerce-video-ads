@@ -86,7 +86,8 @@ Set these in the Vercel project settings (Production + Preview):
 | `POST /api/testimonials` | rate-limited | A client submits feedback tied to their delivery id — stored as pending, never shown until approved. |
 | `POST /api/order` | rate-limited | Contact-form message → Telegram/email. |
 | `POST /api/checkout` | rate-limited | Create a Stripe Checkout session. |
-| `POST /api/stripe-webhook` | Stripe signature | Payment confirmation → record + notify. |
+| `POST /api/customer-upload` | rate-limited | Client-upload token for a customer's product reference photos, added during checkout (up to 6, capped at 20MB each). |
+| `POST /api/stripe-webhook` | Stripe signature | Payment confirmation → record + notify (Telegram/email now include any uploaded product photos). |
 | `POST /api/admin-videos` | admin password | Add/remove portfolio videos. |
 | `POST /api/deliveries` | admin password | Create/list/remove client deliveries. |
 | `POST /api/admin-testimonials` | admin password | List/approve/reject/delete client testimonials. |

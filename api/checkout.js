@@ -64,6 +64,16 @@ export default async function handler(req, res) {
     }).join(', ')
     params.append('metadata[services]', summary.slice(0, 480))
   }
+  // Product reference photos the customer uploaded — each gets its own
+  // metadata key (Stripe caps a single value at 500 chars, too short for
+  // several blob URLs joined together). Capped to 6 photos.
+  if (Array.isArray(o.photos)) {
+    o.photos.slice(0, 6).forEach((url, i) => {
+      if (typeof url === 'string' && url.startsWith('https://')) {
+        params.append(`metadata[photo_${i + 1}]`, url.slice(0, 500))
+      }
+    })
+  }
   params.append('metadata[package]', packageName)
 
   try {
