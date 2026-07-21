@@ -463,7 +463,7 @@
   border: 1px solid rgba(212,175,55,.35); border-radius: var(--r-lg); padding: 30px 34px;
   background: linear-gradient(120deg, rgba(212,175,55,.10), rgba(14,12,18,.5) 60%); }
 .founding-badge { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-  color: #0c0a10; background: var(--gold); padding: 7px 13px; border-radius: 100px; align-self: flex-start; }
+  color: #0c0a10; background: linear-gradient(180deg, var(--gold-hi), var(--gold) 70%, var(--gold-deep)); padding: 7px 13px; border-radius: 100px; align-self: flex-start; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
 .founding-body { flex: 1; min-width: 240px; }
 .founding-body h3 { font-family: var(--display); font-size: clamp(20px,2.4vw,26px); margin-bottom: 8px; color: var(--ink); }
 .founding-body p { color: var(--ink-mut); font-size: 15px; line-height: 1.6; max-width: 60ch; }
