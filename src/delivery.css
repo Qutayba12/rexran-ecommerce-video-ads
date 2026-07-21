@@ -125,7 +125,7 @@
 
 .dl-feedback-input {
   position: relative; width: 100%; max-width: 480px; margin: 0 auto 18px; display: block;
-  font-family: inherit; font-size: 14.5px; color: var(--ink); background: rgba(7,6,10,.5);
+  font-family: inherit; font-size: 16px; color: var(--ink); background: rgba(7,6,10,.5);
   border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; resize: vertical;
   transition: border-color .2s;
 }
