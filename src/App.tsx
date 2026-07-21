@@ -863,7 +863,7 @@ export default function App() {
               {TILES.map((t) => (
                 <div className={`tile ${t.c}`} key={t.n} onMouseMove={tilt}>
                   <div className="glow" /><span className="ph">{t.ph}</span>
-                  <div className="num">{t.n}</div><h3>{t.t}</h3><p>{t.p}</p>
+                  <h3>{t.t}</h3><p>{t.p}</p>
                 </div>
               ))}
             </div>
@@ -872,7 +872,7 @@ export default function App() {
               <ZoomMarquee direction="left" items={TILES.map((t) => (
                 <div className={`tile zc-tile ${t.c}`} key={t.n} onMouseMove={tilt}>
                   <div className="glow" /><span className="ph">{t.ph}</span>
-                  <div className="num">{t.n}</div><h3>{t.t}</h3><p>{t.p}</p>
+                  <h3>{t.t}</h3><p>{t.p}</p>
                 </div>
               ))} />
             </div>
@@ -891,7 +891,7 @@ export default function App() {
               {STEPS.map((s) => (
                 <div className="step" key={s.n} onMouseMove={tilt}>
                   <div className="glow" />
-                  <div className="step-n">{s.n}</div><h3>{s.t}</h3><p>{s.p}</p>
+                  <h3>{s.t}</h3><p>{s.p}</p>
                 </div>
               ))}
             </div>
@@ -900,7 +900,7 @@ export default function App() {
               <ZoomMarquee direction="left" items={STEPS.map((s) => (
                 <div className="step zc-step" key={s.n} onMouseMove={tilt}>
                   <div className="glow" />
-                  <div className="step-n">{s.n}</div><h3>{s.t}</h3><p>{s.p}</p>
+                  <h3>{s.t}</h3><p>{s.p}</p>
                 </div>
               ))} />
             </div>
@@ -944,10 +944,9 @@ export default function App() {
             <h2 className="sec-h">Agency-grade creative, <em>without the agency.</em></h2>
           </div>
           <div className="why-grid reveal">
-            {WHY.map((w, i) => (
+            {WHY.map((w) => (
               <div className="why-card" key={w.t} onMouseMove={tilt}>
                 <div className="glow" />
-                <div className="why-n">0{i + 1}</div>
                 <h3>{w.t}</h3><p>{w.p}</p>
               </div>
             ))}
