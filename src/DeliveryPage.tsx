@@ -42,6 +42,14 @@ function ExpandIcon() {
   )
 }
 
+function CheckSeal() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  )
+}
+
 export default function Delivery() {
   // Resolve the id synchronously during render (lazy initializer) so the
   // "no id" case never needs a setState call inside the effect body.
@@ -208,6 +216,7 @@ export default function Delivery() {
         {state === 'ok' && data && (
           <>
             <div className="dl-welcome">
+              <div className="dl-seal" aria-hidden="true"><CheckSeal /></div>
               <div className="dl-kicker-row">
                 <div className="dl-kicker">Your creative is ready</div>
                 <button className="dl-copy" onClick={copyLink}>{copied ? 'Link copied ✓' : 'Copy link'}</button>
@@ -246,6 +255,10 @@ export default function Delivery() {
                   </div>
                 )
               })}
+            </div>
+
+            <div className="sec-divider dl-divider" aria-hidden="true">
+              <span className="ln" /><span className="dot" /><span className="ln" />
             </div>
 
             <div className="dl-share">
