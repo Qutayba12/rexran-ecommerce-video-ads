@@ -290,7 +290,7 @@ function PhotoGrid({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoIte
         <figure className="photo-card" key={v.id} onMouseMove={tilt3D} onMouseLeave={resetTilt3D}
           onClick={() => onOpen(v)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen(v)}>
           <div className="glow" />
-          <img src={v.url} alt="" loading="lazy" />
+          <img src={v.url} alt={`${v.type} ad creative produced by Rexran`} loading="lazy" />
           <span className="photo-expand" aria-hidden="true"><ExpandIcon /></span>
           <figcaption><span className="vid-type">{v.type}</span></figcaption>
         </figure>
