@@ -11,6 +11,12 @@
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/delivery", "destination": "/delivery.html" },
     { "source": "/delivery/(.*)", "destination": "/delivery.html" },
+    { "source": "/studio", "destination": "/studio.html" },
+    { "source": "/guides", "destination": "/guides.html" },
+    { "source": "/guides/ugc-vs-traditional-ads", "destination": "/guide-ugc-vs-traditional.html" },
+    { "source": "/guides/ai-directed-vs-ai-generated", "destination": "/guide-ai-directed-vs-generated.html" },
+    { "source": "/guides/ad-aspect-ratio-guide", "destination": "/guide-aspect-ratios.html" },
+    { "source": "/guides/why-fast-turnaround-matters", "destination": "/guide-fast-turnaround.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/" }
   ],

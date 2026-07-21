@@ -6,10 +6,15 @@ creative, cinematic product films).
 
 ## Stack
 
-- **Frontend**: React 19 + TypeScript, built with Vite. Three separate entry
+- **Frontend**: React 19 + TypeScript, built with Vite. Three React entry
   points share one Vite build: the marketing site (`src/main.tsx` →
   `index.html`), the admin panel (`src/admin.tsx` → `admin.html`), and the
-  client delivery page (`src/delivery.tsx` → `delivery.html`).
+  client delivery page (`src/delivery.tsx` → `delivery.html`). Content pages
+  (`privacy.html`, `terms.html`, `studio.html`, `guides.html`, and the
+  individual `guide-*.html` articles) are plain static HTML with a shared
+  `public/content.css` — no JS, fast, and easy to index. Every extra
+  `.html` file needs an entry in `vite.config.ts`'s `build.rollupOptions.input`
+  and, for a pretty URL, a rewrite in `vercel.json`.
 - **Backend**: Vercel Serverless Functions under `api/`. No framework — each
   file is a standalone handler.
 - **Data**: Upstash Redis (portfolio videos, client deliveries, paid orders).
