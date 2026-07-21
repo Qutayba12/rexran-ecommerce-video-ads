@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /delivery
 
 Sitemap: https://rexran.com/sitemap.xml
