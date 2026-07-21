@@ -135,6 +135,35 @@
 .step h3 { position: relative; font-size: 24px; margin-bottom: 12px; }
 .step p { position: relative; color: var(--ink-mut); font-size: 15.5px; line-height: 1.7; }
 
+/* ===== ZOOM MARQUEE — endless carousel used for Formats (right) and
+   Process (left). Whichever card sits nearest the center scales up; the
+   rest sit smaller. Reuses the same doubled-track loop as the reviews
+   marquee. Not gated by prefers-reduced-motion in CSS — App.tsx renders
+   the original static grids instead when that's set, skipping this
+   entirely. ===== */
+.zc-wrap { margin-top: 40px; overflow: hidden; padding: 34px 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.zc-track { display: flex; gap: 16px; width: max-content; animation-name: zc-scroll; animation-timing-function: linear; animation-iteration-count: infinite; }
+.zc-right .zc-track { animation-direction: reverse; }
+@keyframes zc-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.zc-item { flex: 0 0 auto; transition: transform .45s cubic-bezier(.16,1,.3,1), opacity .45s; transform: scale(.86); opacity: .55; }
+.zc-item.zc-center { transform: scale(1.08); opacity: 1; z-index: 2; }
+
+.zc-tile { width: min(190px, 56vw); min-height: 210px; padding: 18px 16px; opacity: 1; transform: none; }
+.zc-tile h3 { font-size: 15px; }
+.zc-tile p { font-size: 11.5px; }
+.zc-tile .ph { top: 14px; right: 14px; font-size: 8px; padding: 3px 7px; }
+
+.zc-step { width: min(260px, 68vw); padding: 26px 22px; opacity: 1; transform: none; }
+.zc-step .step-n { font-size: 42px; margin-bottom: 16px; }
+.zc-step h3 { font-size: 19px; }
+.zc-step p { font-size: 13.5px; }
+
+@media (max-width: 640px) {
+  .zc-wrap { padding: 26px 0; }
+  .zc-tile { width: min(160px, 62vw); min-height: 190px; }
+  .zc-step { width: min(220px, 74vw); }
+}
+
 /* ===== PRICING ===== */
 .prices { margin-top: 56px; display: grid; gap: 18px; }
 @media (min-width: 920px) { .prices { grid-template-columns: repeat(4,1fr); } }
@@ -323,7 +352,7 @@
 .vids-track:active { cursor: grabbing; }
 
 .vid3d-card {
-  flex: 0 0 min(280px, 74vw); scroll-snap-align: start; margin: 0; position: relative; overflow: hidden;
+  flex: 0 0 min(210px, 58vw); scroll-snap-align: start; margin: 0; position: relative; overflow: hidden;
   border: 1px solid var(--line); border-radius: var(--r-lg); background: rgba(14,12,18,.4);
   transform-style: preserve-3d; transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .4s, box-shadow .4s;
 }
@@ -404,11 +433,17 @@
 .vid-frame video { width: 100%; height: 100%; object-fit: cover; display: block; background: #0e0c12; }
 .vid-frame img { width: 100%; height: 100%; object-fit: cover; display: block; background: #0e0c12; }
 .vid-type { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
-.vid-sound { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 13px; border-radius: 100px; border: 1px solid rgba(212,175,55,.5);
+.vid-sound { position: absolute; left: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 11px; border-radius: 100px; border: 1px solid rgba(212,175,55,.5);
   background: rgba(7,6,10,.6); backdrop-filter: blur(6px); color: var(--gold-hi);
-  font-family: var(--mono); font-size: 11px; letter-spacing: .04em; transition: all .25s; pointer-events: none; }
+  font-family: var(--mono); font-size: 10px; letter-spacing: .04em; transition: all .25s; pointer-events: none; }
 .vid-frame:hover .vid-sound { background: rgba(212,175,55,.92); color: #000; border-color: var(--gold); }
+.vid-expand {
+  position: absolute; top: 10px; right: 10px; z-index: 2; width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; color: var(--ink);
+  background: rgba(7,6,10,.55); backdrop-filter: blur(6px); border: 1px solid rgba(212,175,55,.3); opacity: .85; transition: all .2s;
+}
+.vid-expand:hover { background: rgba(212,175,55,.9); color: #000; border-color: var(--gold); opacity: 1; }
 
 /* ===== FOUNDING OFFER + PROOF ===== */
 .founding { margin-top: 56px; display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
