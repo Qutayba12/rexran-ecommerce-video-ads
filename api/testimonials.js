@@ -1,14 +1,19 @@
-// GET /api/testimonials — public: approved client testimonials for the site.
-// POST /api/testimonials — public (rate-limited): a client submits feedback
-// tied to their delivery id. Stored as "pending" — nothing appears on the
-// site until a studio admin approves it via /api/admin-testimonials.
+// GET  /api/testimonials — public: approved client testimonials for the site.
+// POST /api/testimonials — two shapes on one endpoint (kept together to stay
+//   under Vercel's serverless-function limit):
+//   • Admin (body has an admin `action`): password-protected
+//     list/approve/reject/delete moderation.
+//   • Public (rate-limited): a client submits feedback tied to their delivery
+//     id. Stored as "pending" — nothing appears on the site until approved.
 import { Redis } from '@upstash/redis'
 import crypto from 'crypto'
-import { limitRequest } from './_lib/rateLimit.js'
+import { limitRequest, isBlockedByFailedAttempts, recordFailedAttempt } from './_lib/rateLimit.js'
+import { checkPassword } from './_lib/auth.js'
 
 const redis = Redis.fromEnv()
 const KEY = 'rexran:testimonials'
 const DELIVERIES_KEY = 'rexran:deliveries'
+const ADMIN_ACTIONS = ['list', 'approve', 'reject', 'delete']
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -24,6 +29,38 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
+    const { action } = req.body || {}
+
+    // ----- Admin moderation (password-protected) -----
+    if (ADMIN_ACTIONS.includes(action)) {
+      const { password, id } = req.body || {}
+      if (await isBlockedByFailedAttempts(req, 'admin', 10)) {
+        return res.status(429).json({ error: 'Too many attempts. Try again later.' })
+      }
+      if (!checkPassword(password, process.env.ADMIN_PASSWORD)) {
+        await recordFailedAttempt(req, 'admin', 15 * 60)
+        return res.status(401).json({ error: 'Unauthorized' })
+      }
+      try {
+        let list = (await redis.get(KEY)) || []
+        if (action === 'list') {
+          return res.status(200).json({ ok: true, testimonials: list })
+        }
+        if (action === 'approve' || action === 'reject') {
+          list = list.map((t) => (t.id === id ? { ...t, status: action === 'approve' ? 'approved' : 'rejected' } : t))
+          await redis.set(KEY, list)
+          return res.status(200).json({ ok: true, testimonials: list })
+        }
+        // delete
+        list = list.filter((t) => t.id !== id)
+        await redis.set(KEY, list)
+        return res.status(200).json({ ok: true, testimonials: list })
+      } catch (e) {
+        return res.status(500).json({ error: 'Server error', detail: String(e) })
+      }
+    }
+
+    // ----- Public feedback submission (rate-limited) -----
     if (!(await limitRequest(req, 'testimonial', 8, 10 * 60))) {
       return res.status(429).json({ error: 'Too many requests. Please try again later.' })
     }
