@@ -44,7 +44,13 @@ const SERVICES: Service[] = [
   { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS, durations: [{ secs: 15, price: 79 }, { secs: 30, price: 109 }] },
   { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
   { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
+  // TEMPORARY — $1 real-payment test. Hidden from normal visitors: it only
+  // appears in the custom builder when the page URL has ?test=1, and it's
+  // exempt from the minimum-order gate. Remove this line (and its mirror in
+  // api/_lib/pricing.js + the ?test / TEST_KEY handling) before launch.
+  { key: 'test', label: 'Test payment ($1)', price: 1, ratios: [] },
 ]
+const TEST_KEY = 'test'
 const MIN_ORDER = 25
 
 const PLANS = [
@@ -421,6 +427,11 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
 
   const [step, setStep] = useState(initialStep) // 0 sizes, 1 info, 2 pay, 3 done
 
+  // TEMPORARY: the $1 test service is only offered when the page URL has
+  // ?test=1, so normal visitors never see it. Remove with the test service.
+  const [showTest] = useState(() => new URLSearchParams(window.location.search).get('test') === '1')
+  const builderServices = SERVICES.filter((sv) => sv.key !== TEST_KEY || showTest)
+
   // ready-plan size choices
   const [planRatios, setPlanRatios] = useState<Record<string, string[]>>({})
   const togglePlanRatio = (k: string, r: string) =>
@@ -453,6 +464,9 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
   const [checkingCode, setCheckingCode] = useState(false)
 
   const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * unitPrice(sv, build[sv.key]), 0)
+  // TEMPORARY: a $1-test order skips the minimum-order gate. Remove with the test service.
+  const isTestOrder = build[TEST_KEY].qty > 0
+  const belowMin = isCustom && !isTestOrder && buildTotal < MIN_ORDER
   const planTotal = isCustom ? buildTotal : (planObj ? parseInt(planObj.price.replace('$', '')) : 0)
   // What the customer actually pays. The server recomputes this independently
   // (see api/checkout.js) — the customer gets the better of the store-wide
@@ -533,7 +547,7 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
         // selected video service must have a duration chosen
         if (build[sv.key].qty > 0 && sv.durations && sv.durations.length && build[sv.key].duration == null) badD[sv.key] = true
       })
-      if (buildTotal < MIN_ORDER) { setSizeErr(`Minimum order is $${MIN_ORDER}. Add a little more to continue.`); return }
+      if (belowMin) { setSizeErr(`Minimum order is $${MIN_ORDER}. Add a little more to continue.`); return }
     } else {
       ;(PLAN_CONTENTS[plan] || []).forEach((c) => {
         if ((planRatios[c.key] || []).length === 0) bad[c.key] = true
@@ -634,7 +648,7 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
             {isCustom ? (
               <>
                 <p className="modal-lede">Pick each service, set the quantity, choose its duration and sizes. Price updates live.</p>
-                {SERVICES.map((sv) => {
+                {builderServices.map((sv) => {
                   const line = build[sv.key]; const on = line.qty > 0
                   const priceLabel = sv.durations && sv.durations.length
                     ? `from $${Math.min(...sv.durations.map((d) => d.price))} each`
@@ -698,9 +712,9 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
               <div className="sum"><span className="lab">{isCustom ? 'Your total' : 'Package price'}</span>
                 {discounted ? <><span className="sum-was">{money(planTotal)}</span> {money(chargeTotal)}</> : <>{money(planTotal)}</>}
               </div>
-              <button className="cta" disabled={isCustom && buildTotal < MIN_ORDER} onClick={goToDetails}>Continue</button>
+              <button className="cta" disabled={belowMin} onClick={goToDetails}>Continue</button>
             </div>
-            {isCustom && buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
+            {belowMin && buildTotal > 0 && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
             {sizeErr && <p className="bmin" style={{ color: '#e6896b' }}>{sizeErr}</p>}
           </>
         )}
