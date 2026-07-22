@@ -105,18 +105,22 @@ const FAQ = [
   { q: 'Who owns the final files?', a: 'You do. Once your order is paid in full, the rights to use the delivered creative for your own advertising are yours.' },
 ]
 
-type Promo = { id: string; type: 'percent' | 'fixed' | 'gift'; value: number; headline: string; detail: string; expiresAt: number | null }
+type Discount = { type: 'percent' | 'fixed' | 'gift'; value: number }
+type Promo = Discount & { id: string; headline: string; detail: string; expiresAt: number | null }
+type PromoCode = { code: string; type: 'percent' | 'fixed'; value: number }
 
 // Display-side mirror of api/_lib/promo.js — the server recomputes and is the
 // source of truth for the actual charge; this only formats the shown price.
-function applyPromo(total: number, promo: Promo | null): number {
-  if (!promo || promo.type === 'gift') return total
-  if (promo.type === 'percent') return Math.max(1, Math.round(total * (100 - promo.value)) / 100)
-  if (promo.type === 'fixed') return Math.max(1, Math.round((total - promo.value) * 100) / 100)
+function applyPromo(total: number, d: Discount | null): number {
+  if (!d || d.type === 'gift') return total
+  if (d.type === 'percent') return Math.max(1, Math.round(total * (100 - d.value)) / 100)
+  if (d.type === 'fixed') return Math.max(1, Math.round((total - d.value) * 100) / 100)
   return total
 }
 const money = (n: number) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`)
 const isDiscount = (promo: Promo | null) => !!promo && promo.type !== 'gift'
+const discountLabel = (d: { type: 'percent' | 'fixed' | 'gift'; value: number }) =>
+  d.type === 'percent' ? `${d.value}% off` : `${money(d.value)} off`
 
 // A live countdown to the admin-set expiry — a real deadline, never a fake
 // resetting timer. Ticks each second; when it hits zero it calls onExpire so
@@ -442,13 +446,40 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
     }
     return sv.price
   }
+  // A promo code the customer types here — validated against /api/promo?code=.
+  const [codeInput, setCodeInput] = useState('')
+  const [appliedCode, setAppliedCode] = useState<PromoCode | null>(null)
+  const [codeErr, setCodeErr] = useState('')
+  const [checkingCode, setCheckingCode] = useState(false)
+
   const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * unitPrice(sv, build[sv.key]), 0)
   const planTotal = isCustom ? buildTotal : (planObj ? parseInt(planObj.price.replace('$', '')) : 0)
-  // What the customer actually pays after an active discount (the server
-  // recomputes this independently — see api/checkout.js). Gift promos and
-  // no promo leave it equal to planTotal.
-  const chargeTotal = applyPromo(planTotal, promo)
-  const discounted = isDiscount(promo) && chargeTotal < planTotal
+  // What the customer actually pays. The server recomputes this independently
+  // (see api/checkout.js) — the customer gets the better of the store-wide
+  // promo and any typed code, never both stacked. Gift/no promo => planTotal.
+  const promoCharge = applyPromo(planTotal, promo)
+  const codeCharge = appliedCode ? applyPromo(planTotal, appliedCode) : planTotal
+  const chargeTotal = Math.min(promoCharge, codeCharge)
+  const discounted = chargeTotal < planTotal
+  const codeWins = appliedCode != null && codeCharge <= promoCharge && codeCharge < planTotal
+  const appliedDiscountLabel = codeWins
+    ? `Code ${appliedCode!.code} (${discountLabel(appliedCode!)})`
+    : (isDiscount(promo) ? `${promo!.headline} (${discountLabel(promo!)})` : '')
+
+  const applyCode = async () => {
+    const c = codeInput.trim()
+    if (!c) return
+    setCheckingCode(true); setCodeErr('')
+    try {
+      const r = await fetch(`/api/promo?code=${encodeURIComponent(c)}`)
+      const d = await r.json()
+      if (d.code) { setAppliedCode(d.code); setCodeErr('') }
+      else { setAppliedCode(null); setCodeErr("That code isn't valid.") }
+    } catch {
+      setAppliedCode(null); setCodeErr('Could not check the code. Please try again.')
+    } finally { setCheckingCode(false) }
+  }
+  const clearCode = () => { setAppliedCode(null); setCodeInput(''); setCodeErr('') }
 
   // client details
   const [info, setInfo] = useState({ brand: '', productUrl: '', offer: '', email: '', language: 'English', notes: '' })
@@ -557,6 +588,7 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
       brand: info.brand, productUrl: info.productUrl, offer: info.offer,
       email: info.email, language: info.language, notes: info.notes,
       items: orderItems(), photos,
+      promoCode: appliedCode?.code,
     }
     try {
       // Create a Stripe Checkout session and redirect to the secure payment page.
@@ -745,12 +777,40 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
             <div className="pay-sum">
               <div className="pay-row"><span>{isCustom ? 'Custom package' : `${plan} package`}</span><strong>{money(planTotal)}</strong></div>
               {discounted && (
-                <div className="pay-row pay-discount"><span>{promo!.headline} {promo!.type === 'percent' ? `(${promo!.value}% off)` : `(${money(promo!.value)} off)`}</span><span>−{money(planTotal - chargeTotal)}</span></div>
+                <div className="pay-row pay-discount"><span>{appliedDiscountLabel}</span><span>−{money(planTotal - chargeTotal)}</span></div>
               )}
               {discounted && (
                 <div className="pay-row pay-total"><span>You pay</span><strong>{money(chargeTotal)}</strong></div>
               )}
               <div className="pay-row muted"><span>Delivery</span><span>Fast turnaround · private download link</span></div>
+            </div>
+
+            {/* Promo code */}
+            <div className="promo-code-row">
+              {appliedCode && codeWins ? (
+                <div className="promo-code-applied">
+                  <span>✓ Code <strong>{appliedCode.code}</strong> applied — {discountLabel(appliedCode)}</span>
+                  <button type="button" className="promo-code-remove" onClick={clearCode}>Remove</button>
+                </div>
+              ) : (
+                <>
+                  <div className="promo-code-field">
+                    <input
+                      value={codeInput}
+                      onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); if (codeErr) setCodeErr('') }}
+                      onKeyDown={(e) => e.key === 'Enter' && applyCode()}
+                      placeholder="Promo code"
+                      style={{ textTransform: 'uppercase' }}
+                      maxLength={40}
+                    />
+                    <button type="button" className="cta ghost promo-code-apply" onClick={applyCode} disabled={checkingCode || !codeInput.trim()}>
+                      {checkingCode ? 'Checking…' : 'Apply'}
+                    </button>
+                  </div>
+                  {appliedCode && !codeWins && <p className="promo-code-note">Your current offer already beats code <strong>{appliedCode.code}</strong> — you're getting the bigger discount.</p>}
+                  {codeErr && <p className="promo-code-err">{codeErr}</p>}
+                </>
+              )}
             </div>
             <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>🔒 You'll be taken to Stripe's secure page to enter your card. Rexran never sees your card details. By paying you agree to our <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-hi)' }}>Terms</a>.</p>
             {submitErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b' }}>{submitErr}</p>}
