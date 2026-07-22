@@ -22,10 +22,7 @@ export default async function handler(req, res) {
   // the client-sent total is display-only and never trusted here.
   const baseTotal = computeTotal(o)
   if (!baseTotal || baseTotal < 1) return res.status(400).json({ error: 'Invalid order' })
-  // TEMPORARY: a $1-test order (contains the 'test' service) skips the minimum.
-  // Remove this exemption with the test service before launch.
-  const isTestOrder = Array.isArray(o.items) && o.items.some((it) => it && it.key === 'test')
-  if (o.package === 'Custom' && !isTestOrder && baseTotal < MIN_ORDER) {
+  if (o.package === 'Custom' && baseTotal < MIN_ORDER) {
     return res.status(400).json({ error: `Minimum order is $${MIN_ORDER}` })
   }
 
