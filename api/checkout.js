@@ -88,13 +88,15 @@ export default async function handler(req, res) {
     })
   }
   params.append('metadata[package]', packageName)
-  // Record the applied discount so it's visible on the payment in Stripe.
+  // Record the applied discount so it's visible on the payment in Stripe and,
+  // via the webhook, stored on the order (promo_code powers the admin stats).
   if (source && total < baseTotal) {
     const applied = source === 'code' ? codeMatch : promo
     const label = applied.type === 'percent' ? `${applied.value}% off` : `$${applied.value} off`
     const name = source === 'code' ? `Code ${codeMatch.code}` : promo.headline
     params.append('metadata[promo]', `${name} (${label})`.slice(0, 200))
     params.append('metadata[original_total]', `$${baseTotal}`)
+    if (source === 'code') params.append('metadata[promo_code]', String(codeMatch.code).slice(0, 40))
   }
 
   try {

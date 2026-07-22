@@ -39,6 +39,8 @@ async function saveOrder(session) {
     services: m.services || '',
     notes: m.notes || '',
     photos: photosFromMetadata(m),
+    promoCode: m.promo_code || '',
+    promoLabel: m.promo || '',
     createdAt: session.created ? session.created * 1000 : Date.now(),
   }
   const list = (await redis.get(ORDERS_KEY)) || []
