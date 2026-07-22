@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   // Stripe expects form-encoded bodies and amounts in the smallest unit (pence)
   const params = new URLSearchParams()
   params.append('mode', 'payment')
-  params.append('success_url', `${base}/?paid=1&session_id={CHECKOUT_SESSION_ID}`)
+  params.append('success_url', `${base}/thank-you?paid=1&session_id={CHECKOUT_SESSION_ID}`)
   params.append('cancel_url', `${base}/?canceled=1`)
   params.append('line_items[0][quantity]', '1')
   params.append('line_items[0][price_data][currency]', 'usd')
