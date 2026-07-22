@@ -7,6 +7,9 @@ export const SERVICES = {
   cine: { durations: { 15: 79, 30: 109 } },
   static: { price: 12 },
   shoot: { price: 18 },
+  // TEMPORARY — mirrors the $1 real-payment test service in src/App.tsx.
+  // Remove both (and the isTestOrder exemption in api/checkout.js) before launch.
+  test: { price: 1 },
 }
 
 export const PLANS = {
