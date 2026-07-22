@@ -105,6 +105,19 @@ const FAQ = [
   { q: 'Who owns the final files?', a: 'You do. Once your order is paid in full, the rights to use the delivered creative for your own advertising are yours.' },
 ]
 
+type Promo = { id: string; type: 'percent' | 'fixed' | 'gift'; value: number; headline: string; detail: string; expiresAt: number | null }
+
+// Display-side mirror of api/_lib/promo.js — the server recomputes and is the
+// source of truth for the actual charge; this only formats the shown price.
+function applyPromo(total: number, promo: Promo | null): number {
+  if (!promo || promo.type === 'gift') return total
+  if (promo.type === 'percent') return Math.max(1, Math.round(total * (100 - promo.value)) / 100)
+  if (promo.type === 'fixed') return Math.max(1, Math.round((total - promo.value) * 100) / 100)
+  return total
+}
+const money = (n: number) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`)
+const isDiscount = (promo: Promo | null) => !!promo && promo.type !== 'gift'
+
 type Line = { qty: number; ratios: string[]; duration: number | null }
 const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [], duration: null }]))
 
@@ -366,7 +379,7 @@ function PhotoGrid({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoIte
 // uploader live here, isolated from the homepage's App() component. This is
 // what makes typing/clicking here fast — state changes only re-render this
 // modal, never the marketing sections underneath it.
-function CheckoutModal({ plan, initialStep, onClose }: { plan: string; initialStep: number; onClose: () => void }) {
+function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; initialStep: number; onClose: () => void; promo: Promo | null }) {
   const isCustom = plan === 'Custom'
   const planObj = PLANS.find((p) => p.name === plan)
 
@@ -399,6 +412,11 @@ function CheckoutModal({ plan, initialStep, onClose }: { plan: string; initialSt
   }
   const buildTotal = SERVICES.reduce((s, sv) => s + build[sv.key].qty * unitPrice(sv, build[sv.key]), 0)
   const planTotal = isCustom ? buildTotal : (planObj ? parseInt(planObj.price.replace('$', '')) : 0)
+  // What the customer actually pays after an active discount (the server
+  // recomputes this independently — see api/checkout.js). Gift promos and
+  // no promo leave it equal to planTotal.
+  const chargeTotal = applyPromo(planTotal, promo)
+  const discounted = isDiscount(promo) && chargeTotal < planTotal
 
   // client details
   const [info, setInfo] = useState({ brand: '', productUrl: '', offer: '', email: '', language: 'English', notes: '' })
@@ -516,7 +534,12 @@ function CheckoutModal({ plan, initialStep, onClose }: { plan: string; initialSt
       })
       const data = await r.json()
       if (!r.ok || !data.url) throw new Error(data.error || 'checkout failed')
-      window.location.href = data.url
+      // Navigate to Stripe via a local anchor rather than assigning
+      // window.location.href — functionally identical, but keeps the React
+      // Compiler from flagging a mutation of the global object.
+      const a = document.createElement('a')
+      a.href = data.url
+      a.click()
     } catch (e) {
       setSubmitErr('Could not start secure checkout: ' + String(e instanceof Error ? e.message : e) + ' — please try again, or email hello@rexran.com.')
       setSubmitting(false)
@@ -608,7 +631,9 @@ function CheckoutModal({ plan, initialStep, onClose }: { plan: string; initialSt
               </>
             )}
             <div className="btotal">
-              <div className="sum"><span className="lab">{isCustom ? 'Your total' : 'Package price'}</span>${planTotal}</div>
+              <div className="sum"><span className="lab">{isCustom ? 'Your total' : 'Package price'}</span>
+                {discounted ? <><span className="sum-was">{money(planTotal)}</span> {money(chargeTotal)}</> : <>{money(planTotal)}</>}
+              </div>
               <button className="cta" disabled={isCustom && buildTotal < MIN_ORDER} onClick={goToDetails}>Continue</button>
             </div>
             {isCustom && buildTotal > 0 && buildTotal < MIN_ORDER && <p className="bmin">Minimum order is ${MIN_ORDER}. Add a little more to continue.</p>}
@@ -686,14 +711,20 @@ function CheckoutModal({ plan, initialStep, onClose }: { plan: string; initialSt
           <>
             <p className="modal-lede">Secure checkout, powered by Stripe. Your finished files arrive on a private download page, ready to run.</p>
             <div className="pay-sum">
-              <div className="pay-row"><span>{isCustom ? 'Custom package' : `${plan} package`}</span><strong>${planTotal}</strong></div>
+              <div className="pay-row"><span>{isCustom ? 'Custom package' : `${plan} package`}</span><strong>{money(planTotal)}</strong></div>
+              {discounted && (
+                <div className="pay-row pay-discount"><span>{promo!.headline} {promo!.type === 'percent' ? `(${promo!.value}% off)` : `(${money(promo!.value)} off)`}</span><span>−{money(planTotal - chargeTotal)}</span></div>
+              )}
+              {discounted && (
+                <div className="pay-row pay-total"><span>You pay</span><strong>{money(chargeTotal)}</strong></div>
+              )}
               <div className="pay-row muted"><span>Delivery</span><span>Fast turnaround · private download link</span></div>
             </div>
             <p className="bmin" style={{ textAlign: 'left', marginTop: 18 }}>🔒 You'll be taken to Stripe's secure page to enter your card. Rexran never sees your card details. By paying you agree to our <a href="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-hi)' }}>Terms</a>.</p>
             {submitErr && <p className="bmin" style={{ textAlign: 'left', color: '#e6896b' }}>{submitErr}</p>}
             <div className="modal-nav">
               <button className="cta ghost" onClick={() => setStep(1)} disabled={submitting}>Back</button>
-              <button className="cta" onClick={submitOrder} disabled={submitting}>{submitting ? 'Starting checkout…' : `Pay $${planTotal} →`}</button>
+              <button className="cta" onClick={submitOrder} disabled={submitting}>{submitting ? 'Starting checkout…' : `Pay ${money(chargeTotal)} →`}</button>
             </div>
           </>
         )}
@@ -756,6 +787,19 @@ export default function App() {
     fetch('/api/testimonials').then((r) => r.json()).then((d) => setTestimonials(d.testimonials || [])).catch(() => {})
   }, [])
 
+  // Active store-wide promotion (a discount or a gift), set by the admin.
+  // Nothing shows until one is live; the discount is applied for real at
+  // checkout by the server (see api/checkout.js).
+  const [promo, setPromo] = useState<Promo | null>(null)
+  useEffect(() => {
+    fetch('/api/promo').then((r) => r.json()).then((d) => setPromo(d.promo || null)).catch(() => {})
+  }, [])
+  // Let the fixed nav + hero make room for the promo bar without prop-drilling.
+  useEffect(() => {
+    document.body.classList.toggle('has-promo', !!promo)
+    return () => document.body.classList.remove('has-promo')
+  }, [promo])
+
   // FAQ accordion — single item open at a time
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
@@ -796,6 +840,17 @@ export default function App() {
         <div className="aurora a1" /><div className="aurora a2" /><div className="aurora a3" /><div className="mesh" />
       </div>
       <div className="grain" />
+
+      {promo && (
+        <a className="promo-bar" href="#pricing">
+          <span className="promo-bar-tag">{promo.type === 'gift' ? 'Gift' : 'Offer'}</span>
+          <span className="promo-bar-text">
+            <strong>{promo.headline}</strong>
+            {promo.detail && <span className="promo-bar-detail">{promo.detail}</span>}
+          </span>
+          <span className="promo-bar-go">{isDiscount(promo) ? 'Claim it' : 'Start a project'} →</span>
+        </a>
+      )}
 
       <nav className={`nav${scrolled ? ' scrolled' : ''}`}>
         <a className="brand" href="#top" onClick={() => setMenuOpen(false)}><RexMark className="brand-logo" />Rexran</a>
@@ -928,17 +983,25 @@ export default function App() {
             <p className="sec-lede">Every package leads with video — the format that converts — with statics to round out the set. Fully done-for-you, no contracts.</p>
           </div>
           <div className="prices reveal">
-            {PLANS.map((p) => (
+            {PLANS.map((p) => {
+              const planNum = parseInt(p.price.replace('$', ''))
+              const planCharge = applyPromo(planNum, promo)
+              const planCut = isDiscount(promo) && planCharge < planNum
+              return (
               <div className={`pcard${p.feat ? ' feat' : ''}`} key={p.name} onMouseMove={tilt}>
                 <div className="glow" />
                 {p.feat && <span className="pflag">Most picked</span>}
                 <div className="pname">{p.name}</div>
-                <div className="pprice">{p.price}<span className="per">{p.per}</span></div>
+                <div className="pprice">
+                  {planCut ? <><span className="pprice-was">{p.price}</span>{money(planCharge)}</> : <>{p.price}</>}
+                  <span className="per">{p.per}</span>
+                </div>
                 <p className="pdesc">{p.desc}</p>
                 <ul className="pitems">{p.items.map((i) => <li key={i}>{i}</li>)}</ul>
                 <button className={`cta${p.feat ? '' : ' ghost'}`} onClick={() => open(p.name)}>Choose {p.name}</button>
               </div>
-            ))}
+              )
+            })}
           </div>
           <div className="builder-row reveal">
             <button className="builder-trigger" onClick={() => open('Custom')}>
@@ -1061,7 +1124,7 @@ export default function App() {
           inside it (qty steppers, fields, photo uploads) never re-renders
           this entire homepage tree (videos, testimonials, FAQ, etc.). */}
       {checkout && (
-        <CheckoutModal plan={checkout} initialStep={isPaidReturn() ? 3 : 0} onClose={close} key={checkout} />
+        <CheckoutModal plan={checkout} initialStep={isPaidReturn() ? 3 : 0} onClose={close} promo={promo} key={checkout} />
       )}
 
       {/* CONTACT MODAL */}
