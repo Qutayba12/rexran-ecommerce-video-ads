@@ -71,9 +71,23 @@
    float/pulse motion) — only the entrance fade-in and hover/tap feedback
    animate. Reuses the tileIn keyframe already defined in App.css. ===== */
 .adm-hub { margin-top: 4px; }
-.adm-hub-head { text-align: center; margin-bottom: 46px; }
+.adm-hub-head { text-align: center; margin-bottom: 34px; }
 .adm-hub-head h1 { font-size: clamp(26px, 4vw, 38px); }
 .adm-hub-head p { color: var(--ink-mut); font-size: 15px; margin-top: 10px; }
+
+/* ===== OVERVIEW STATS ===== */
+.adm-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 46px; }
+@media (max-width: 860px) { .adm-overview { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 460px) { .adm-overview { grid-template-columns: 1fr; } }
+.adm-ov-card { border: 1px solid var(--line); border-radius: var(--r); padding: 20px 22px; background: linear-gradient(160deg, rgba(212,175,55,.05), rgba(14,12,18,.4)); display: flex; flex-direction: column; gap: 6px; min-height: 104px; }
+.adm-ov-num { font-family: var(--display); font-size: clamp(26px, 3.4vw, 34px); line-height: 1; color: var(--ink); }
+.adm-ov-lab { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+.adm-ov-codes { gap: 10px; }
+.adm-ov-codes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.adm-ov-codes li { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.adm-ov-code { font-family: var(--mono); font-size: 13px; letter-spacing: .05em; color: var(--gold-hi); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-ov-count { font-family: var(--mono); font-size: 12px; color: var(--ink-mut); flex: none; }
+.adm-ov-empty { font-size: 13px; color: var(--ink-faint); }
 
 .adm-hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
 @media (max-width: 680px) { .adm-hub-grid { grid-template-columns: 1fr; } }

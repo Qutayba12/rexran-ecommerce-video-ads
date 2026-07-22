@@ -194,7 +194,8 @@ export default function Admin() {
   type OrderT = {
     id: string; package: string; amount: number | null; currency: string
     email: string; name: string; brand: string; offer: string; productUrl: string
-    language: string; services: string; notes: string; photos?: string[]; createdAt: number
+    language: string; services: string; notes: string; photos?: string[]
+    promoCode?: string; promoLabel?: string; createdAt: number
   }
   const [orders, setOrders] = useState<OrderT[]>([])
   const loadOrders = async (pwd: string) => {
@@ -447,6 +448,17 @@ export default function Admin() {
     }).catch(() => {})
   }
 
+  // ---- OVERVIEW STATS (derived from paid orders, no extra fetch) ----
+  const paidOrders = orders.filter((o) => o.amount != null)
+  const orderCount = paidOrders.length
+  const totalSales = paidOrders.reduce((s, o) => s + (o.amount || 0), 0)
+  const monthStart = new Date(new Date(nowTs).getFullYear(), new Date(nowTs).getMonth(), 1).getTime()
+  const monthSales = paidOrders.filter((o) => o.createdAt >= monthStart).reduce((s, o) => s + (o.amount || 0), 0)
+  const fmtMoney = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const codeCounts: Record<string, number> = {}
+  for (const o of paidOrders) { if (o.promoCode) codeCounts[o.promoCode] = (codeCounts[o.promoCode] || 0) + 1 }
+  const topCodes = Object.entries(codeCounts).sort((a, b) => b[1] - a[1]).slice(0, 3)
+
   if (!authed) {
     return (
       <div className="adm-gate">
@@ -476,6 +488,34 @@ export default function Admin() {
             <h1>What are we doing today?</h1>
             <p>Pick a workspace to continue.</p>
           </div>
+
+          <div className="adm-overview">
+            <div className="adm-ov-card">
+              <span className="adm-ov-num">{orderCount}</span>
+              <span className="adm-ov-lab">Paid order{orderCount !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="adm-ov-card">
+              <span className="adm-ov-num">{fmtMoney(totalSales)}</span>
+              <span className="adm-ov-lab">Total sales</span>
+            </div>
+            <div className="adm-ov-card">
+              <span className="adm-ov-num">{fmtMoney(monthSales)}</span>
+              <span className="adm-ov-lab">This month</span>
+            </div>
+            <div className="adm-ov-card adm-ov-codes">
+              <span className="adm-ov-lab">Top promo codes</span>
+              {topCodes.length === 0 ? (
+                <span className="adm-ov-empty">No codes used yet</span>
+              ) : (
+                <ul>
+                  {topCodes.map(([code, n]) => (
+                    <li key={code}><span className="adm-ov-code">{code}</span><span className="adm-ov-count">{n}×</span></li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
           <div className="adm-hub-grid">
             <div className="adm-hub-card" onMouseMove={tilt} onClick={() => setView('videos')}
               role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setView('videos')}>
@@ -597,7 +637,9 @@ export default function Admin() {
           {orders.map((o) => (
             <div className="adm-item" key={o.id}>
               <div className="adm-meta">
-                <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}</strong>
+                <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}
+                  {o.promoLabel && <span className="adm-tstatus adm-tstatus-approved" style={{ marginLeft: 8 }}>{o.promoLabel}</span>}
+                </strong>
                 <span className="adm-url">{o.brand || '—'} · {o.email || '—'} · {new Date(o.createdAt).toLocaleString()}</span>
                 {o.services && <span className="adm-url">{o.services}</span>}
                 {o.photos && o.photos.length > 0 && (
