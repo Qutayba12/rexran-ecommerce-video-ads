@@ -826,10 +826,20 @@ export default function App() {
   useEffect(() => {
     fetch('/api/promo').then((r) => r.json()).then((d) => setPromo(d.promo || null)).catch(() => {})
   }, [])
-  // Let the fixed nav + hero make room for the promo bar without prop-drilling.
+  // Let the fixed nav + hero make room for the promo bar. The bar's height
+  // varies (it can wrap to two lines on a phone), so measure it and expose it
+  // as --promo-h instead of hard-coding a magic number — that way the content
+  // below never hides behind it no matter how long the offer text is.
+  const promoRef = useRef<HTMLAnchorElement>(null)
   useEffect(() => {
     document.body.classList.toggle('has-promo', !!promo)
-    return () => document.body.classList.remove('has-promo')
+    const el = promoRef.current
+    if (!promo || !el) { document.body.style.removeProperty('--promo-h'); return }
+    const measure = () => document.body.style.setProperty('--promo-h', `${el.offsetHeight}px`)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => { ro.disconnect(); document.body.classList.remove('has-promo'); document.body.style.removeProperty('--promo-h') }
   }, [promo])
 
   // FAQ accordion — single item open at a time
@@ -874,10 +884,13 @@ export default function App() {
       <div className="grain" />
 
       {promo && (
-        <a className="promo-bar" href="#pricing">
+        <a className="promo-bar" href="#pricing" ref={promoRef}>
           <span className="promo-bar-tag">{promo.type === 'gift' ? 'Gift' : 'Offer'}</span>
           <span className="promo-bar-text">
             <strong>{promo.headline}</strong>
+            {isDiscount(promo) && (
+              <span className="promo-bar-value">{promo.type === 'percent' ? `${promo.value}% OFF` : `${money(promo.value)} OFF`}</span>
+            )}
             {promo.detail && <span className="promo-bar-detail">{promo.detail}</span>}
           </span>
           {promo.expiresAt && <PromoCountdown expiresAt={promo.expiresAt} onExpire={() => setPromo(null)} />}
