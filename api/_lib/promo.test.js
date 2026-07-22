@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pickActivePromo, applyPromoToTotal } from './promo.js'
+import { pickActivePromo, applyPromoToTotal, normalizeCode, findValidCode, bestChargeTotal } from './promo.js'
 
 describe('pickActivePromo', () => {
   const now = 1_000_000
@@ -67,5 +67,65 @@ describe('applyPromoToTotal', () => {
 
   it('returns the base for a malformed total', () => {
     expect(applyPromoToTotal(NaN, { type: 'percent', value: 20 })).toBeNaN()
+  })
+})
+
+describe('normalizeCode', () => {
+  it('trims and uppercases', () => {
+    expect(normalizeCode('  welcome10 ')).toBe('WELCOME10')
+  })
+  it('returns empty for nullish input', () => {
+    expect(normalizeCode(null)).toBe('')
+    expect(normalizeCode(undefined)).toBe('')
+  })
+})
+
+describe('findValidCode', () => {
+  const now = 1_000_000
+  const codes = [
+    { id: 'a', code: 'WELCOME10', type: 'percent', value: 10, active: true, expiresAt: null },
+    { id: 'b', code: 'OLD', type: 'percent', value: 50, active: true, expiresAt: now - 1 },
+    { id: 'c', code: 'OFFOFF', type: 'fixed', value: 20, active: false, expiresAt: null },
+  ]
+  it('matches case-insensitively', () => {
+    expect(findValidCode(codes, 'welcome10', now)).toMatchObject({ id: 'a' })
+    expect(findValidCode(codes, ' WeLcOmE10 ', now)).toMatchObject({ id: 'a' })
+  })
+  it('rejects an unknown code', () => {
+    expect(findValidCode(codes, 'NOPE', now)).toBeNull()
+  })
+  it('rejects an expired code', () => {
+    expect(findValidCode(codes, 'OLD', now)).toBeNull()
+  })
+  it('rejects an inactive code', () => {
+    expect(findValidCode(codes, 'OFFOFF', now)).toBeNull()
+  })
+  it('rejects empty input', () => {
+    expect(findValidCode(codes, '', now)).toBeNull()
+  })
+})
+
+describe('bestChargeTotal', () => {
+  const promo20 = { type: 'percent', value: 20 }
+  const code10 = { type: 'percent', value: 10 }
+  const code30 = { type: 'percent', value: 30 }
+
+  it('applies nothing when neither exists', () => {
+    expect(bestChargeTotal(100, null, null)).toEqual({ total: 100, source: null })
+  })
+  it('applies the promo when only a promo exists', () => {
+    expect(bestChargeTotal(100, promo20, null)).toEqual({ total: 80, source: 'promo' })
+  })
+  it('applies the code when only a code exists', () => {
+    expect(bestChargeTotal(100, null, code10)).toEqual({ total: 90, source: 'code' })
+  })
+  it('takes the code when it beats the promo', () => {
+    expect(bestChargeTotal(100, promo20, code30)).toEqual({ total: 70, source: 'code' })
+  })
+  it('takes the promo when it beats the code', () => {
+    expect(bestChargeTotal(100, promo20, code10)).toEqual({ total: 80, source: 'promo' })
+  })
+  it('prefers the code on a tie (the customer typed it)', () => {
+    expect(bestChargeTotal(100, promo20, { type: 'percent', value: 20 })).toEqual({ total: 80, source: 'code' })
   })
 })

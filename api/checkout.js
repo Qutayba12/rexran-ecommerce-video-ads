@@ -3,7 +3,7 @@
 // No card data ever touches our server.
 import { computeTotal, MIN_ORDER } from './_lib/pricing.js'
 import { limitRequest } from './_lib/rateLimit.js'
-import { getActivePromo, applyPromoToTotal } from './_lib/promo.js'
+import { getActivePromo, getAllCodes, findValidCode, bestChargeTotal } from './_lib/promo.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -26,11 +26,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Minimum order is $${MIN_ORDER}` })
   }
 
-  // Apply the active store-wide promo server-side (the min-order gate above is
-  // on the pre-discount order size). A gift promo leaves the price unchanged.
+  // Apply a discount server-side (the min-order gate above is on the
+  // pre-discount order size). The customer gets the better of the active
+  // store-wide promo and a typed code — never both stacked, never trusting a
+  // client-sent price. A gift promo leaves the price unchanged.
   let promo = null
-  try { promo = await getActivePromo() } catch { /* no promo store / unreachable — charge full price */ }
-  const total = applyPromoToTotal(baseTotal, promo)
+  let codeMatch = null
+  try {
+    promo = await getActivePromo()
+    if (o.promoCode) codeMatch = findValidCode(await getAllCodes(), o.promoCode)
+  } catch { /* no promo store / unreachable — charge full price */ }
+  const { total, source } = bestChargeTotal(baseTotal, promo, codeMatch)
 
   // Base URL for redirects (works on rexran.com and preview URLs)
   const proto = (req.headers['x-forwarded-proto'] || 'https').toString().split(',')[0]
@@ -83,9 +89,11 @@ export default async function handler(req, res) {
   }
   params.append('metadata[package]', packageName)
   // Record the applied discount so it's visible on the payment in Stripe.
-  if (promo && total < baseTotal) {
-    const label = promo.type === 'percent' ? `${promo.value}% off` : `$${promo.value} off`
-    params.append('metadata[promo]', `${promo.headline} (${label})`.slice(0, 200))
+  if (source && total < baseTotal) {
+    const applied = source === 'code' ? codeMatch : promo
+    const label = applied.type === 'percent' ? `${applied.value}% off` : `$${applied.value} off`
+    const name = source === 'code' ? `Code ${codeMatch.code}` : promo.headline
+    params.append('metadata[promo]', `${name} (${label})`.slice(0, 200))
     params.append('metadata[original_total]', `$${baseTotal}`)
   }
 

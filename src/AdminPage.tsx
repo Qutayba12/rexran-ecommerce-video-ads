@@ -130,6 +130,7 @@ export default function Admin() {
       await loadOrders(pw)
       await loadTestimonials(pw)
       await loadPromos(pw)
+      await loadCodes(pw)
     } catch {
       setErr('Could not connect. Try again.')
     } finally { setLoading(false) }
@@ -319,6 +320,75 @@ export default function Admin() {
       })
       const d = await r.json()
       if (r.ok) setPromos(d.promos)
+    } finally { setLoading(false) }
+  }
+
+  // ---- PROMO CODES (customer types one at checkout; many can be active) ----
+  type CodeT = {
+    id: string; code: string; type: 'percent' | 'fixed'; value: number
+    expiresAt: number | null; active: boolean; createdAt: number
+  }
+  const [codes, setCodes] = useState<CodeT[]>([])
+  const [cCode, setCCode] = useState('')
+  const [cType, setCType] = useState<'percent' | 'fixed'>('percent')
+  const [cValue, setCValue] = useState('')
+  const [cExpiry, setCExpiry] = useState('')
+  const [cErr, setCErr] = useState('')
+
+  const loadCodes = async (pwd: string) => {
+    try {
+      const r = await fetch('/api/promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd, action: 'code-list' }),
+      })
+      const d = await r.json()
+      if (r.ok) setCodes(d.codes || [])
+    } catch { /* ignore */ }
+  }
+
+  const createCode = async () => {
+    setCErr('')
+    if (cCode.trim().length < 3) { setCErr('Code must be at least 3 characters.'); return }
+    if (!(Number(cValue) > 0)) { setCErr('Enter a discount value greater than 0.'); return }
+    setLoading(true)
+    try {
+      const r = await fetch('/api/promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: pw, action: 'code-create',
+          code: { code: cCode, type: cType, value: Number(cValue), expiresAt: cExpiry || null, active: true },
+        }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'failed')
+      setCodes(d.codes)
+      setCCode(''); setCValue(''); setCExpiry(''); setCType('percent')
+    } catch (e) {
+      setCErr('Could not save. ' + String(e instanceof Error ? e.message : e))
+    } finally { setLoading(false) }
+  }
+
+  const setCodeActive = async (id: string, action: 'code-activate' | 'code-deactivate') => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw, action, id }),
+      })
+      const d = await r.json()
+      if (r.ok) setCodes(d.codes)
+    } finally { setLoading(false) }
+  }
+
+  const removeCode = async (id: string) => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw, action: 'code-delete', id }),
+      })
+      const d = await r.json()
+      if (r.ok) setCodes(d.codes)
     } finally { setLoading(false) }
   }
 
@@ -692,6 +762,56 @@ export default function Admin() {
                     ? <button className="cta ghost adm-copylink" onClick={() => setPromoActive(p.id, 'activate')} disabled={loading}>Make live</button>
                     : <button className="cta ghost adm-copylink" onClick={() => setPromoActive(p.id, 'deactivate')} disabled={loading}>Turn off</button>}
                   <button className="adm-del" onClick={() => removePromo(p.id)} disabled={loading}>Delete</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="adm-section">
+        <h2>Promo codes</h2>
+        <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>A private code a customer types at checkout — no public banner. Share it by email, DM, or with an influencer. Several can be active at once. If a store-wide offer is also live, the customer automatically gets whichever discount is bigger.</p>
+
+        <div className="adm-form">
+          <div className="field"><label>Code</label><input value={cCode} onChange={(e) => setCCode(e.target.value.toUpperCase())} placeholder="WELCOME10" maxLength={40} style={{ textTransform: 'uppercase' }} /></div>
+          <div className="field"><label>Type</label>
+            <select value={cType} onChange={(e) => setCType(e.target.value as 'percent' | 'fixed')}>
+              <option value="percent">Percentage off</option>
+              <option value="fixed">Fixed amount off</option>
+            </select>
+          </div>
+          <div className="field">
+            <label>{cType === 'percent' ? 'Percentage off (1–90)' : 'Amount off in USD'}</label>
+            <input type="number" min="1" max={cType === 'percent' ? '90' : undefined} value={cValue}
+              onChange={(e) => setCValue(e.target.value)} placeholder={cType === 'percent' ? 'e.g. 10' : 'e.g. 15'} />
+          </div>
+          <div className="field"><label>Ends on (optional — stops working after)</label><input type="datetime-local" value={cExpiry} onChange={(e) => setCExpiry(e.target.value)} /></div>
+        </div>
+        {cErr && <div className="adm-err">{cErr}</div>}
+        <button className="cta" onClick={createCode} disabled={loading}>{loading ? 'Saving…' : 'Create code'}</button>
+
+        <div className="adm-list" style={{ marginTop: 28 }}>
+          {codes.length === 0 && <p className="adm-empty">No codes yet. Create your first one above.</p>}
+          {codes.map((c) => {
+            const live = c.active && (!c.expiresAt || c.expiresAt > nowTs)
+            const expired = c.active && c.expiresAt != null && c.expiresAt <= nowTs
+            const valueLabel = c.type === 'percent' ? `${c.value}% off` : `$${c.value} off`
+            return (
+              <div className="adm-item" key={c.id}>
+                <div className="adm-meta">
+                  <strong>
+                    <span style={{ fontFamily: 'var(--mono)', letterSpacing: '.05em' }}>{c.code}</span>
+                    {' · '}<span className="adm-url" style={{ color: 'var(--gold)' }}>{valueLabel}</span>
+                    {' · '}<span className={`adm-tstatus adm-tstatus-${live ? 'approved' : expired ? 'rejected' : 'pending'}`}>{live ? 'live' : expired ? 'expired' : 'off'}</span>
+                  </strong>
+                  <span className="adm-url">{c.expiresAt ? `Ends ${new Date(c.expiresAt).toLocaleString()} · ` : ''}Created {new Date(c.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="adm-tactions">
+                  {!c.active
+                    ? <button className="cta ghost adm-copylink" onClick={() => setCodeActive(c.id, 'code-activate')} disabled={loading}>Turn on</button>
+                    : <button className="cta ghost adm-copylink" onClick={() => setCodeActive(c.id, 'code-deactivate')} disabled={loading}>Turn off</button>}
+                  <button className="adm-del" onClick={() => removeCode(c.id)} disabled={loading}>Delete</button>
                 </div>
               </div>
             )
