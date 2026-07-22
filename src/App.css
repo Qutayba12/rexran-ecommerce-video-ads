@@ -44,6 +44,9 @@
 .promo-bar-text { display: flex; align-items: baseline; gap: 10px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .promo-bar-text strong { font-family: var(--display); font-style: italic; font-size: 16px; font-weight: 500; }
 .promo-bar-detail { font-family: var(--body); font-size: 13px; opacity: .8; overflow: hidden; text-overflow: ellipsis; }
+.promo-bar-timer { flex: none; display: inline-flex; align-items: center; gap: 6px; color: #0c0a10;
+  background: rgba(12,10,16,.14); border: 1px solid rgba(12,10,16,.28); border-radius: 100px; padding: 5px 11px; }
+.promo-bar-clock { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 .promo-bar-go { flex: none; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; font-weight: 500;
   border: 1px solid rgba(12,10,16,.4); border-radius: 100px; padding: 6px 14px; transition: background .2s, color .2s; }
 .promo-bar:hover .promo-bar-go { background: #0c0a10; color: var(--gold-hi); border-color: #0c0a10; }
@@ -601,9 +604,12 @@ body.has-promo .hero { padding-top: calc(130px + 46px); }
   .wrap { width: min(1240px, 100% - 36px); }
 
   /* Promo bar: keep it to a single tidy line on small screens */
-  .promo-bar { height: 42px; gap: 10px; padding: 0 12px; }
+  .promo-bar { height: 42px; gap: 8px; padding: 0 12px; }
   .promo-bar-text strong { font-size: 14px; }
   .promo-bar-detail { display: none; }
+  .promo-bar-tag { display: none; } /* the headline already reads as an offer; make room for the timer */
+  .promo-bar-timer { padding: 4px 9px; gap: 5px; }
+  .promo-bar-clock { font-size: 11.5px; }
   .promo-bar-go { padding: 5px 11px; font-size: 10px; }
   body.has-promo .nav { top: 42px; }
   body.has-promo .hero { padding-top: calc(96px + 42px); }
