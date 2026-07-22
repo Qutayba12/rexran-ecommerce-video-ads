@@ -215,7 +215,7 @@ export default function Admin() {
   const [testimonials, setTestimonials] = useState<TestimonialT[]>([])
   const loadTestimonials = async (pwd: string) => {
     try {
-      const r = await fetch('/api/admin-testimonials', {
+      const r = await fetch('/api/testimonials', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pwd, action: 'list' }),
       })
@@ -226,7 +226,7 @@ export default function Admin() {
   const setTestimonialStatus = async (id: string, action: 'approve' | 'reject') => {
     setLoading(true)
     try {
-      const r = await fetch('/api/admin-testimonials', {
+      const r = await fetch('/api/testimonials', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pw, action, id }),
       })
@@ -237,7 +237,7 @@ export default function Admin() {
   const removeTestimonial = async (id: string) => {
     setLoading(true)
     try {
-      const r = await fetch('/api/admin-testimonials', {
+      const r = await fetch('/api/testimonials', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pw, action: 'delete', id }),
       })
@@ -261,7 +261,7 @@ export default function Admin() {
 
   const loadPromos = async (pwd: string) => {
     try {
-      const r = await fetch('/api/admin-promo', {
+      const r = await fetch('/api/promo', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pwd, action: 'list' }),
       })
@@ -276,7 +276,7 @@ export default function Admin() {
     if (pType !== 'gift' && !(Number(pValue) > 0)) { setPErr('Enter a discount value greater than 0.'); return }
     setLoading(true)
     try {
-      const r = await fetch('/api/admin-promo', {
+      const r = await fetch('/api/promo', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           password: pw, action: 'create',
@@ -301,7 +301,7 @@ export default function Admin() {
   const setPromoActive = async (id: string, action: 'activate' | 'deactivate') => {
     setLoading(true)
     try {
-      const r = await fetch('/api/admin-promo', {
+      const r = await fetch('/api/promo', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pw, action, id }),
       })
@@ -313,7 +313,7 @@ export default function Admin() {
   const removePromo = async (id: string) => {
     setLoading(true)
     try {
-      const r = await fetch('/api/admin-promo', {
+      const r = await fetch('/api/promo', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pw, action: 'delete', id }),
       })
