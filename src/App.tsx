@@ -118,6 +118,38 @@ function applyPromo(total: number, promo: Promo | null): number {
 const money = (n: number) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`)
 const isDiscount = (promo: Promo | null) => !!promo && promo.type !== 'gift'
 
+// A live countdown to the admin-set expiry — a real deadline, never a fake
+// resetting timer. Ticks each second; when it hits zero it calls onExpire so
+// the whole offer disappears (matching the server, which also stops honouring
+// an expired promo). The ticking `now` lives here so only this small badge
+// re-renders each second, never the whole homepage.
+function PromoCountdown({ expiresAt, onExpire }: { expiresAt: number; onExpire: () => void }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const remaining = expiresAt - now
+  useEffect(() => { if (remaining <= 0) onExpire() }, [remaining, onExpire])
+  if (remaining <= 0) return null
+
+  const totalSecs = Math.floor(remaining / 1000)
+  const days = Math.floor(totalSecs / 86400)
+  const hours = Math.floor((totalSecs % 86400) / 3600)
+  const mins = Math.floor((totalSecs % 3600) / 60)
+  const secs = totalSecs % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  return (
+    <span className="promo-bar-timer" aria-label="Time left on this offer">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" />
+      </svg>
+      <span className="promo-bar-clock">{days > 0 ? `${days}d ` : ''}{pad(hours)}:{pad(mins)}:{pad(secs)}</span>
+    </span>
+  )
+}
+
 type Line = { qty: number; ratios: string[]; duration: number | null }
 const emptyLines = (): Record<string, Line> => Object.fromEntries(SERVICES.map((s) => [s.key, { qty: 0, ratios: [], duration: null }]))
 
@@ -848,6 +880,7 @@ export default function App() {
             <strong>{promo.headline}</strong>
             {promo.detail && <span className="promo-bar-detail">{promo.detail}</span>}
           </span>
+          {promo.expiresAt && <PromoCountdown expiresAt={promo.expiresAt} onExpire={() => setPromo(null)} />}
           <span className="promo-bar-go">{isDiscount(promo) ? 'Claim it' : 'Start a project'} →</span>
         </a>
       )}
