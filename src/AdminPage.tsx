@@ -5,7 +5,7 @@ import RexMark from './RexMark'
 type Video = { id: string; title: string; url: string; type: string; poster?: string }
 const TYPES = ['UGC', 'Static', 'Cinematic', 'Photoshoot', 'Campaign']
 
-type WorkspaceView = 'hub' | 'videos' | 'orders' | 'deliveries' | 'testimonials'
+type WorkspaceView = 'hub' | 'videos' | 'orders' | 'deliveries' | 'testimonials' | 'promos'
 
 // Follows the cursor position into --mx/--my so the .glow radial gradient
 // tracks the pointer — same pattern used site-wide (see App.tsx's `tilt`).
@@ -47,11 +47,22 @@ function TestimonialsIcon() {
     </svg>
   )
 }
+function PromoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.5 13.3 13.3 20.5a2 2 0 0 1-2.8 0L3 13V3.5h9.5l8 8a2 2 0 0 1 0 1.8Z" />
+      <circle cx="7.5" cy="7.5" r="1.4" />
+    </svg>
+  )
+}
 
 export default function Admin() {
   const [pw, setPw] = useState('')
   const [authed, setAuthed] = useState(false)
   const [view, setView] = useState<WorkspaceView>('hub')
+  // Stable "now" for promo live/expired checks — computed once so render stays
+  // pure (calling Date.now() during render trips the React Compiler purity rule).
+  const [nowTs] = useState(() => Date.now())
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
@@ -118,6 +129,7 @@ export default function Admin() {
       await loadDeliveries(pw)
       await loadOrders(pw)
       await loadTestimonials(pw)
+      await loadPromos(pw)
     } catch {
       setErr('Could not connect. Try again.')
     } finally { setLoading(false) }
@@ -231,6 +243,82 @@ export default function Admin() {
       })
       const d = await r.json()
       if (r.ok) setTestimonials(d.testimonials)
+    } finally { setLoading(false) }
+  }
+
+  // ---- PROMOTIONS (a discount or gift that auto-shows on the homepage) ----
+  type PromoT = {
+    id: string; type: 'percent' | 'fixed' | 'gift'; value: number
+    headline: string; detail: string; expiresAt: number | null; active: boolean; createdAt: number
+  }
+  const [promos, setPromos] = useState<PromoT[]>([])
+  const [pType, setPType] = useState<'percent' | 'fixed' | 'gift'>('percent')
+  const [pValue, setPValue] = useState('')
+  const [pHeadline, setPHeadline] = useState('')
+  const [pDetail, setPDetail] = useState('')
+  const [pExpiry, setPExpiry] = useState('')
+  const [pErr, setPErr] = useState('')
+
+  const loadPromos = async (pwd: string) => {
+    try {
+      const r = await fetch('/api/admin-promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd, action: 'list' }),
+      })
+      const d = await r.json()
+      if (r.ok) setPromos(d.promos || [])
+    } catch { /* ignore */ }
+  }
+
+  const createPromo = async () => {
+    setPErr('')
+    if (!pHeadline.trim()) { setPErr('Add a short headline.'); return }
+    if (pType !== 'gift' && !(Number(pValue) > 0)) { setPErr('Enter a discount value greater than 0.'); return }
+    setLoading(true)
+    try {
+      const r = await fetch('/api/admin-promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: pw, action: 'create',
+          promo: {
+            type: pType,
+            value: pType === 'gift' ? 0 : Number(pValue),
+            headline: pHeadline, detail: pDetail,
+            expiresAt: pExpiry || null,
+            active: true,
+          },
+        }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'failed')
+      setPromos(d.promos)
+      setPValue(''); setPHeadline(''); setPDetail(''); setPExpiry(''); setPType('percent')
+    } catch (e) {
+      setPErr('Could not save. ' + String(e instanceof Error ? e.message : e))
+    } finally { setLoading(false) }
+  }
+
+  const setPromoActive = async (id: string, action: 'activate' | 'deactivate') => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/admin-promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw, action, id }),
+      })
+      const d = await r.json()
+      if (r.ok) setPromos(d.promos)
+    } finally { setLoading(false) }
+  }
+
+  const removePromo = async (id: string) => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/admin-promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw, action: 'delete', id }),
+      })
+      const d = await r.json()
+      if (r.ok) setPromos(d.promos)
     } finally { setLoading(false) }
   }
 
@@ -356,6 +444,20 @@ export default function Admin() {
                 <span>{testimonials.length} total</span>
                 {testimonials.some((t) => t.status === 'pending') && (
                   <span className="adm-hub-badge">{testimonials.filter((t) => t.status === 'pending').length} new</span>
+                )}
+              </div>
+              <span className="adm-hub-go">Open workspace →</span>
+            </div>
+            <div className="adm-hub-card" onMouseMove={tilt} onClick={() => setView('promos')}
+              role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setView('promos')}>
+              <div className="glow" />
+              <div className="adm-hub-icon"><PromoIcon /></div>
+              <h2>Promotions</h2>
+              <p className="adm-hub-desc">Run a discount or a gift — it shows on the site automatically.</p>
+              <div className="adm-hub-stats">
+                <span>{promos.length} total</span>
+                {promos.some((p) => p.active && (!p.expiresAt || p.expiresAt > nowTs)) && (
+                  <span className="adm-hub-badge">live</span>
                 )}
               </div>
               <span className="adm-hub-go">Open workspace →</span>
@@ -534,6 +636,66 @@ export default function Admin() {
                 </div>
               </div>
             ))}
+        </div>
+      </section>
+      </>
+      )}
+
+      {view === 'promos' && (
+      <>
+      <button className="adm-back" onClick={() => setView('hub')}>← Back to hub</button>
+      <section className="adm-section">
+        <h2>Run a promotion</h2>
+        <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Start a discount or a gift. It appears on the homepage automatically — a discount is applied to the price at checkout for real; a gift is an announcement you fulfil with the order. Only one promotion is live at a time.</p>
+
+        <div className="adm-form">
+          <div className="field"><label>Type</label>
+            <select value={pType} onChange={(e) => setPType(e.target.value as 'percent' | 'fixed' | 'gift')}>
+              <option value="percent">Discount — percentage off</option>
+              <option value="fixed">Discount — fixed amount off</option>
+              <option value="gift">Gift / announcement (price unchanged)</option>
+            </select>
+          </div>
+          {pType !== 'gift' && (
+            <div className="field">
+              <label>{pType === 'percent' ? 'Percentage off (1–90)' : 'Amount off in USD'}</label>
+              <input type="number" min="1" max={pType === 'percent' ? '90' : undefined} value={pValue}
+                onChange={(e) => setPValue(e.target.value)} placeholder={pType === 'percent' ? 'e.g. 20' : 'e.g. 15'} />
+            </div>
+          )}
+          <div className="field"><label>Headline</label><input value={pHeadline} onChange={(e) => setPHeadline(e.target.value)} placeholder={pType === 'gift' ? 'Free bonus reel with every package' : 'Launch week'} maxLength={80} /></div>
+          <div className="field"><label>Detail line (optional)</label><input value={pDetail} onChange={(e) => setPDetail(e.target.value)} placeholder={pType === 'gift' ? 'A free 6-second cutdown, on us.' : '20% off every package this week.'} maxLength={200} /></div>
+          <div className="field"><label>Ends on (optional — auto-hides after)</label><input type="datetime-local" value={pExpiry} onChange={(e) => setPExpiry(e.target.value)} /></div>
+        </div>
+        {pErr && <div className="adm-err">{pErr}</div>}
+        <button className="cta" onClick={createPromo} disabled={loading}>{loading ? 'Saving…' : 'Publish promotion'}</button>
+
+        <div className="adm-list" style={{ marginTop: 28 }}>
+          {promos.length === 0 && <p className="adm-empty">No promotions yet. Create your first one above.</p>}
+          {promos.map((p) => {
+            const live = p.active && (!p.expiresAt || p.expiresAt > nowTs)
+            const expired = p.active && p.expiresAt != null && p.expiresAt <= nowTs
+            const valueLabel = p.type === 'percent' ? `${p.value}% off` : p.type === 'fixed' ? `$${p.value} off` : 'Gift'
+            return (
+              <div className="adm-item" key={p.id}>
+                <div className="adm-meta">
+                  <strong>
+                    {p.headline}
+                    {' · '}<span className="adm-url" style={{ color: 'var(--gold)' }}>{valueLabel}</span>
+                    {' · '}<span className={`adm-tstatus adm-tstatus-${live ? 'approved' : expired ? 'rejected' : 'pending'}`}>{live ? 'live' : expired ? 'expired' : 'off'}</span>
+                  </strong>
+                  {p.detail && <span className="adm-url adm-tstext">{p.detail}</span>}
+                  <span className="adm-url">{p.expiresAt ? `Ends ${new Date(p.expiresAt).toLocaleString()} · ` : ''}Created {new Date(p.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="adm-tactions">
+                  {!p.active
+                    ? <button className="cta ghost adm-copylink" onClick={() => setPromoActive(p.id, 'activate')} disabled={loading}>Make live</button>
+                    : <button className="cta ghost adm-copylink" onClick={() => setPromoActive(p.id, 'deactivate')} disabled={loading}>Turn off</button>}
+                  <button className="adm-del" onClick={() => removePromo(p.id)} disabled={loading}>Delete</button>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
       </>
