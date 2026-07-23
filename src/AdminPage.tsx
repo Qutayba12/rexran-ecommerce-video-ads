@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { upload } from '@vercel/blob/client'
 import RexMark from './RexMark'
 
 type Video = { id: string; title: string; url: string; type: string; poster?: string }
 const TYPES = ['UGC', 'Static', 'Cinematic', 'Photoshoot', 'Campaign']
+
+// Vercel Blob forces a real download (not in-browser view) when ?download=1 is
+// added — works cross-origin, where the HTML `download` attribute is ignored.
+const forceDownloadUrl = (u: string) => (u.includes('?') ? `${u}&download=1` : `${u}?download=1`)
 
 type WorkspaceView = 'hub' | 'videos' | 'orders' | 'deliveries' | 'testimonials' | 'promos'
 
@@ -198,6 +202,7 @@ export default function Admin() {
     promoCode?: string; promoLabel?: string; createdAt: number
   }
   const [orders, setOrders] = useState<OrderT[]>([])
+  const [openOrder, setOpenOrder] = useState<string | null>(null)
   const loadOrders = async (pwd: string) => {
     try {
       const r = await fetch('/api/orders', {
@@ -634,24 +639,66 @@ export default function Admin() {
         <p className="adm-empty" style={{ marginTop: -6, marginBottom: 20 }}>Every payment confirmed by Stripe is recorded here, even if the Telegram/email alert fails to send.</p>
         {orders.length === 0 && <p className="adm-empty">No paid orders yet.</p>}
         <div className="adm-list">
-          {orders.map((o) => (
-            <div className="adm-item" key={o.id}>
-              <div className="adm-meta">
-                <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}
-                  {o.promoLabel && <span className="adm-tstatus adm-tstatus-approved" style={{ marginLeft: 8 }}>{o.promoLabel}</span>}
-                </strong>
-                <span className="adm-url">{o.brand || '—'} · {o.email || '—'} · {new Date(o.createdAt).toLocaleString()}</span>
-                {o.services && <span className="adm-url">{o.services}</span>}
-                {o.photos && o.photos.length > 0 && (
-                  <div className="adm-order-photos">
-                    {o.photos.map((url, i) => (
-                      <a href={url} target="_blank" rel="noreferrer" key={i}><img src={url} alt="" loading="lazy" /></a>
-                    ))}
+          {orders.map((o) => {
+            const open = openOrder === o.id
+            const rows: [string, ReactNode][] = []
+            if (o.name) rows.push(['Name', o.name])
+            if (o.brand) rows.push(['Brand', o.brand])
+            if (o.email) rows.push(['Email', <a href={`mailto:${o.email}`}>{o.email}</a>])
+            if (o.productUrl) rows.push(['Product link', <a href={o.productUrl} target="_blank" rel="noreferrer">{o.productUrl}</a>])
+            if (o.offer) rows.push(['Offer', o.offer])
+            if (o.language) rows.push(['Language', o.language])
+            if (o.services) rows.push(['Services', o.services])
+            return (
+              <div className={`adm-order${open ? ' open' : ''}`} key={o.id}>
+                <button className="adm-order-head" onClick={() => setOpenOrder(open ? null : o.id)} aria-expanded={open}>
+                  <span className="adm-order-sum">
+                    <strong>{o.package || 'Order'} · {o.amount != null ? `$${o.amount.toFixed(2)}` : '—'} {o.currency}
+                      {o.promoLabel && <span className="adm-tstatus adm-tstatus-approved" style={{ marginLeft: 8 }}>{o.promoLabel}</span>}
+                    </strong>
+                    <span className="adm-url">{o.brand || o.name || '—'} · {o.email || '—'} · {new Date(o.createdAt).toLocaleString()}</span>
+                  </span>
+                  <span className="adm-order-chev" aria-hidden="true">▾</span>
+                </button>
+
+                {open && (
+                  <div className="adm-order-body">
+                    <div className="adm-order-fields">
+                      {rows.map(([lab, val]) => (
+                        <div className="adm-of-row" key={lab}>
+                          <span className="adm-of-lab">{lab}</span>
+                          <span className="adm-of-val">{val}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {o.notes && (
+                      <div className="adm-order-notes">
+                        <span className="adm-of-lab">Brief / what to highlight</span>
+                        <p>{o.notes}</p>
+                      </div>
+                    )}
+
+                    {o.photos && o.photos.length > 0 ? (
+                      <div className="adm-order-photos-block">
+                        <span className="adm-of-lab">Product photos ({o.photos.length})</span>
+                        <div className="adm-order-photos">
+                          {o.photos.map((url, i) => (
+                            <div className="adm-order-photo" key={i}>
+                              <a href={url} target="_blank" rel="noreferrer" title="Open full size"><img src={url} alt="" loading="lazy" /></a>
+                              <a className="adm-photo-dl" href={forceDownloadUrl(url)}>Download</a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="adm-empty" style={{ margin: 0 }}>No photos were attached to this order.</p>
+                    )}
                   </div>
                 )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </section>
       </>
