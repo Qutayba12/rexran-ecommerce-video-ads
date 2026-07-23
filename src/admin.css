@@ -34,9 +34,32 @@
 .adm-meta strong { font-size: 15px; color: var(--ink); }
 .adm-tag { font-family: var(--mono); font-size: 11px; color: var(--gold); }
 .adm-url { font-size: 12px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adm-order-photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-.adm-order-photos img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); transition: border-color .2s; }
-.adm-order-photos a:hover img { border-color: var(--gold); }
+/* ===== ORDERS — expandable cards ===== */
+.adm-order { border: 1px solid var(--line); border-radius: var(--r); background: rgba(14,12,18,.4); overflow: hidden; transition: border-color .25s; }
+.adm-order.open { border-color: rgba(212,175,55,.4); }
+.adm-order-head { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; background: none; border: none; text-align: left; cursor: pointer; transition: background .2s; }
+.adm-order-head:hover { background: rgba(212,175,55,.04); }
+.adm-order-sum { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.adm-order-sum strong { font-size: 15px; color: var(--ink); }
+.adm-order-chev { flex: none; color: var(--gold); font-size: 13px; transition: transform .3s cubic-bezier(.16,1,.3,1); }
+.adm-order.open .adm-order-chev { transform: rotate(180deg); }
+
+.adm-order-body { padding: 4px 18px 20px; display: flex; flex-direction: column; gap: 20px; border-top: 1px solid var(--line); }
+.adm-order-fields { display: grid; gap: 12px 24px; margin-top: 16px; }
+@media (min-width: 620px) { .adm-order-fields { grid-template-columns: 1fr 1fr; } }
+.adm-of-row { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.adm-of-lab { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+.adm-of-val { font-size: 14px; color: var(--ink); word-break: break-word; }
+.adm-of-val a { color: var(--gold-hi); }
+.adm-order-notes p { font-size: 14px; color: var(--ink); line-height: 1.65; white-space: pre-wrap; margin-top: 6px; }
+
+.adm-order-photos-block { display: flex; flex-direction: column; gap: 10px; }
+.adm-order-photos { display: flex; gap: 12px; flex-wrap: wrap; }
+.adm-order-photo { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.adm-order-photo img { width: 92px; height: 92px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); transition: border-color .2s; display: block; }
+.adm-order-photo a:hover img { border-color: var(--gold); }
+.adm-photo-dl { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mut); text-decoration: none; transition: color .2s; }
+.adm-photo-dl:hover { color: var(--gold-hi); }
 .adm-del { flex: none; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; padding: 9px 16px; border: 1px solid var(--line); border-radius: 100px; background: transparent; color: var(--ink-mut); transition: all .2s; }
 .adm-del:hover { border-color: #e6896b; color: #e6896b; }
 .adm-copylink { padding: 9px 14px; font-size: 12px; }
