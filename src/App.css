@@ -332,6 +332,17 @@ body.has-promo .hero { padding-top: calc(130px + var(--promo-h, 46px)); }
 .bsvc.on { background: rgba(212,175,55,.03); }
 .bratios { padding: 0 0 20px; }
 
+/* ===== SIZE PICKER — one size per unit ===== */
+.unit-size-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.unit-size-head .svc-qty-lab { margin-bottom: 0; }
+.unit-size-toggle { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--gold-hi);
+  background: none; border: none; padding: 0; cursor: pointer; transition: opacity .2s; }
+.unit-size-toggle:hover { opacity: .75; }
+.unit-size-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.unit-size-row:last-child { margin-bottom: 0; }
+.unit-size-num { flex: none; width: 26px; font-family: var(--mono); font-size: 12px; color: var(--gold); }
+.unit-size-row .chips { flex: 1; }
+
 /* ===== MODAL STEP BAR ===== */
 .steps-bar { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
 .stepdot { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); }
