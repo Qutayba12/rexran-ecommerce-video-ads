@@ -58,11 +58,22 @@ const PLANS = [
     items: ['4 UGC videos / month', '1 cinematic film / month', '10 statics / month', 'Rolling revisions', 'Direct line on Instagram'], feat: false },
 ]
 
-const PLAN_CONTENTS: Record<string, { key: string; label: string; ratios: string[] }[]> = {
-  Spark: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad image', ratios: IMAGE_RATIOS }],
-  Growth: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS }],
-  Scale: [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS }],
-  'Brand Partner': [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS }],
+type PlanContent = { key: string; label: string; ratios: string[]; qty: number }
+const PLAN_CONTENTS: Record<string, PlanContent[]> = {
+  Spark: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad image', ratios: IMAGE_RATIOS, qty: 1 }],
+  Growth: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 3 }],
+  Scale: [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS, qty: 2 }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 5 }],
+  'Brand Partner': [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS, qty: 4 }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 10 }],
+}
+
+// One size per unit. A length-1 selection means "this size for all N units"
+// (so changing the quantity never breaks it); a length-N selection is one
+// size per unit. Complete = the single size is set, or every unit has one.
+function sizesComplete(chosen: string[], qty: number): boolean {
+  if (qty <= 0) return true
+  if (chosen.length === 1) return !!chosen[0]
+  for (let i = 0; i < qty; i++) if (!chosen[i]) return false
+  return true
 }
 
 const TILES = [
@@ -411,6 +422,64 @@ function PhotoGrid({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoIte
   )
 }
 
+// One aspect ratio per deliverable — no free multi-select. For a single unit
+// it's a simple single-select. For 2+ units it defaults to one pick that
+// applies to every unit ("same size for all"), with a toggle to set a
+// different size per item. The parent stores a length-1 array for "all" and a
+// length-N array for per-unit (see sizesComplete).
+function SizePicker({ qty, options, selected, onChange, bad, label }: {
+  qty: number; options: string[]; selected: string[]; onChange: (v: string[]) => void; bad?: boolean; label?: string
+}) {
+  const [perUnit, setPerUnit] = useState(() => selected.length > 1)
+  const base = selected[0] || ''
+
+  const chips = (value: string, pick: (r: string) => void) => (
+    <div className="chips">
+      {options.map((r) => (
+        <button type="button" key={r} className={`chip sm${value === r ? ' on' : ''}`} onClick={() => pick(r)}>{r}</button>
+      ))}
+    </div>
+  )
+
+  if (qty <= 1) {
+    return (
+      <div className={`bratios${bad ? ' bad' : ''}`}>
+        <span className="svc-qty-lab">{label || 'Size'}</span>
+        {chips(base, (r) => onChange([r]))}
+      </div>
+    )
+  }
+
+  const goPerUnit = () => { setPerUnit(true); onChange(Array.from({ length: qty }, () => base)) }
+  const goSame = () => { setPerUnit(false); onChange([base]) }
+  const pickUnit = (i: number, r: string) => {
+    const next = Array.from({ length: qty }, (_, u) => selected[u] || '')
+    next[i] = r
+    onChange(next)
+  }
+
+  return (
+    <div className={`bratios${bad ? ' bad' : ''}`}>
+      <div className="unit-size-head">
+        <span className="svc-qty-lab">{perUnit ? `A size for each of the ${qty}` : `Size for all ${qty}`}</span>
+        <button type="button" className="unit-size-toggle" onClick={perUnit ? goSame : goPerUnit}>
+          {perUnit ? 'Use one size for all' : 'Different size per item'}
+        </button>
+      </div>
+      {!perUnit ? (
+        chips(base, (r) => onChange([r]))
+      ) : (
+        Array.from({ length: qty }).map((_, i) => (
+          <div className="unit-size-row" key={i}>
+            <span className="unit-size-num">#{i + 1}</span>
+            {chips(selected[i] || '', (r) => pickUnit(i, r))}
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
+
 // Fully self-contained: every field, the qty steppers, and the photo
 // uploader live here, isolated from the homepage's App() component. This is
 // what makes typing/clicking here fast — state changes only re-render this
@@ -421,19 +490,16 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
 
   const [step, setStep] = useState(initialStep) // 0 sizes, 1 info, 2 pay, 3 done
 
-  // ready-plan size choices
+  // ready-plan size choices (per content key → one size per unit; see SizePicker)
   const [planRatios, setPlanRatios] = useState<Record<string, string[]>>({})
-  const togglePlanRatio = (k: string, r: string) =>
-    setPlanRatios((p) => { const c = p[k] || []; return { ...p, [k]: c.includes(r) ? c.filter((x) => x !== r) : [...c, r] } })
 
   // custom builder lines
   const [build, setBuild] = useState<Record<string, Line>>(() => ({ ...emptyLines() }))
   const setQty = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, d: number) => {
     const q = Math.max(0, state[key].qty + d); set({ ...state, [key]: { qty: q, ratios: q === 0 ? [] : state[key].ratios, duration: q === 0 ? null : state[key].duration } })
   }
-  const toggleRatio = (state: Record<string, Line>, set: (v: Record<string, Line>) => void, key: string, r: string) => {
-    const line = state[key]; const ratios = line.ratios.includes(r) ? line.ratios.filter((x) => x !== r) : [...line.ratios, r]
-    set({ ...state, [key]: { ...line, ratios } })
+  const setRatios = (key: string, ratios: string[]) => {
+    setBuild((state) => ({ ...state, [key]: { ...state[key], ratios } }))
   }
   const setDuration = (key: string, secs: number) => {
     setBuild((state) => ({ ...state, [key]: { ...state[key], duration: secs } }))
@@ -529,15 +595,15 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
     const badD: Record<string, boolean> = {}
     if (isCustom) {
       SERVICES.forEach((sv) => {
-        // selected service must have a size (if it offers sizes)
-        if (build[sv.key].qty > 0 && sv.ratios.length > 0 && build[sv.key].ratios.length === 0) bad[sv.key] = true
+        // every unit of a selected service must have a size (if it offers sizes)
+        if (build[sv.key].qty > 0 && sv.ratios.length > 0 && !sizesComplete(build[sv.key].ratios, build[sv.key].qty)) bad[sv.key] = true
         // selected video service must have a duration chosen
         if (build[sv.key].qty > 0 && sv.durations && sv.durations.length && build[sv.key].duration == null) badD[sv.key] = true
       })
       if (belowMin) { setSizeErr(`Minimum order is $${MIN_ORDER}. Add a little more to continue.`); return }
     } else {
       ;(PLAN_CONTENTS[plan] || []).forEach((c) => {
-        if ((planRatios[c.key] || []).length === 0) bad[c.key] = true
+        if (!sizesComplete(planRatios[c.key] || [], c.qty)) bad[c.key] = true
       })
     }
     setBadSizes(bad)
@@ -569,15 +635,18 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
   }
 
   // assemble services & sizes for the order
+  // A length-1 ratios array means "this size for all N" — the checkout summary
+  // reads it naturally (e.g. "3× UGC video (9:16)"); per-unit stays as-is.
+  const sizesForOrder = (chosen: string[], qty: number) => (chosen.length <= 1 ? chosen : chosen.slice(0, qty))
   const orderItems = () => {
     if (isCustom) {
       return SERVICES.filter((sv) => build[sv.key].qty > 0).map((sv) => ({
-        key: sv.key, label: sv.label, qty: build[sv.key].qty, ratios: build[sv.key].ratios,
+        key: sv.key, label: sv.label, qty: build[sv.key].qty, ratios: sizesForOrder(build[sv.key].ratios, build[sv.key].qty),
         duration: build[sv.key].duration ? `${build[sv.key].duration}s` : undefined,
       }))
     }
     return (PLAN_CONTENTS[plan] || []).map((c) => ({
-      label: c.label, qty: 0, ratios: planRatios[c.key] || [],
+      label: c.label, qty: c.qty, ratios: sizesForOrder(planRatios[c.key] || [], c.qty),
     }))
   }
 
@@ -662,15 +731,11 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
                         </div>
                       )}
                       {on && sv.ratios.length > 0 && (
-                        <div className={`bratios${badSizes[sv.key] ? ' bad' : ''}`}>
-                          <span className="svc-qty-lab">Sizes for this service</span>
-                          <div className="chips">
-                            {sv.ratios.map((r) => (
-                              <button type="button" key={r} className={`chip sm${line.ratios.includes(r) ? ' on' : ''}`}
-                                onClick={() => { toggleRatio(build, setBuild, sv.key, r); setBadSizes((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}>{r}</button>
-                            ))}
-                          </div>
-                        </div>
+                        <SizePicker
+                          qty={line.qty} options={sv.ratios} selected={line.ratios} bad={badSizes[sv.key]}
+                          label="Size for this service"
+                          onChange={(v) => { setRatios(sv.key, v); setBadSizes((b) => (b[sv.key] ? { ...b, [sv.key]: false } : b)) }}
+                        />
                       )}
                     </div>
                   )
@@ -678,19 +743,15 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
               </>
             ) : (
               <>
-                <p className="modal-lede">Choose the size(s) you want for each part of your {plan} package.</p>
+                <p className="modal-lede">Choose the size for each part of your {plan} package — one size per item.</p>
                 {(PLAN_CONTENTS[plan] || []).map((c) => (
                   <div className="bsvc on" key={c.key}>
-                    <div className="bitem"><div className="bitem-info"><h4>{c.label}</h4></div></div>
-                    <div className={`bratios${badSizes[c.key] ? ' bad' : ''}`}>
-                      <span className="svc-qty-lab">Pick the size(s) you want</span>
-                      <div className="chips">
-                        {c.ratios.map((r) => (
-                          <button type="button" key={r} className={`chip sm${(planRatios[c.key] || []).includes(r) ? ' on' : ''}`}
-                            onClick={() => { togglePlanRatio(c.key, r); setBadSizes((b) => (b[c.key] ? { ...b, [c.key]: false } : b)) }}>{r}</button>
-                        ))}
-                      </div>
-                    </div>
+                    <div className="bitem"><div className="bitem-info"><h4>{c.label}{c.qty > 1 ? ` · ×${c.qty}` : ''}</h4></div></div>
+                    <SizePicker
+                      qty={c.qty} options={c.ratios} selected={planRatios[c.key] || []} bad={badSizes[c.key]}
+                      label="Pick the size"
+                      onChange={(v) => { setPlanRatios((p) => ({ ...p, [c.key]: v })); setBadSizes((b) => (b[c.key] ? { ...b, [c.key]: false } : b)) }}
+                    />
                   </div>
                 ))}
               </>
