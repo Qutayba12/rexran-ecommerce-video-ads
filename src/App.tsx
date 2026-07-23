@@ -41,7 +41,7 @@ type Duration = { secs: number; price: number }
 type Service = { key: string; label: string; price: number; ratios: string[]; durations?: Duration[] }
 const SERVICES: Service[] = [
   { key: 'ugc', label: 'UGC Video Ad', price: 59, ratios: VIDEO_RATIOS, durations: [{ secs: 15, price: 59 }, { secs: 30, price: 79 }] },
-  { key: 'cine', label: 'Cinematic Film', price: 79, ratios: VIDEO_RATIOS, durations: [{ secs: 15, price: 79 }, { secs: 30, price: 109 }] },
+  { key: 'cine', label: 'Cinematic & Motion Design', price: 79, ratios: VIDEO_RATIOS, durations: [{ secs: 15, price: 79 }, { secs: 30, price: 109 }] },
   { key: 'static', label: 'Static Ad Image', price: 12, ratios: IMAGE_RATIOS },
   { key: 'shoot', label: 'Product Photoshoot', price: 18, ratios: IMAGE_RATIOS },
 ]
@@ -49,21 +49,21 @@ const MIN_ORDER = 25
 
 const PLANS = [
   { name: 'Spark', price: '$39', per: '/ project', desc: 'A quick test spot to see how AI creative performs for your product.',
-    items: ['1 UGC video (up to 15s)', '1 static ad creative', 'One aspect ratio', '48-hour delivery'], feat: false },
+    items: ['1 UGC video · 15s', '1 static ad creative', 'One aspect ratio', '48-hour delivery'], feat: false },
   { name: 'Growth', price: '$99', per: '/ project', desc: 'The package most stores run with — a full talking spot plus statics.',
-    items: ['1 UGC video (up to 30s)', '3 static ad creatives', 'AI actor + voiceover', 'Up to 2 aspect ratios', '48-hour delivery'], feat: true },
+    items: ['1 UGC video · 30s', '3 static ad creatives', 'AI actor + voiceover', 'Up to 2 aspect ratios', '48-hour delivery'], feat: true },
   { name: 'Scale', price: '$199', per: '/ project', desc: 'A launch-ready kit when you want to go live on every channel at once.',
-    items: ['2 UGC videos', '1 short cinematic film', '5 static creatives', 'All aspect ratios', 'Priority delivery'], feat: false },
+    items: ['2 UGC videos · 30s each', '1 Cinematic & Motion Design · 30s', '5 static creatives', 'All aspect ratios', 'Priority delivery'], feat: false },
   { name: 'Brand Partner', price: '$549', per: '/ month', desc: 'Fresh creative on tap for stores that feed paid social every week.',
-    items: ['4 UGC videos / month', '1 cinematic film / month', '10 statics / month', 'Rolling revisions', 'Direct line on Instagram'], feat: false },
+    items: ['4 UGC videos · 30s each / month', '1 Cinematic & Motion Design · 30s / month', '10 statics / month', 'Rolling revisions', 'Direct line on Instagram'], feat: false },
 ]
 
-type PlanContent = { key: string; label: string; ratios: string[]; qty: number }
+type PlanContent = { key: string; label: string; ratios: string[]; qty: number; duration?: number }
 const PLAN_CONTENTS: Record<string, PlanContent[]> = {
-  Spark: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad image', ratios: IMAGE_RATIOS, qty: 1 }],
-  Growth: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 3 }],
-  Scale: [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS, qty: 2 }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 5 }],
-  'Brand Partner': [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS, qty: 4 }, { key: 'cine', label: 'Cinematic film', ratios: VIDEO_RATIOS, qty: 1 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 10 }],
+  Spark: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS, qty: 1, duration: 15 }, { key: 'static', label: 'Static ad image', ratios: IMAGE_RATIOS, qty: 1 }],
+  Growth: [{ key: 'ugc', label: 'UGC video', ratios: VIDEO_RATIOS, qty: 1, duration: 30 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 3 }],
+  Scale: [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS, qty: 2, duration: 30 }, { key: 'cine', label: 'Cinematic & Motion Design', ratios: VIDEO_RATIOS, qty: 1, duration: 30 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 5 }],
+  'Brand Partner': [{ key: 'ugc', label: 'UGC videos', ratios: VIDEO_RATIOS, qty: 4, duration: 30 }, { key: 'cine', label: 'Cinematic & Motion Design', ratios: VIDEO_RATIOS, qty: 1, duration: 30 }, { key: 'static', label: 'Static ad images', ratios: IMAGE_RATIOS, qty: 10 }],
 }
 
 // One size per unit. A length-1 selection means "this size for all N units"
@@ -80,7 +80,7 @@ const TILES = [
   { c: 't1', n: 'FORMAT 01', t: 'UGC Video Ads', p: 'Hyper-real AI creators talking through your product — natural voice, perfect lip-sync.', ph: 'VIDEO' },
   { c: 't2', n: 'FORMAT 02', t: 'Scroll-Stop Statics', p: 'One hook, zero clutter, sized for every placement.', ph: 'STATIC' },
   { c: 't3', n: 'FORMAT 03', t: 'Studio Photoshoots', p: 'Phone snaps turned into clean 4K catalog imagery.', ph: '4K' },
-  { c: 't4', n: 'FORMAT 04', t: 'Cinematic Films', p: 'Brand-grade product stories without a crew.', ph: 'CINEMA' },
+  { c: 't4', n: 'FORMAT 04', t: 'Cinematic & Motion Design', p: 'Brand-grade product stories and motion graphics, without a crew.', ph: 'MOTION' },
   { c: 't5', n: 'FORMAT 05', t: 'Full Campaign Sets', p: 'A matched pack of video and stills built to run together.', ph: 'SUITE' },
 ]
 
@@ -647,6 +647,7 @@ function CheckoutModal({ plan, initialStep, onClose, promo }: { plan: string; in
     }
     return (PLAN_CONTENTS[plan] || []).map((c) => ({
       label: c.label, qty: c.qty, ratios: sizesForOrder(planRatios[c.key] || [], c.qty),
+      duration: c.duration ? `${c.duration}s` : undefined,
     }))
   }
 
@@ -1061,8 +1062,8 @@ export default function App() {
 
       <div className="strip">
         <div className="strip-track" aria-hidden="true">
-          <span>UGC Video <b>✦</b> Static Ads <b>✦</b> Cinematic Films <b>✦</b> 4K Photoshoots <b>✦</b> Campaign Sets <b>✦</b> </span>
-          <span>UGC Video <b>✦</b> Static Ads <b>✦</b> Cinematic Films <b>✦</b> 4K Photoshoots <b>✦</b> Campaign Sets <b>✦</b> </span>
+          <span>UGC Video <b>✦</b> Static Ads <b>✦</b> Cinematic &amp; Motion Design <b>✦</b> 4K Photoshoots <b>✦</b> Campaign Sets <b>✦</b> </span>
+          <span>UGC Video <b>✦</b> Static Ads <b>✦</b> Cinematic &amp; Motion Design <b>✦</b> 4K Photoshoots <b>✦</b> Campaign Sets <b>✦</b> </span>
         </div>
       </div>
 
