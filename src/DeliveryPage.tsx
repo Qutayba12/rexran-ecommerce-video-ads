@@ -99,7 +99,7 @@ export default function Delivery() {
       const blob = await res.blob()
       // iOS only offers "Save Video"/"Save Image" in the share sheet when the
       // shared file's name carries a real extension — the friendly label
-      // alone (e.g. "Cinematic Film") makes it fall back to "Save to Files".
+      // alone (e.g. "Cinematic & Motion Design") makes it fall back to "Save to Files".
       const ext = f.name.includes('.') ? f.name.slice(f.name.lastIndexOf('.')) : ''
       const base = f.label || f.name || 'rexran-file'
       const filename = ext && !base.toLowerCase().endsWith(ext.toLowerCase()) ? `${base}${ext}` : base

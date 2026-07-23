@@ -3,7 +3,7 @@ import { upload } from '@vercel/blob/client'
 import RexMark from './RexMark'
 
 type Video = { id: string; title: string; url: string; type: string; poster?: string }
-const TYPES = ['UGC', 'Static', 'Cinematic', 'Photoshoot', 'Campaign']
+const TYPES = ['UGC', 'Static', 'Cinematic & Motion Design', 'Photoshoot', 'Campaign']
 
 // Vercel Blob forces a real download (not in-browser view) when ?download=1 is
 // added — works cross-origin, where the HTML `download` attribute is ignored.
@@ -172,7 +172,7 @@ export default function Admin() {
   // ---- DELIVERIES ----
   type DFile = { url: string; name: string; type: string; label: string }
   type DeliveryT = { id: string; client: string; note: string; files: DFile[]; createdAt: number }
-  const DELIVERY_LABELS = ['UGC Video Ad', 'Cinematic Film', 'Static Ad Image', 'Product Photoshoot', 'Campaign Asset']
+  const DELIVERY_LABELS = ['UGC Video Ad', 'Cinematic & Motion Design', 'Static Ad Image', 'Product Photoshoot', 'Campaign Asset']
   const [deliveries, setDeliveries] = useState<DeliveryT[]>([])
   const [dClient, setDClient] = useState('')
   const [dNote, setDNote] = useState('')
