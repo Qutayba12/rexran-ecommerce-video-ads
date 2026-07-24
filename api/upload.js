@@ -29,7 +29,11 @@ export default async function handler(req, res) {
           throw new Error('Unauthorized')
         }
         return {
-          allowedContentTypes: ['video/mp4', 'video/quicktime', 'video/webm', 'image/jpeg', 'image/png', 'image/webp'],
+          // Accept any image or video type. Browsers (especially on Windows)
+          // often report a file's MIME as "" or application/octet-stream, so an
+          // exact allow-list silently rejected valid uploads client-side; the
+          // wildcards + a client-side content-type guess (see AdminPage) fix that.
+          allowedContentTypes: ['image/*', 'video/*'],
           maximumSizeInBytes: 500 * 1024 * 1024,
           addRandomSuffix: true,
         }

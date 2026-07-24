@@ -9,6 +9,22 @@ const TYPES = ['UGC', 'Static', 'Cinematic & Motion Design', 'Photoshoot', 'Camp
 // added — works cross-origin, where the HTML `download` attribute is ignored.
 const forceDownloadUrl = (u: string) => (u.includes('?') ? `${u}&download=1` : `${u}?download=1`)
 
+// Browsers (Windows especially) sometimes hand us a File with an empty or
+// generic `type`, which Vercel Blob then rejects against the allowed content
+// types. Fall back to a type guessed from the extension so the upload always
+// declares a real image/* or video/* content type.
+const EXT_CONTENT_TYPES: Record<string, string> = {
+  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', m4v: 'video/x-m4v',
+  mkv: 'video/x-matroska', avi: 'video/x-msvideo', '3gp': 'video/3gpp', ogv: 'video/ogg',
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+  gif: 'image/gif', avif: 'image/avif', heic: 'image/heic', heif: 'image/heif', bmp: 'image/bmp',
+}
+const contentTypeFor = (file: File): string | undefined => {
+  if (file.type) return file.type
+  const ext = file.name.toLowerCase().split('.').pop() || ''
+  return EXT_CONTENT_TYPES[ext]
+}
+
 type WorkspaceView = 'hub' | 'videos' | 'orders' | 'deliveries' | 'testimonials' | 'promos'
 
 // Follows the cursor position into --mx/--my so the .glow radial gradient
@@ -83,6 +99,7 @@ export default function Admin() {
       const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
+        contentType: contentTypeFor(file),
         clientPayload: JSON.stringify({ password: pw }),
         onUploadProgress: (p) => setUploadPct(Math.round(p.percentage)),
       })
@@ -404,6 +421,7 @@ export default function Admin() {
       const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
+        contentType: contentTypeFor(file),
         clientPayload: JSON.stringify({ password: pw }),
         onUploadProgress: (p) => setDPct(Math.round(p.percentage)),
       })
@@ -588,7 +606,7 @@ export default function Admin() {
         <h2>Add a video</h2>
         <div className="adm-upload">
           <label className="adm-drop">
-            <input type="file" accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/webp" style={{ display: 'none' }}
+            <input type="file" accept="video/*,image/*" style={{ display: 'none' }}
               onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0])} disabled={uploading} />
             {uploading ? (
               <div className="adm-prog"><div className="adm-prog-bar" style={{ width: `${uploadPct}%` }} /><span>Uploading… {uploadPct}%</span></div>
