@@ -24,6 +24,31 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,420;0,9..144,560;1,9..144,420&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/content.css">
+    <style>
+      /* One prominent piece of work at the top of the page. The media keeps its
+         own aspect ratio (portrait UGC or landscape alike) inside a centered,
+         gold-framed panel — no cropping. Hidden until the script finds a clip. */
+      .studio-hero { margin: 0 0 44px; }
+      .studio-hero[hidden] { display: none; }
+      .studio-hero-frame {
+        position: relative; display: flex; align-items: center; justify-content: center;
+        background: var(--bg2); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+        box-shadow: 0 30px 80px -30px rgba(0,0,0,.7), 0 0 44px -12px rgba(212,175,55,.16);
+      }
+      .studio-hero-frame video, .studio-hero-frame img {
+        display: block; max-height: 62vh; max-width: 100%; width: auto; height: auto;
+      }
+      .studio-hero-frame.is-photo img {
+        transform-origin: center; animation: studio-kenburns 20s ease-in-out infinite alternate;
+      }
+      @keyframes studio-kenburns { from { transform: scale(1.03); } to { transform: scale(1.11); } }
+      .studio-hero-cap {
+        margin-top: 14px; font-family: var(--mono); font-size: 12px; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 9px;
+      }
+      .studio-hero-cap .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px rgba(212,175,55,.6); }
+      @media (prefers-reduced-motion: reduce) { .studio-hero-frame.is-photo img { animation: none; } }
+    </style>
 
     <script type="application/ld+json">
     {
@@ -45,6 +70,11 @@
       <div class="kicker">The Studio</div>
       <h1>Ads directed by hand. Produced with AI.</h1>
       <p class="lead">Great ads used to mean <em>a studio, a crew, and a two-week wait.</em> Rexran was built to break that trade-off.</p>
+
+      <figure class="studio-hero" id="studio-hero" hidden>
+        <div class="studio-hero-frame" id="studio-hero-frame"></div>
+        <figcaption class="studio-hero-cap"><span class="dot"></span><span id="studio-hero-cap"></span></figcaption>
+      </figure>
 
       <p>Most small brands are stuck choosing between an agency they can't afford and DIY creative that looks like everyone else's. Rexran exists to end that compromise — pairing an art director's eye with AI production, so a store scaling on a tight budget can run creative that looks like it came from a studio.</p>
       <p>Every project is directed by hand, one brand at a time. No templates, no prompt-and-pray, no assembly line. Just ads built to earn attention and move product — delivered in days, not weeks.</p>
@@ -87,5 +117,6 @@
       <span>© 2026 Rexran — AI-Directed Ad Studio</span>
       <a href="/" style="color:var(--ink-faint);text-decoration:none">rexran.com</a>
     </div></footer>
+    <script type="module" src="/src/studioHero.ts"></script>
   </body>
 </html>
