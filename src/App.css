@@ -445,39 +445,32 @@ body.has-promo .hero { padding-top: calc(130px + var(--promo-h, 46px)); }
 .vids-arrow.prev { left: -8px; } .vids-arrow.next { right: -8px; }
 @media (hover: hover) and (pointer: fine) { .vids-arrow { display: flex; } }
 
-.photo-grid { display: grid; gap: 18px; grid-template-columns: repeat(2, 1fr); }
-@media (min-width: 640px) { .photo-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 980px) { .photo-grid { grid-template-columns: repeat(4, 1fr); } }
-
-.photo-card {
-  margin: 0; position: relative; overflow: hidden; cursor: pointer; aspect-ratio: 1 / 1;
-  border: 1px solid var(--line); border-radius: var(--r-lg); background: #050409;
-  transform-style: preserve-3d; transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .4s, box-shadow .4s;
+/* Photo cards ride the same auto-advancing carousel as the videos (they share
+   .vid3d-card for the frame, glow, tilt and caption); these rules just give
+   the still image a square frame and keep the expand affordance. */
+.photo-card { cursor: pointer; }
+.photo-card:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
+.photo-frame { position: relative; width: 100%; aspect-ratio: 1 / 1; background: #050409; overflow: hidden; }
+/* A slow, continuous Ken Burns drift so the stills feel alive alongside the
+   auto-playing video cards, instead of sitting frozen. Subtle on purpose. */
+.photo-frame img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transform-origin: center; animation: photo-drift 18s ease-in-out infinite alternate;
 }
-.photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.photo-card .glow {
-  position: absolute; inset: 0; opacity: 0; transition: opacity .5s; border-radius: inherit; pointer-events: none; z-index: 1;
-  background: radial-gradient(260px circle at var(--mx,50%) var(--my,50%), rgba(212,175,55,.2), transparent 60%);
+.photo-card:nth-child(even) .photo-frame img { animation-duration: 22s; animation-delay: -6s; }
+.photo-card:nth-child(3n) .photo-frame img { animation-duration: 20s; animation-delay: -11s; }
+@keyframes photo-drift {
+  from { transform: scale(1.04) translate(-1.2%, 1%); }
+  to   { transform: scale(1.12) translate(1.5%, -1.2%); }
 }
-.photo-card figcaption {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 10px 12px;
-  background: linear-gradient(0deg, rgba(4,3,7,.85), transparent);
+@media (prefers-reduced-motion: reduce) {
+  .photo-frame img { animation: none; transform: none; }
 }
 .photo-expand {
   position: absolute; top: 10px; right: 10px; z-index: 2; width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center; color: var(--ink);
   background: rgba(7,6,10,.55); backdrop-filter: blur(6px); border: 1px solid rgba(212,175,55,.3); opacity: .85;
 }
-@media (hover: hover) and (pointer: fine) {
-  .photo-card { transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
-  .photo-card:hover {
-    transform: translateY(-6px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1.03);
-    border-color: rgba(212,175,55,.45); box-shadow: 0 26px 60px -20px rgba(0,0,0,.6), 0 0 34px -10px rgba(212,175,55,.22); z-index: 2;
-  }
-  .photo-card:hover .glow { opacity: 1; }
-}
-.photo-card:active { transform: scale(.98); }
-.photo-card:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
 
 /* Photo lightbox — reuses .modal-back/.modal-x; App.css also turns
    .modal-back into a mobile bottom sheet for the checkout/contact modal

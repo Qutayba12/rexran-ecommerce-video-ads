@@ -255,11 +255,18 @@ function VideoCard({ v, onOpen }: { v: VideoItem; onOpen: (v: VideoItem) => void
   )
 }
 
-// Auto-advances horizontally (never vertically) to the next video, fully
+// Auto-advances horizontally (never vertically) to the next card, fully
 // under the customer's control: hover/touch/drag pause it, arrow buttons and
 // native swipe/drag step it manually, and it resumes a few seconds after the
 // customer stops interacting. Respects prefers-reduced-motion (no autoplay).
-function VideoCarousel({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoItem) => void }) {
+// Shared by the Videos and Photos rows — pass a renderCard for each; `kind`
+// only labels the arrows for screen readers.
+function MediaCarousel({ items, onOpen, renderCard, kind }: {
+  items: VideoItem[]
+  onOpen: (v: VideoItem) => void
+  renderCard: (v: VideoItem, onOpen: (v: VideoItem) => void) => React.ReactNode
+  kind: string
+}) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -320,12 +327,12 @@ function VideoCarousel({ items, onOpen }: { items: VideoItem[]; onOpen: (v: Vide
       <div className="vids-track" ref={trackRef}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endInteraction} onPointerLeave={endInteraction}
         onClickCapture={(e) => { if (didDrag.current) { e.preventDefault(); e.stopPropagation(); didDrag.current = false } }}>
-        {items.map((v) => <VideoCard key={v.id} v={v} onOpen={onOpen} />)}
+        {items.map((v) => renderCard(v, onOpen))}
       </div>
       {items.length > 1 && (
         <>
-          <button className="vids-arrow prev" aria-label="Previous video" onClick={() => step(-1)}>‹</button>
-          <button className="vids-arrow next" aria-label="Next video" onClick={() => step(1)}>›</button>
+          <button className="vids-arrow prev" aria-label={`Previous ${kind}`} onClick={() => step(-1)}>‹</button>
+          <button className="vids-arrow next" aria-label={`Next ${kind}`} onClick={() => step(1)}>›</button>
         </>
       )}
     </div>
@@ -406,19 +413,17 @@ function ZoomMarquee({ items, direction }: { items: React.ReactNode[]; direction
   )
 }
 
-function PhotoGrid({ items, onOpen }: { items: VideoItem[]; onOpen: (v: VideoItem) => void }) {
+function PhotoCard({ v, onOpen }: { v: VideoItem; onOpen: (v: VideoItem) => void }) {
   return (
-    <div className="photo-grid">
-      {items.map((v) => (
-        <figure className="photo-card" key={v.id} onMouseMove={tilt3D} onMouseLeave={resetTilt3D}
-          onClick={() => onOpen(v)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen(v)}>
-          <div className="glow" />
-          <img src={v.url} alt={`${v.type} ad creative produced by Rexran`} loading="lazy" />
-          <span className="photo-expand" aria-hidden="true"><ExpandIcon /></span>
-          <figcaption><span className="vid-type">{v.type}</span></figcaption>
-        </figure>
-      ))}
-    </div>
+    <figure className="vid3d-card photo-card" onMouseMove={tilt3D} onMouseLeave={resetTilt3D}
+      onClick={() => onOpen(v)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen(v)}>
+      <div className="glow" />
+      <div className="photo-frame">
+        <img src={v.url} alt={`${v.type} ad creative produced by Rexran`} loading="lazy" />
+        <span className="photo-expand" aria-hidden="true"><ExpandIcon /></span>
+      </div>
+      <figcaption><span className="vid-type">{v.type}</span></figcaption>
+    </figure>
   )
 }
 
@@ -1081,13 +1086,15 @@ export default function App() {
           {videoItems.length > 0 && (
             <div>
               <div className="sec-tag med-tag">Videos</div>
-              <VideoCarousel items={videoItems} onOpen={setMediaLightbox} />
+              <MediaCarousel items={videoItems} onOpen={setMediaLightbox} kind="video"
+                renderCard={(v, open) => <VideoCard key={v.id} v={v} onOpen={open} />} />
             </div>
           )}
           {photoItems.length > 0 && (
             <div>
               <div className="sec-tag med-tag">Photos</div>
-              <PhotoGrid items={photoItems} onOpen={setMediaLightbox} />
+              <MediaCarousel items={photoItems} onOpen={setMediaLightbox} kind="photo"
+                renderCard={(v, open) => <PhotoCard key={v.id} v={v} onOpen={open} />} />
             </div>
           )}
           {reducedMotion ? (
