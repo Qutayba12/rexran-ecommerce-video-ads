@@ -4,5 +4,7 @@
 // no-op until VITE_GA_MEASUREMENT_ID is set, and ships as a bundled module
 // because the CSP forbids inline scripts (script-src 'self' + gtag only).
 import { initAnalytics } from './analytics'
+import './applock'
+import './aperture'
 
 initAnalytics()

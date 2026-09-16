@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#07060a" />
     <meta name="robots" content="index" />
     <title>Terms of Service — Rexran</title>
@@ -29,7 +29,7 @@
       body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(44vw 44vw at 90% -8%,rgba(212,175,55,.11),transparent 60%),radial-gradient(40vw 40vw at -8% 10%,rgba(138,109,31,.1),transparent 62%)}
       body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.04;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
       .wrap{max-width:760px;margin:0 auto;padding:0 24px}
-      header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);padding:20px 0;background:rgba(7,6,10,.72);backdrop-filter:blur(16px)}
+      header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);padding:20px 0;padding-top:calc(20px + env(safe-area-inset-top));background:rgba(7,6,10,.72);backdrop-filter:blur(16px)}
       header .wrap{display:flex;align-items:center;justify-content:space-between}
       .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-size:22px;color:var(--gold);text-decoration:none}
       .brand svg{width:26px;height:26px}

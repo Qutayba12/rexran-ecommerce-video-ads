@@ -37,6 +37,7 @@
    is set (see App.tsx), so nothing is ever hidden behind it. ===== */
 .promo-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 70; min-height: 46px;
   display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 14px; padding: 7px clamp(16px,4vw,52px);
+  padding-top: calc(7px + env(safe-area-inset-top));
   background: linear-gradient(180deg, var(--gold-hi), var(--gold) 60%, var(--gold-deep)); color: #0c0a10;
   box-shadow: inset 0 -1px 0 rgba(0,0,0,.18), 0 6px 24px -8px rgba(212,175,55,.5); }
 .promo-bar-tag { flex: none; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
@@ -58,8 +59,13 @@ body.has-promo .hero { padding-top: calc(130px + var(--promo-h, 46px)); }
 /* ===== NAV ===== */
 .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center;
   justify-content: space-between; padding: 20px clamp(20px,4vw,52px);
+  padding-top: calc(20px + env(safe-area-inset-top));
   transition: background .4s, padding .4s, border-color .4s; border-bottom: 1px solid transparent; }
-.nav.scrolled { background: rgba(7,6,10,.72); backdrop-filter: blur(16px); padding-top: 13px; padding-bottom: 13px; border-bottom-color: var(--line); }
+.nav.scrolled { background: rgba(7,6,10,.72); backdrop-filter: blur(16px); padding-top: calc(13px + env(safe-area-inset-top)); padding-bottom: 13px; border-bottom-color: var(--line); }
+/* When the promo bar is present it already clears the notch, so the nav sits
+   below it and must not add the safe-area inset a second time. */
+body.has-promo .nav { padding-top: 20px; }
+body.has-promo .nav.scrolled { padding-top: 13px; }
 .brand { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-size: 23px; letter-spacing: .03em; }
 .brand .brand-logo { font-size: 30px; color: var(--gold); }
 .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
