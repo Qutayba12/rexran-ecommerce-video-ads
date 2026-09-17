@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import RexMark from './RexMark'
+import HeroCrest from './hero3d/HeroCrest'
 import { trackPurchase, trackInitiateCheckout } from './analytics'
 import { r2Upload } from './mediaUtils'
 
@@ -1057,7 +1058,7 @@ export default function App() {
       </div>
 
       <header className="hero" id="top">
-        <RexMark className="hero-logo" />
+        <HeroCrest />
         <div className="hero-kicker">AI-Directed Ad Studio</div>
         <h1 className="hero-h">
           <span className="ln"><span>Make them</span></span>
