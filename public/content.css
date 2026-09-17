@@ -25,7 +25,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);padding:20px 0;padding-top:calc(20px + env(safe-area-inset-top));background:rgba(7,6,10,.72);backdrop-filter:blur(16px)}
 header .wrap{display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-size:22px;color:var(--gold);text-decoration:none}
-.brand svg{width:26px;height:26px}
+.brand svg{width:auto;height:26px}
 .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mut);text-decoration:none;transition:color .2s}
 .back:hover{color:var(--gold-hi)}
 main{padding:64px 0 90px}
@@ -44,7 +44,7 @@ li::marker{color:var(--gold)}
 a{color:var(--gold-hi)}
 strong{color:var(--ink)}
 .sign{margin-top:48px;display:inline-flex;align-items:center;gap:12px;padding-top:26px;border-top:1px solid var(--line)}
-.sign svg{width:28px;height:28px;color:var(--gold)}
+.sign svg{width:auto;height:28px;color:var(--gold)}
 .sign span{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
 footer{border-top:1px solid var(--line);padding:34px 0;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
