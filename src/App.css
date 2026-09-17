@@ -66,7 +66,7 @@ body.has-promo .hero { padding-top: calc(130px + var(--promo-h, 46px)); }
    below it and must not add the safe-area inset a second time. */
 body.has-promo .nav { padding-top: 20px; }
 body.has-promo .nav.scrolled { padding-top: 13px; }
-.brand { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-size: 23px; letter-spacing: .03em; }
+.brand { display: flex; align-items: center; gap: 13px; font-family: 'Bodoni Moda', var(--display); font-weight: 600; font-size: 21px; letter-spacing: .2em; text-transform: uppercase; }
 .brand .brand-logo { font-size: 30px; color: var(--gold); }
 .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
   padding: 12px 22px; border: 1px solid var(--gold); color: var(--gold-hi); border-radius: 100px; transition: all .25s; }

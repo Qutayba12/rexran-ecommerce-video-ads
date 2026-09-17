@@ -5,6 +5,7 @@
    aurora, fine grain, the diamond motif, brushed-foil buttons and lifting
    cards — so a client who clicks "Studio" or "Guides" never leaves that
    world. All of it is pure CSS: the shipped page markup is unchanged. */
+@font-face{font-family:'Bodoni Moda';src:url('/fonts/bodoni-moda-600.woff2') format('woff2');font-weight:600;font-display:swap}
 :root{--bg:#07060a;--bg2:#0e0c12;--gold:#d4af37;--gold-hi:#f4d97b;--gold-deep:#8a6d1f;--ink:#f7f3e9;--ink-mut:#a8a092;--ink-faint:#635c52;--line:rgba(212,175,55,.16);--display:'Fraunces',Georgia,serif;--body:'Manrope',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;background:var(--bg);scrollbar-color:var(--gold-deep) var(--bg);scrollbar-width:thin}
@@ -24,7 +25,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 .wrap{max-width:840px;margin:0 auto;padding:0 24px}
 header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);padding:20px 0;padding-top:calc(20px + env(safe-area-inset-top));background:rgba(7,6,10,.72);backdrop-filter:blur(16px)}
 header .wrap{display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-size:22px;color:var(--gold);text-decoration:none}
+.brand{display:flex;align-items:center;gap:12px;font-family:'Bodoni Moda',var(--display);font-weight:600;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);text-decoration:none}
 .brand svg{width:auto;height:26px}
 .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mut);text-decoration:none;transition:color .2s}
 .back:hover{color:var(--gold-hi)}

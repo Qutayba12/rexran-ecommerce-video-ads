@@ -1,3 +1,10 @@
+/* Self-hosted Bodoni Moda — the fixed brand wordmark face (matches the logo). */
+@font-face {
+  font-family: 'Bodoni Moda';
+  src: url('/fonts/bodoni-moda-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
 :root {
   --bg: #07060a;
   --bg2: #0e0c12;
