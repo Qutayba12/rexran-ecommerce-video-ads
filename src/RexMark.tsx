@@ -14,8 +14,8 @@ export default function RexMark({ className = '', glow = true }: { className?: s
   return (
     <svg
       className={className}
-      viewBox="0 0 2372 1693"
-      width="1.401em"
+      viewBox="0 0 2442 1693"
+      width="1.442em"
       height="1em"
       fill="none"
       role="img"
@@ -23,7 +23,7 @@ export default function RexMark({ className = '', glow = true }: { className?: s
       style={{ overflow: 'visible', filter: glow ? 'drop-shadow(0 0 28px rgba(212,175,55,.28))' : undefined }}
     >
       <defs>
-        <linearGradient id="rex-grad" x1="0" y1="1693" x2="2372" y2="0" gradientUnits="userSpaceOnUse">
+        <linearGradient id="rex-grad" x1="0" y1="1693" x2="2442" y2="0" gradientUnits="userSpaceOnUse">
           <stop stopColor="#8A6D1F" />
           <stop offset="0.34" stopColor="#D4AF37" />
           <stop offset="0.62" stopColor="#F8EBBE" />
@@ -32,7 +32,7 @@ export default function RexMark({ className = '', glow = true }: { className?: s
       </defs>
       <g fill="url(#rex-grad)" transform="translate(38 1590) scale(1 -1)">
         <path d={R_PATH} />
-        <path d={R_PATH} transform="translate(2296 0) scale(-1 1)" />
+        <path d={R_PATH} transform="translate(2366 0) scale(-1 1)" />
       </g>
     </svg>
   )

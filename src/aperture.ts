@@ -71,10 +71,10 @@ function play() {
     `<circle cx="100" cy="100" r="70" stroke="var(--gold-hi,#f4d97b)" stroke-width="1.6" opacity="0.9"/>` +
     bladeSeams() +
     `</g></svg>` +
-    `<svg viewBox="0 0 2372 1693" width="60%" height="60%" style="position:relative" fill="none" aria-label="Rexran">` +
-    `<defs><linearGradient id="rx-ap-grad" x1="0" y1="1693" x2="2372" y2="0" gradientUnits="userSpaceOnUse">` +
+    `<svg viewBox="0 0 2442 1693" width="60%" height="60%" style="position:relative" fill="none" aria-label="Rexran">` +
+    `<defs><linearGradient id="rx-ap-grad" x1="0" y1="1693" x2="2442" y2="0" gradientUnits="userSpaceOnUse">` +
     `<stop stop-color="var(--gold,#d4af37)"/><stop offset="0.34" stop-color="var(--gold-hi,#f4d97b)"/><stop offset="0.62" stop-color="#F8EBBE"/><stop offset="1" stop-color="var(--gold,#d4af37)"/></linearGradient></defs>` +
-    `<g fill="url(#rx-ap-grad)" transform="translate(38 1590) scale(1 -1)"><path d="${R_PATH}"/><path d="${R_PATH}" transform="translate(2296 0) scale(-1 1)"/></g>` +
+    `<g fill="url(#rx-ap-grad)" transform="translate(38 1590) scale(1 -1)"><path d="${R_PATH}"/><path d="${R_PATH}" transform="translate(2366 0) scale(-1 1)"/></g>` +
     `</svg>`
 
   cover.appendChild(stage)
