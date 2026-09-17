@@ -8,14 +8,14 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { Environment, Lightformer } from '@react-three/drei'
 import * as THREE from 'three'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
-import { R_PATH, SPARK } from '../RexMark'
+import { R_PATH } from '../RexMark'
 
 const CREST_SVG =
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2372 1693">` +
   `<g transform="translate(38 1590) scale(1 -1)">` +
   `<path d="${R_PATH}"/>` +
   `<path d="${R_PATH}" transform="translate(2296 0) scale(-1 1)"/>` +
-  `<path d="${SPARK}"/></g></svg>`
+  `</g></svg>`
 
 function useCrestGeometry() {
   return useMemo(() => {
