@@ -32,6 +32,11 @@
   --border: rgba(212, 175, 55, 0.16);
   --focus: var(--aurum-200);
 
+  /* ===== SIGNATURE MOTIF — the Rexran "eye" (drawn from the crest), used as
+     the brand's marker/bullet/divider glyph everywhere. Applied via mask so it
+     can be filled with the aurum foil. ===== */
+  --eye-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2.5 Q16.8 12 12 21.5 Q7.2 12 12 2.5 Z M12 5.6 Q14.7 12 12 18.4 Q9.3 12 12 5.6 Z M12 8.8 Q13.3 12 12 15.2 Q10.7 12 12 8.8 Z'/%3E%3C/svg%3E");
+
   /* ===== LEGACY ALIASES — keep existing components working, one source of truth ===== */
   --bg2: var(--surface);
   --gold: var(--accent);

@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { initAnalytics } from './analytics'
 import './applock'
 import './aperture'
+import './cursor'
 
 initAnalytics()
 
