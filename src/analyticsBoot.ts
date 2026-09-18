@@ -6,6 +6,5 @@
 import { initAnalytics } from './analytics'
 import './applock'
 import './aperture'
-import './cursor'
 
 initAnalytics()
