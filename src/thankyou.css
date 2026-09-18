@@ -23,7 +23,7 @@
 .ty .cta { opacity: 0; animation: ty-rise 1s ease .65s forwards; }
 .ty-redirect { margin-top: 22px; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--ink-faint);
   opacity: 0; animation: ty-rise 1s ease .8s forwards; }
-.ty-brand { margin-top: 54px; display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 18px; color: var(--gold);
+.ty-brand { margin-top: 54px; display: inline-flex; align-items: center; gap: 12px; font-family: 'Bodoni Moda', var(--display); font-weight: 600; font-size: 17px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold);
   opacity: 0; animation: ty-fade-brand 1s ease .95s forwards; transition: opacity .2s; }
 .ty-brand:hover { opacity: 1; }
 .ty-logo { font-size: 22px; }
