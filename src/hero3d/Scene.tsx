@@ -44,16 +44,31 @@ function useCrestGeometry() {
   }, [])
 }
 
+// Pointer parallax is driven from a passive window listener rather than the
+// canvas's own pointer events — the 3D layer is pointer-events:none so it can
+// never intercept scrolling/gestures over the hero. Normalized to [-1,1].
+const ptr = { x: 0, y: 0 }
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      ptr.x = (e.clientX / window.innerWidth) * 2 - 1
+      ptr.y = (e.clientY / window.innerHeight) * 2 - 1
+    },
+    { passive: true },
+  )
+}
+
 function Crest() {
   const geo = useCrestGeometry()
   const tilt = useRef<THREE.Group>(null)
   const spin = useRef<THREE.Group>(null)
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     const d = Math.min(delta, 0.05)
     if (spin.current) spin.current.rotation.y += d * 0.32
     if (tilt.current) {
-      tilt.current.rotation.x += (-state.pointer.y * 0.22 - tilt.current.rotation.x) * 0.06
-      tilt.current.rotation.y += (state.pointer.x * 0.32 - tilt.current.rotation.y) * 0.06
+      tilt.current.rotation.x += (-ptr.y * 0.22 - tilt.current.rotation.x) * 0.06
+      tilt.current.rotation.y += (ptr.x * 0.32 - tilt.current.rotation.y) * 0.06
     }
   })
   return (
@@ -106,6 +121,7 @@ export default function Scene() {
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         camera={{ position: [0, 0, 6], fov: 38 }}
+        style={{ pointerEvents: 'none', touchAction: 'auto' }}
       >
         <Rig />
         <Crest />
